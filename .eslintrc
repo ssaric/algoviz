@@ -1,0 +1,67 @@
+/* eslint-disable */
+{
+    "parser": "babel-eslint",
+    "extends": "airbnb",
+    "env": {
+        "browser": true
+    },
+    "rules": {
+        "indent": [
+            "error",
+            4
+        ],
+        "no-debugger": 0,
+        "import/no-unresolved": 0,
+        "import/no-absolute-path": 0,
+        "import/extensions": 0,
+        "import/first": 0,
+        "no-plusplus": 0,
+        "max-len": 0,
+        "jsx-a11y/no-noninteractive-element-interactions": 0,
+        "jsx-a11y/click-events-have-key-events": 0,
+        "react/jsx-filename-extension": 0,
+        "react/destructuring-assignment": 0,
+        "react/jsx-indent": [
+            "error",
+            4
+        ],
+        "react/jsx-indent-props": [
+            "error",
+            4
+        ],
+        "no-underscore-dangle": 0,
+        "no-console": [
+            "warn",
+            {
+                "allow": [
+                    "warn",
+                    "error"
+                ]
+            }
+        ],
+        "arrow-parens": [
+            "error",
+            "as-needed"
+        ],
+        "comma-dangle": [
+            "error",
+            {
+                "arrays": "always-multiline",
+                "objects": "always-multiline",
+                "imports": "always-multiline",
+                "exports": "always-multiline",
+                "functions": "ignore"
+            }
+        ],
+        "default-case": 0,
+        "no-multi-assign": 0,
+        "one-var": 0,
+        "one-var-declaration-per-line": 0,
+        "no-continue": 0,
+        "react/forbid-prop-types": 0,
+        "class-methods-use-this": 0,
+        "jsx-a11y/no-static-element-interactions": 0,
+        // until we bump to jsx-a11y v5.0.0+
+        "no-unused-vars": 1
+    }
+}
