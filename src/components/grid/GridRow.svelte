@@ -1,38 +1,81 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+<style lang="scss" global>
+    @import "../../scss/theme";
 
+    .cell {
+        height: 20px;
+        width: 20px;
+        cursor: pointer;
+        border: 1px solid $color-neutral10;
+        transition: background-color 0.01s;
+        position: relative;
 
-function GridRow(props) {
-    const {
-        numberOfCells, onCellClick,
-    } = props;
-
-    const cells = [];
-
-    for (let j = 0; j < numberOfCells; j++) {
-        cells.push(<td
-            className="cell"
-            onClick={onCellClick}
-            data-cell-location={`${props.rowIndex}-${j}`}
-            id={`${props.rowIndex}-${j}`}
-            key={`${j}`}
-        />);
+        &:hover {
+            background: $color-neutral20;
+        }
     }
 
-    return (
-        <tr className="row">
-            {cells}
-        </tr>
-    );
-}
+    .cell--wall {
+        background-color: $color-neutral40;
+    }
 
-GridRow.propTypes = {
-    rowIndex: PropTypes.number.isRequired,
-    numberOfCells: PropTypes.number.isRequired,
-    onCellClick: PropTypes.func.isRequired,
-};
-GridRow.defaultProps = {
-};
+    .cell--start {
+        background-size: 15px 15px;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-image: url("/images/play-circle-solid.svg");
+    }
 
+    .cell--end {
+        background-size: 15px 15px;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-image: url("/images/dot-circle-solid.svg");
+    }
 
-export default GridRow;
+    .cell--discovered {
+        background-color: $color-primary20;
+    }
+
+    .cell--visited {
+        background-color: $color-primary40;
+    }
+
+    .cell--path {
+        background-color: $color-secondary50;
+    }
+
+    .cell--highlighted {
+        border: 2px solid blue;
+    }
+</style>
+<script>
+    import {createEventDispatcher} from 'svelte';
+    import { afterUpdate } from 'svelte';
+
+    export let numberOfCells;
+    export let rowIndex;
+    const dispatch = createEventDispatcher();
+
+    function onCellClick(e) {
+        dispatch('cellClick',e);
+    }
+
+    let cells = [];
+
+    $: {
+        for (let j = 0; j < numberOfCells; j++) {
+            cells = [...cells, j];
+        }
+    }
+</script>
+
+<tr class="row">
+    {#each cells as columnIndex}
+        <td
+                class="cell"
+                on:click={onCellClick}
+                id={`${rowIndex},${columnIndex}`}
+                data-cell-location={`${rowIndex}-${columnIndex}`}
+        ></td>
+    {/each}
+</tr>

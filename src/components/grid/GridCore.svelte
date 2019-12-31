@@ -1,43 +1,18 @@
-import React, { memo } from 'react';
-import PropTypes from 'prop-types';
-import GridRow from './grid-row';
-
-/**
- * @return {null}
- */
-function GridCore(props) {
-    const {
-        nrOfRows, numberOfCells, onCellClick,
-    } = props;
-
-    if (!numberOfCells) return null;
+<script>
+    import GridRow from './GridRow.svelte';
+    export let nrOfRows;
+    export let numberOfCells;
 
     const rows = [];
     for (let i = 0; i < nrOfRows; i++) {
-        rows.push(
-            <GridRow
-                numberOfCells={numberOfCells}
-                rowIndex={i}
-                onCellClick={onCellClick}
-                key={`row-${i}`}
-            />
-        );
+        rows.push(i);
     }
+</script>
 
-    return (
-        <tbody>
-            {rows}
-        </tbody>
-    );
-}
-
-GridCore.propTypes = {
-    nrOfRows: PropTypes.number.isRequired,
-    numberOfCells: PropTypes.number,
-    onCellClick: PropTypes.func.isRequired,
-};
-GridCore.defaultProps = {
-    numberOfCells: undefined,
-};
-
-export default memo(GridCore);
+{#each rows as rowIndex}
+    <GridRow
+            numberOfCells={numberOfCells}
+            rowIndex={rowIndex}
+            on:cellClick
+    />
+{/each}

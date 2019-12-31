@@ -161,9 +161,9 @@ function throttledFunction(open, end, grid) {
     const neighbours = adjacentNodes(currentNode, grid);
     processNeighbours(currentNode, neighbours, open, end);
     open.sort((a, b) => {
-        const costDiff = b.totalCost - a.totalCost;
+        const costDiff = a.totalCost - b.totalCost;
         if (costDiff === 0) {
-            return b.hCost - a.hCost;
+            return a.hCost - b.hCost;
         }
         return costDiff;
     });
@@ -174,12 +174,33 @@ function throttledFunction(open, end, grid) {
 
 
 export default function main(rootNode) {
-    const grid = rootNode.childNodes[0];
+    const grid = rootNode;
     const start = grid.getElementsByClassName('cell--start')[0];
     const end = grid.getElementsByClassName('cell--end')[0];
 
     const startNode = setStartNodeParameters(start, end);
 
     const open = [startNode];
+    while(open.length > 0) {
+        const currentNode = open.pop();
+
+        currentNode.visit();
+        if (currentNode.isEndNode()) {
+            markPath(currentNode);
+            return;
+        }
+        const neighbours = adjacentNodes(currentNode, grid);
+        processNeighbours(currentNode, neighbours, open, end);
+        open.sort((a, b) => {
+            const costDiff = a.totalCost - b.totalCost;
+            if (costDiff === 0) {
+                return a.hCost - b.hCost;
+            }
+            return costDiff;
+        });
+        if (open.length !== 0) {
+            setTimeout(throttledFunction, throttleTime, open, end, grid);
+        }
+    }
     throttledFunction(open, end, grid);
 }

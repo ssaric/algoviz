@@ -1,35 +1,27 @@
-import React, { useCallback } from 'react';
-import PropTypes from 'prop-types';
-import cn from 'classnames';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+<script>
+    import { createEventDispatcher } from 'svelte';
+    import Icon from 'svelte-awesome';
 
-import './legend.scss';
+    const dispatch = createEventDispatcher();
 
-function LegendItem({
-    onClick, icon, text, id, selected,
-}) {
-    const onClickCallback = useCallback(() => onClick(id), []);
+    export let selected;
+    export let icon;
+    export let id;
+    export let text;
 
-    const legendItemClasses = cn('legend-item', { 'legend-item--selected': selected });
+    function onClick() {
+        dispatch('legendItemClick', {
+            id,
+        });
+    }
 
-    return (
-        <div className={legendItemClasses} onClick={onClickCallback}>
-            <FontAwesomeIcon className="legend-item__icon" icon={icon} />
-            <span className="legend-item__text">{text}</span>
-        </div>
-    );
-}
 
-LegendItem.propTypes = {
-    onClick: PropTypes.func.isRequired,
-    icon: PropTypes.string.isRequired,
-    text: PropTypes.string.isRequired,
-    id: PropTypes.number.isRequired,
-    selected: PropTypes.bool,
-};
+</script>
 
-LegendItem.defaultProps = {
-    selected: false,
-};
 
-export default LegendItem;
+<div class="legend-item" class:legend-item--selected={selected} on:click={onClick}>
+    <div class="legend-item__icon">
+        <Icon data={icon} />
+    </div>
+    <span class="legend-item__text">{text}</span>
+</div>
