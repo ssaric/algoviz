@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "AlgoViz implemented in Svelte",
   "scripts": {
-    "build": "rollup -c",
+    "build": "rollup -c --environment INCLUDE_DEPS,BUILD:production",
     "dev": "rollup -c -w",
     "start": "sirv public"
   },
