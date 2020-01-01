@@ -3,9 +3,12 @@
     import FieldType from '../../enums/field-type';
     import GridCore from './GridCore.svelte';
     import {afterUpdate, onDestroy} from 'svelte';
+    import {createEventDispatcher} from 'svelte';
 
     export let selectedFieldType;
     export let table;
+
+    const dispatch = createEventDispatcher();
 
     const CELL_SIZE = 20;
     const sets = [];
@@ -28,6 +31,10 @@
     onDestroy(() => {
         document.removeEventListener('mouseout', onMouseOut);
     });
+
+    function resetGrid() {
+        dispatch('resetGrid');
+    }
 
     function _setCellState(fieldType, node) {
         switch (fieldType) {
@@ -53,12 +60,14 @@
                 endNode = node;
                 break;
         }
+        resetGrid();
     }
 
     function onMouseDown(e) {
         if (e.button !== MouseClick.LEFT) return;
         if (selectedFieldType !== FieldType.WALL) return;
         document.addEventListener('mouseout', onMouseOut);
+        resetGrid();
         dragSelect = true;
     }
 

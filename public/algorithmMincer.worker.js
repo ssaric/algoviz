@@ -121,6 +121,12 @@ function sendStep(step) {
     this.postMessage([MessageTypes.ALGORITHM_STEP, step]);
 }
 
+function createStartStep() {
+    return {
+        type: 'start',
+    }
+}
+
 function createMarkPathStep(node) {
     return {
         type: 'markPath',
@@ -153,7 +159,7 @@ function process(grid) {
     const startNode = grid.start;
     const endNode = grid.end;
     const open = [startNode];
-
+    sendStep(createStartStep());
     while(open.length > 0) {
         const currentNode = open.pop();
         grid.visit(currentNode);

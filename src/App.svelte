@@ -33,14 +33,13 @@
 
 
     const worker = new Worker('algorithmMincer.worker.js');
-    const steps = [];
+    let steps = [];
 
     worker.onmessage = function (e) {
         const data = e.data[1];
-        hasData = true;
+        if (data.type === 'start') steps = [];
         processResults(data);
         nrOfSteps = steps.length;
-        // if (data.type === 'end') startVisualizingSteps();
     }
 
     let table;
@@ -50,7 +49,6 @@
     let interval;
     let nrOfSteps = 100;
     let currentStep = 0;
-    let hasData = false;
     onDestroy(() => worker.terminate());
 
     function onItemClick({detail}) {
@@ -70,6 +68,10 @@
             }
             steps[currentStep++]('forward');
         }, 10);
+    }
+
+    function onResetGrid() {
+        steps = [];
     }
 
     function onPlayClick() {
@@ -179,7 +181,7 @@
     <Navbar/>
     <div class="home">
         <Legend on:startClick={onStartClick} on:legendItemClick={onItemClick} selectedFieldType={fieldType}/>
-        <PlaybackControls hasData={hasData}
+        <PlaybackControls hasData={steps.length > 0}
                           on:playClick={onPlayClick}
                           on:backwardClick={onBackwardClick}
                           on:forwardClick={onForwardClick}
@@ -187,7 +189,10 @@
                           nrOfSteps={nrOfSteps}
                           currentStep={currentStep}
         />
-        <Grid bind:nrOfRows={nrOfRows} bind:numberOfCells={numberOfCells} bind:table={table}
+        <Grid bind:nrOfRows={nrOfRows}
+              bind:numberOfCells={numberOfCells}
+              bind:table={table}
+              on:resetGrid={onResetGrid}
               selectedFieldType={fieldType}/>
     </div>
 </main>
