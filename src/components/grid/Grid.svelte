@@ -2,35 +2,54 @@
     import MouseClick from '../../enums/mouse-click';
     import FieldType from '../../enums/field-type';
     import GridCore from './GridCore.svelte';
-    import {afterUpdate, onDestroy} from 'svelte';
+    import {afterUpdate, onDestroy, onMount} from 'svelte';
     import {createEventDispatcher} from 'svelte';
+    import {debounce} from '../../util';
 
     export let selectedFieldType;
     export let table;
+
 
     const dispatch = createEventDispatcher();
 
     const CELL_SIZE = 20;
     const sets = [];
-    export let nrOfRows = 40;
-    export let numberOfCells = 0;
+    export let nrOfRows = 0;
+    export let nrOfCells = 0;
+    let gridHeight;
     let gridWidth;
     let selectedCells = new Map(sets);
     let dragSelect = false;
     let startNode = undefined;
     let endNode = undefined;
 
+
+
     for (let i = 0; i < nrOfRows; i++) {
         sets.push([`${i}`, new Set()]);
     }
 
+    const dbAdjustNumberOfCells = debounce(adjustNumberOfCells, 250);
+
+    function adjustNumberOfCells(e) {
+        nrOfCells = Math.floor(gridWidth / CELL_SIZE);
+        nrOfRows = Math.floor(gridHeight / CELL_SIZE);
+    }
+
+    onMount(() => {
+        window.addEventListener('resize', dbAdjustNumberOfCells);
+    })
+
     afterUpdate(() => {
-        numberOfCells = Math.floor(gridWidth / CELL_SIZE);
-    });
+        if (nrOfCells === 0) nrOfCells = Math.floor(gridWidth / CELL_SIZE);
+        if (nrOfRows === 0) nrOfRows = Math.floor(gridHeight / CELL_SIZE);
+    })
 
     onDestroy(() => {
         document.removeEventListener('mouseout', onMouseOut);
+        window.removeEventListener('resize', dbAdjustNumberOfCells);
     });
+
 
     function resetGrid() {
         dispatch('resetGrid');
@@ -104,8 +123,8 @@
 
     .table {
         border-spacing: 0;
-        height: 100%;
         width: 100%;
+        height: calc(100% - 240px);
         user-select: none;
 
         &.table--start-overlay {
@@ -147,13 +166,16 @@
 </style>
 
 
-<table bind:this={table} class="table" bind:clientWidth={gridWidth}
+<table bind:this={table} class="table"
+       bind:clientWidth={gridWidth} bind:clientHeight={gridHeight}
        class:table--wall-overlay={selectedFieldType === FieldType.WALL}
        class:table--start-overlay={selectedFieldType === FieldType.START}
        class:table--end-overlay={selectedFieldType === FieldType.END}
        on:mouseup={onMouseUp}
        on:mousedown={onMouseDown}
        on:mousemove={onMouseMove}>
-    <GridCore nrOfRows={nrOfRows} numberOfCells={numberOfCells} selectedCells={selectedCells}
+    <GridCore nrOfRows={nrOfRows}
+              numberOfCells={nrOfCells}
+              selectedCells={selectedCells}
               on:cellClick={onCellClick}/>
 </table>

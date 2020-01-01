@@ -50,7 +50,6 @@
 </style>
 <script>
     import {createEventDispatcher} from 'svelte';
-    import { afterUpdate } from 'svelte';
 
     export let numberOfCells;
     export let rowIndex;
@@ -60,17 +59,10 @@
         dispatch('cellClick',e);
     }
 
-    let cells = [];
-
-    $: {
-        for (let j = 0; j < numberOfCells; j++) {
-            cells = [...cells, j];
-        }
-    }
 </script>
 
 <tr class="row">
-    {#each cells as columnIndex}
+    {#each Array(numberOfCells) as c, columnIndex}
         <td
                 class="cell"
                 on:click={onCellClick}

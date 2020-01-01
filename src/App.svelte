@@ -13,7 +13,7 @@
         align-items: center;
         justify-content: flex-start;
         flex-direction: column;
-        flex: 1;
+        height: calc(100% - 60px);
         background: $color-neutral5;
     }
 
@@ -45,7 +45,7 @@
     let table;
     let fieldType = FieldType.WALL;
     let nrOfRows;
-    let numberOfCells;
+    let nrOfCells;
     let interval;
     let nrOfSteps = 100;
     let currentStep = 0;
@@ -103,6 +103,7 @@
     }
 
     function onManualLoaderChange(e) {
+        clearInterval(interval);
         const value = parseInt(e.detail.target.value, 10);
         const nrOfSteps = value - currentStep;
         console.log(nrOfSteps)
@@ -165,7 +166,7 @@
         const endPosition = getPositionFromDataset(table.getElementsByClassName('cell--end')[0])
 
         const gridTransferObject = new GridTransferObject({
-            width: numberOfCells,
+            width: nrOfCells,
             height: nrOfRows,
             start: startPosition,
             end: endPosition,
@@ -187,10 +188,9 @@
                           on:forwardClick={onForwardClick}
                           on:loaderChange={onManualLoaderChange}
                           nrOfSteps={nrOfSteps}
-                          currentStep={currentStep}
-        />
+                          currentStep={currentStep} />
         <Grid bind:nrOfRows={nrOfRows}
-              bind:numberOfCells={numberOfCells}
+              bind:nrOfCells={nrOfCells}
               bind:table={table}
               on:resetGrid={onResetGrid}
               selectedFieldType={fieldType}/>
