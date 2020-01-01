@@ -31,16 +31,30 @@
     .legend-item__icon {
         margin-right: 5px;
         font-size: 25px;
+        height: 20px;
+        width: 20px;
+    }
+
+    .legend__start-button {
+        display: flex;
+        align-items: center;
+        font-size: 25px;
+        .legend-item__icon {
+            height: 40px;
+            width: 40px;
+        }
     }
 
 </style>
 <script>
     import Icon from 'svelte-awesome';
-    import { faFlagCheckered,
+    import {
+        faCogs,
         faPlayCircle,
         faDotCircle,
-        faSquareFull } from '@fortawesome/free-solid-svg-icons';
-    import { createEventDispatcher } from 'svelte';
+        faSquareFull
+    } from '@fortawesome/free-solid-svg-icons';
+    import {createEventDispatcher} from 'svelte';
     import LegendItem from './LegendItem.svelte';
     import FieldType from '../../enums/field-type';
 
@@ -56,12 +70,17 @@
 
 <div class="legend">
     <div class="legend-wrapper">
-        <LegendItem on:legendItemClick selected={selectedFieldType === FieldType.START} text="Start location" icon={faPlayCircle} id={FieldType.START} />
-        <LegendItem on:legendItemClick selected={selectedFieldType === FieldType.END} text="End location" icon={faDotCircle} id={FieldType.END} />
-        <LegendItem on:legendItemClick selected={selectedFieldType === FieldType.WALL} text="Wall" icon={faSquareFull} id={FieldType.WALL} />
+        <LegendItem on:legendItemClick selected={selectedFieldType === FieldType.START} text="Start location"
+                    icon={faPlayCircle} id={FieldType.START}/>
+        <LegendItem on:legendItemClick selected={selectedFieldType === FieldType.END} text="End location"
+                    icon={faDotCircle} id={FieldType.END}/>
+        <LegendItem on:legendItemClick selected={selectedFieldType === FieldType.WALL} text="Wall" icon={faSquareFull}
+                    id={FieldType.WALL}/>
     </div>
-    <div class="legend__start-button" on:click={onStartClick}>
-        <Icon class="item__icon" data={faFlagCheckered}/>
-        <span class="legend-item__text">Start</span>
+    <div>
+        <div class="legend__start-button" on:click={onStartClick}>
+            <Icon class="legend-item__icon" data={faCogs}/>
+            <span class="legend-item__text">Process</span>
+        </div>
     </div>
 </div>

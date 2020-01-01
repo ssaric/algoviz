@@ -20,10 +20,10 @@
 </style>
 
 <script>
-    import { onDestroy } from 'svelte';
+    import {onDestroy} from 'svelte';
 
     import Navbar from './components/Navbar.svelte';
-    import Loader from './components/loader/Loader.svelte';
+    import PlaybackControls from './components/loader/PlaybackControls.svelte';
     import GridTransferObject from './util/Grid';
     import MessageTypes from './enums/MessageTypes';
     import Grid from './components/grid/Grid.svelte';
@@ -37,9 +37,10 @@
 
     worker.onmessage = function (e) {
         const data = e.data[1];
-        if (data.type === 'end') startVisualizingSteps();
-        else processResults(data);
+        hasData = true;
+        processResults(data);
         nrOfSteps = steps.length;
+        // if (data.type === 'end') startVisualizingSteps();
     }
 
     let table;
@@ -47,8 +48,9 @@
     let nrOfRows;
     let numberOfCells;
     let interval;
-    let nrOfSteps = 0;
+    let nrOfSteps = 100;
     let currentStep = 0;
+    let hasData = false;
     onDestroy(() => worker.terminate());
 
     function onItemClick({detail}) {
@@ -62,13 +64,86 @@
 
     function startVisualizingSteps() {
         interval = setInterval(() => {
-            if (steps.length === 0) clearInterval(interval);
-            else {
-                const step = steps.shift();
-                step();
-                currentStep++;
+            if (currentStep > nrOfSteps - 1) {
+                clearInterval(interval);
+                return;
             }
-        }, 50);
+            steps[currentStep++]('forward');
+        }, 10);
+    }
+
+    function onPlayClick() {
+        startVisualizingSteps();
+    }
+
+    function onBackwardClick() {
+        skipBackward(currentStep, -10);
+        currentStep = currentStep - 10;
+    }
+
+    function onForwardClick() {
+        skipForward(currentStep, 10);
+        currentStep = currentStep + 10;
+    }
+
+    function skipForward(start, nrOfSteps) {
+        console.log(start, nrOfSteps);
+        for(let i = start; i < start + nrOfSteps; i++) {
+            setTimeout(() => steps[i]('forward'), 0);
+        }
+    }
+
+    function skipBackward(start, nrOfSteps) {
+        console.log(start, nrOfSteps);
+        for(let i = start; i > start + nrOfSteps; i--) {
+            setTimeout(() => steps[i]('backward'), 0);
+        }
+    }
+
+    function onManualLoaderChange(e) {
+        const value = parseInt(e.detail.target.value, 10);
+        const nrOfSteps = value - currentStep;
+        console.log(nrOfSteps)
+        const direction = nrOfSteps > 0 ? 'forward' : 'backward';
+        if (direction === 'forward') skipForward(currentStep, nrOfSteps)
+        else if (direction === 'backward') skipBackward(currentStep, nrOfSteps);
+        currentStep = value;
+    }
+
+
+    function stepForward(element, step) {
+        highlightElement(element);
+        switch (step.type) {
+            case 'visit': {
+                return element.classList.add('cell--visited');
+            }
+            case 'discover': {
+                return element.classList.add('cell--discovered');
+            }
+            case 'markPath': {
+                return element.classList.add('cell--path');
+            }
+        }
+    }
+
+    function stepBackward(element, step) {
+        highlightElement(element);
+        switch (step.type) {
+            case 'visit': {
+                return element.classList.remove('cell--visited');
+            }
+            case 'discover': {
+                return element.classList.remove('cell--discovered');
+            }
+            case 'markPath': {
+                return element.classList.remove('cell--path');
+            }
+        }
+    }
+
+    function processStep(element, step, direction) {
+        if (direction === 'forward') stepForward(element, step);
+        else if (direction === 'backward') stepBackward(element, step);
     }
 
     function highlightElement(element) {
@@ -78,31 +153,7 @@
 
     function processResults(step) {
         const element = document.getElementById(String(step.location));
-        switch (step.type) {
-            case 'visit': {
-                steps.push(() => {
-                    console.log(`visiting ${step.location}`, element);
-                    highlightElement(element);
-                    element.classList.add('cell--visited'); });
-                break;
-            }
-            case 'discover': {
-                steps.push(() => {
-                    console.log(`discovering ${step.location}`, element);
-                    highlightElement(element);
-                    return element.classList.add('cell--discovered');
-                });
-                break;
-            }
-            case 'markPath': {
-                steps.push(() => {
-                    console.log(`discovering ${step.location}`, element);
-                    highlightElement(element);
-                    return element.classList.add('cell--path');
-                });
-            }
-            break;
-        }
+        steps.push(direction => processStep(element, step, direction))
     }
 
     function createGrid() {
@@ -128,7 +179,14 @@
     <Navbar/>
     <div class="home">
         <Legend on:startClick={onStartClick} on:legendItemClick={onItemClick} selectedFieldType={fieldType}/>
-        <Loader nrOfSteps={nrOfSteps} currentStep={currentStep}/>
+        <PlaybackControls hasData={hasData}
+                          on:playClick={onPlayClick}
+                          on:backwardClick={onBackwardClick}
+                          on:forwardClick={onForwardClick}
+                          on:loaderChange={onManualLoaderChange}
+                          nrOfSteps={nrOfSteps}
+                          currentStep={currentStep}
+        />
         <Grid bind:nrOfRows={nrOfRows} bind:numberOfCells={numberOfCells} bind:table={table}
               selectedFieldType={fieldType}/>
     </div>

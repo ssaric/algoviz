@@ -1,4 +1,18 @@
 <style lang="scss">
+    .playback-controls {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .playback-controls--disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
     .loader-wrapper {
         width: 100%;
         padding: 40px 20px;
@@ -101,21 +115,25 @@
         border-width: 16px 0;
         color: transparent;
     }
+
     input[type=range]::-ms-fill-lower {
         background: #2a6495;
         border: 0.2px solid #010101;
         border-radius: 2.6px;
         box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
     }
+
     input[type=range]:focus::-ms-fill-lower {
         background: #3071a9;
     }
+
     input[type=range]::-ms-fill-upper {
         background: #3071a9;
         border: 0.2px solid #010101;
         border-radius: 2.6px;
         box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
     }
+
     input[type=range]:focus::-ms-fill-upper {
         background: #367ebd;
     }
@@ -123,22 +141,32 @@
 </style>
 
 <script>
+    import {createEventDispatcher} from 'svelte';
+    import Controls from './Controls.svelte';
+    export let hasData;
     export let nrOfSteps;
     export let currentStep;
+    const dispatch = createEventDispatcher();
 
-    const rows = [];
+    function onLoaderChange(e) {
+        dispatch('loaderChange', e);
+    }
+
+
 </script>
-<div class="loader-wrapper">
-    <span>0</span>
-    <input
-            type="range"
-            class="loader"
-            min="0"
-            max={nrOfSteps}
-            step="1"
-            value={currentStep}
-            data-orientation="vertical"
-            disabled
-    />
-    <span>{nrOfSteps}</span>
+<div class="playback-controls" class:playback-controls--disabled={!hasData}>
+    <div class="loader-wrapper">
+        <span>0</span>
+        <input
+                type="range"
+                class="loader"
+                min="0"
+                max={nrOfSteps}
+                step="1"
+                on:input={onLoaderChange}
+                value={currentStep}
+        />
+        <span>{nrOfSteps}</span>
+    </div>
+    <Controls on:playClick on:forwardClick on:backwardClick />
 </div>

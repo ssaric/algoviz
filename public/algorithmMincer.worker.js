@@ -1,7 +1,7 @@
 /* eslint-disable no-param-reassign */
 
 function heuristics(nodeA, nodeB) {
-    return (Math.abs((nodeA.x - nodeB.x)) + Math.abs((nodeA.y - nodeB.y)));
+    return 100 * (Math.abs((nodeA.x - nodeB.x)) + (Math.abs((nodeA.y - nodeB.y))));
 }
 
 class GridNode {
@@ -97,11 +97,13 @@ function adjacentNodes(node, grid) {
 function processNeighbours(node, neighbours, open, end, grid) {
     neighbours.forEach(neighbour => {
         neighbour.setParameters(end, node);
-        grid.discover(neighbour);
         const existingNode = open.find(n => n.id === neighbour.id);
         if (existingNode && neighbour.g > existingNode.g) {
             return;
+        } else if (existingNode) {
+            open.splice(open.indexOf(existingNode), 1);
         }
+        grid.discover(neighbour);
         open.push(neighbour);
     });
 }
