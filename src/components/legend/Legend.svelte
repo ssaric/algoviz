@@ -49,22 +49,15 @@
 <script>
     import Icon from 'svelte-awesome';
     import {
-        faCogs,
         faPlayCircle,
         faDotCircle,
         faSquareFull
     } from '@fortawesome/free-solid-svg-icons';
-    import {createEventDispatcher} from 'svelte';
     import LegendItem from './LegendItem.svelte';
     import FieldType from '../../enums/field-type';
 
-    const dispatch = createEventDispatcher();
-
     export let selectedFieldType;
 
-    function onStartClick() {
-        dispatch('startClick');
-    }
 </script>
 
 
@@ -76,11 +69,5 @@
                     icon={faDotCircle} id={FieldType.END}/>
         <LegendItem on:legendItemClick selected={selectedFieldType === FieldType.WALL} text="Wall" icon={faSquareFull}
                     id={FieldType.WALL}/>
-    </div>
-    <div>
-        <div class="legend__start-button" on:click={onStartClick}>
-            <Icon class="legend-item__icon" data={faCogs}/>
-            <span class="legend-item__text">Process</span>
-        </div>
     </div>
 </div>

@@ -1,14 +1,15 @@
-<style lang="scss">
+<style lang="scss" global>
     .playback-controls {
         display: flex;
         flex-direction: column;
         width: 100%;
         align-items: center;
         margin-bottom: 20px;
+        user-select: none;
     }
 
-    .playback-controls--disabled {
-        opacity: 0.6;
+    .disabled {
+        opacity: 0.5;
         cursor: not-allowed;
         pointer-events: none;
     }
@@ -143,6 +144,7 @@
 <script>
     import {createEventDispatcher} from 'svelte';
     import Controls from './Controls.svelte';
+    export let isPlaying;
     export let hasData;
     export let nrOfSteps;
     export let currentStep;
@@ -154,8 +156,8 @@
 
 
 </script>
-<div class="playback-controls" class:playback-controls--disabled={!hasData}>
-    <div class="loader-wrapper">
+<div class="playback-controls">
+    <div class="loader-wrapper" class:disabled={!hasData}>
         <span>0</span>
         <input
                 type="range"
@@ -168,5 +170,5 @@
         />
         <span>{nrOfSteps}</span>
     </div>
-    <Controls on:playClick on:forwardClick on:backwardClick />
+    <Controls on:playClick on:stopClick on:forwardClick on:backwardClick {hasData} {isPlaying}/>
 </div>

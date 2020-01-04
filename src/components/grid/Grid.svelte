@@ -83,9 +83,10 @@
     }
 
     function onMouseDown(e) {
-        if (e.button !== MouseClick.LEFT) return;
+        if (e.button !== undefined && e.button !== MouseClick.LEFT) return;
         if (selectedFieldType !== FieldType.WALL) return;
         document.addEventListener('mouseout', onMouseOut);
+        document.addEventListener('touchcancel', onMouseOut);
         resetGrid();
         dragSelect = true;
     }
@@ -97,8 +98,16 @@
         e.target.classList.add('cell--wall');
     }
 
+    function onTouchMove(e) {
+        const { touches } = e;
+        const touch = touches[0];
+        const { clientX, clientY } = touch;
+        const element = document.elementFromPoint(clientX, clientY);
+        if (!element.dataset.cellLocation) return;
+        element.classList.add('cell--wall');
+    }
 
-    function onMouseUp() {
+    function onMouseUp(e) {
         if (selectedFieldType !== FieldType.WALL) return;
         document.removeEventListener('mouseout', onMouseOut);
         dragSelect = false;
@@ -171,9 +180,12 @@
        class:table--wall-overlay={selectedFieldType === FieldType.WALL}
        class:table--start-overlay={selectedFieldType === FieldType.START}
        class:table--end-overlay={selectedFieldType === FieldType.END}
+       on:touchend={onMouseUp}
        on:mouseup={onMouseUp}
        on:mousedown={onMouseDown}
-       on:mousemove={onMouseMove}>
+       on:touchstart={onMouseDown}
+       on:mousemove={onMouseMove}
+       on:touchmove={onTouchMove}>
     <GridCore nrOfRows={nrOfRows}
               numberOfCells={nrOfCells}
               selectedCells={selectedCells}

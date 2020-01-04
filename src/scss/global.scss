@@ -10,6 +10,7 @@ body {
   bottom: 0;
   display: flex;
   box-sizing: border-box;
+  touch-action: manipulation;
 }
 
 *, *:before, *:after {
