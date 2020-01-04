@@ -42,7 +42,11 @@
 
     worker.onmessage = function (e) {
         const data = e.data[1];
-        if (data.type === 'start') steps = [];
+        if (data.type === 'start') {
+            steps = [];
+            return;
+        }
+
         processStep(data);
         nrOfSteps = steps.length;
         if (!interval) startVisualizingSteps();
@@ -209,6 +213,7 @@
 
     function processStep(step) {
         const element = document.getElementById(String(step.location));
+        if (element === null) debugger;
         steps.push(direction => createGridPaintMove(element, step, direction))
     }
 
@@ -234,7 +239,7 @@
     <Navbar/>
     <div class="home">
         <Legend on:legendItemClick={onItemClick} selectedFieldType={fieldType}/>
-        <PlaybackControls hasData={steps.length > 0}
+        <PlaybackControls hasData={nrOfSteps > 0}
                           on:playClick={onPlayClick}
                                   on:stopClick={onStopClick}
                                   on:backwardClick={onBackwardClick}

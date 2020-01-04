@@ -236,13 +236,10 @@ const MessageTypes = {
 
 
 onmessage = function(e) {
-    console.log('Worker: Message received from main script', e);
     switch (e.data[0]) {
         case MessageTypes.GRID_DATA: {
             const grid = new Grid(e.data[1]);
             process(grid);
         }
-        default:
-            console.log('no event');
     }
 }
