@@ -107,7 +107,7 @@
         element.classList.add('cell--wall');
     }
 
-    function onMouseUp(e) {
+    function onMouseUp() {
         if (selectedFieldType !== FieldType.WALL) return;
         document.removeEventListener('mouseout', onMouseOut);
         dragSelect = false;

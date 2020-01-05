@@ -20,7 +20,7 @@
 </style>
 
 <script>
-    import {onDestroy} from 'svelte';
+    import {onDestroy, afterUpdate} from 'svelte';
 
     import Navbar from './components/Navbar.svelte';
     import PlaybackControls from './components/loader/PlaybackControls.svelte';
@@ -40,6 +40,14 @@
     const worker = new Worker('algorithmMincer.worker.js');
     let steps = [];
 
+    let table;
+    let fieldType = FieldType.WALL;
+    let nrOfRows;
+    let nrOfCells;
+    let interval;
+    let nrOfSteps = 0;
+    let currentStep = 0;
+
     worker.onmessage = function (e) {
         const data = e.data[1];
         if (data.type === 'start') {
@@ -52,15 +60,7 @@
         if (!interval) startVisualizingSteps();
     }
 
-    let table;
-    let fieldType = FieldType.WALL;
-    let nrOfRows;
-    let nrOfCells;
-    let interval;
-    let nrOfSteps = 0;
-    let currentStep = 0;
     onDestroy(() => worker.terminate());
-
     function onItemClick({detail}) {
         fieldType = detail.id;
     }
@@ -77,6 +77,8 @@
 
     function onResetGrid() {
         steps = [];
+        currentStep = 0;
+        nrOfSteps = steps.length;
     }
 
     const elementsData = {
@@ -131,7 +133,7 @@
                 layout: 'bottom',
                 text: `Cannot process algorithm, following data is missing: ${missingData.join(', ')}`
             }).show();
-        } else if (steps.length === 0) {
+        } else if (nrOfSteps === 0) {
             processData(gridData);
         } else {
             startVisualizingSteps();
