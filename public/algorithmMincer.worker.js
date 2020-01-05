@@ -177,6 +177,7 @@ function process(grid) {
     sendStep(createStartStep());
     while(open.length > 0) {
         const currentNode = open.pop();
+        grid.visit(currentNode);
         if (grid.isEndNode(currentNode)) {
             sendStep(createEndStep(currentNode));
             markPath(currentNode);
