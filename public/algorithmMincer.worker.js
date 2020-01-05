@@ -1,5 +1,7 @@
 /* eslint-disable no-param-reassign */
 
+let selectedHeuristics;
+
 function heuristics(nodeA, nodeB) {
     return 100 * (Math.abs((nodeA.x - nodeB.x)) + (Math.abs((nodeA.y - nodeB.y))));
 }
@@ -104,6 +106,7 @@ function processNeighbours(node, neighbours, open, end, grid) {
             open.splice(open.indexOf(existingNode), 1);
         }
         grid.discover(neighbour);
+        sendStep(createDiscoverStep(node));
         open.push(neighbour);
     });
 }
@@ -141,9 +144,10 @@ function createEndStep(node) {
     }
 }
 
-function createVisitStep(node) {
+function createVisitStep(node, neighbours) {
     return {
         type: 'visit',
+        neighbours,
         location: node.toArray(),
     }
 }
@@ -155,6 +159,17 @@ function createDiscoverStep(node) {
     }
 }
 
+function sortOpenNodes(open) {
+    open.sort((a, b) => {
+        const costDiff = b.totalCost - a.totalCost;
+        if (costDiff === 0) {
+            return b.hCost - a.hCost;
+        }
+        return costDiff;
+    });
+}
+
+
 function process(grid) {
     const startNode = grid.start;
     const endNode = grid.end;
@@ -162,21 +177,16 @@ function process(grid) {
     sendStep(createStartStep());
     while(open.length > 0) {
         const currentNode = open.pop();
-        grid.visit(currentNode);
         if (grid.isEndNode(currentNode)) {
             sendStep(createEndStep(currentNode));
             markPath(currentNode);
             return;
         }
         const neighbours = adjacentNodes(currentNode, grid);
+        sendStep(createVisitStep(currentNode, neighbours));
+
         processNeighbours(currentNode, neighbours, open, endNode, grid);
-        open.sort((a, b) => {
-            const costDiff = b.totalCost - a.totalCost;
-            if (costDiff === 0) {
-                return b.hCost - a.hCost;
-            }
-            return costDiff;
-        });
+        sortOpenNodes(open);
     }
 }
 
@@ -205,12 +215,10 @@ class Grid {
 
     visit(node) {
         this.visited.set(node.id, node);
-        sendStep(createVisitStep(node));
     }
 
     discover(node) {
         this.discovered.set(node.id, node);
-        sendStep(createDiscoverStep(node));
     }
 
     isEndNode(node) {

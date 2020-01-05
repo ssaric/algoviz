@@ -75,10 +75,20 @@
         }, 50);
     }
 
+    function resetGridVisualizedSteps() {
+        let data = table.getElementsByClassName('cell--visited');
+        [...data].forEach(e => e.classList.remove('cell--visited'));
+        data = table.getElementsByClassName('cell--discovered');
+        [...data].forEach(e => e.classList.remove('cell--discovered'));
+        data = table.getElementsByClassName('cell--path');
+        [...data].forEach(e => e.classList.remove('cell--path'));
+    }
+
     function onResetGrid() {
         steps = [];
         currentStep = 0;
         nrOfSteps = steps.length;
+        resetGridVisualizedSteps();
     }
 
     const elementsData = {

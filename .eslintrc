@@ -1,10 +1,22 @@
 /* eslint-disable */
 {
-    "parser": "babel-eslint",
-    "extends": "airbnb",
+    "parserOptions": {
+        "ecmaVersion": 2019,
+        "sourceType": "module"
+    },
     "env": {
+        "es6": true,
         "browser": true
     },
+    "plugins": [
+        "svelte3"
+    ],
+    "overrides": [
+        {
+            "files": ["**/*.svelte"],
+            "processor": "svelte3/svelte3"
+        }
+    ],
     "rules": {
         "indent": [
             "error",
@@ -19,16 +31,6 @@
         "max-len": 0,
         "jsx-a11y/no-noninteractive-element-interactions": 0,
         "jsx-a11y/click-events-have-key-events": 0,
-        "react/jsx-filename-extension": 0,
-        "react/destructuring-assignment": 0,
-        "react/jsx-indent": [
-            "error",
-            4
-        ],
-        "react/jsx-indent-props": [
-            "error",
-            4
-        ],
         "no-underscore-dangle": 0,
         "no-console": [
             "warn",
@@ -61,7 +63,6 @@
         "react/forbid-prop-types": 0,
         "class-methods-use-this": 0,
         "jsx-a11y/no-static-element-interactions": 0,
-        // until we bump to jsx-a11y v5.0.0+
         "no-unused-vars": 1
     }
 }
