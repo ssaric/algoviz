@@ -106,7 +106,7 @@ function processNeighbours(node, neighbours, open, end, grid) {
             open.splice(open.indexOf(existingNode), 1);
         }
         grid.discover(neighbour);
-        sendStep(createDiscoverStep(node));
+        sendStep(createDiscoverStep(neighbour));
         open.push(neighbour);
     });
 }
