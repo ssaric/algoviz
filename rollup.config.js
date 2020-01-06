@@ -17,7 +17,7 @@ export default {
         file: 'public/build/bundle.js'
     },
     plugins: [
-        webWorkerLoader({ inline: false }),
+        webWorkerLoader(),
         svg({ stringify: true }),
         svelte({
             // enable run-time checks when not in production
