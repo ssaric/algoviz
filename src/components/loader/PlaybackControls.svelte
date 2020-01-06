@@ -163,7 +163,7 @@
                 type="range"
                 class="loader"
                 min="0"
-                max={nrOfSteps}
+                max={nrOfSteps - 1}
                 step="1"
                 on:input={onLoaderChange}
                 value={currentStep}

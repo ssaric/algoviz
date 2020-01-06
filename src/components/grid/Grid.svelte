@@ -1,6 +1,6 @@
 <script>
-    import MouseClick from '../../enums/mouse-click';
-    import FieldType from '../../enums/field-type';
+    import MouseClick from '../../enums/MouseClick';
+    import FieldType from '../../enums/FieldType';
     import GridCore from './GridCore.svelte';
     import {afterUpdate, onDestroy, onMount} from 'svelte';
     import {createEventDispatcher} from 'svelte';

@@ -54,7 +54,7 @@
         faSquareFull
     } from '@fortawesome/free-solid-svg-icons';
     import LegendItem from './LegendItem.svelte';
-    import FieldType from '../../enums/field-type';
+    import FieldType from '../../enums/FieldType';
 
     export let selectedFieldType;
 

@@ -1,76 +1,9 @@
 /* eslint-disable no-param-reassign */
 
+import MessageTypes from './enums/MessageTypes';
+import GridNode from './util/GridNode';
+import Grid from './util/Grid';
 let selectedHeuristics;
-
-function heuristics(nodeA, nodeB) {
-    return 100 * (Math.abs((nodeA.x - nodeB.x)) + (Math.abs((nodeA.y - nodeB.y))));
-}
-
-class GridNode {
-    constructor([x, y]) {
-        this.x = x;
-        this.y = y;
-        this.g = 0;
-        this.h = 0;
-    }
-
-    get id() {
-        return `${this.x},${this.y}`;
-    }
-
-    set parent(parent) {
-        this.p = parent;
-    }
-
-    get parent() {
-        return this.p;
-    }
-
-    set gCost(g) {
-        this.g = g;
-    }
-
-    get gCost() {
-        return this.g;
-    }
-
-    set hCost(h) {
-        this.h = h;
-    }
-
-    get hCost() {
-        return this.h;
-    }
-
-    get totalCost() {
-        return this.h + this.g;
-    }
-
-    toArray() {
-        return [this.x, this.y];
-    }
-
-    equals(node) {
-        if (node instanceof GridNode) {
-            return this.x === node.x && this.y === node.y;
-        } else if (Array.isArray(node)) {
-            return this.x === node.x && this.y === node.y;
-        }
-    }
-
-    setParameters(endNode, fromNode) {
-        const initialCost = (fromNode && fromNode.g) || 0;
-        this.g = initialCost + 1;
-        this.h = heuristics(this, endNode);
-        this.setParent(fromNode);
-    }
-
-    setParent(fromNode) {
-        if (fromNode) {
-            this.parent = fromNode;
-        }
-    }
-}
 
 
 function isLocationValid(location, grid) {
@@ -190,59 +123,6 @@ function process(grid) {
         sortOpenNodes(open);
     }
 }
-
-class Grid {
-    constructor({width, height, start, end, walls}) {
-        this.width = width;
-        this.height = height;
-        this.start = new GridNode(start);
-        this.end = new GridNode(end);
-        this.walls = new Map();
-        this.visited = new Map();
-        this.discovered = new Map();
-        walls.forEach(w => this.walls.set(String(w), new GridNode(w)));
-    }
-
-
-    serialize() {
-        return {
-            width: this.width,
-            height: this.height,
-            start: this.start,
-            end: this.end,
-            walls: this.walls
-        }
-    }
-
-    visit(node) {
-        this.visited.set(node.id, node);
-    }
-
-    discover(node) {
-        this.discovered.set(node.id, node);
-    }
-
-    isEndNode(node) {
-        return node.equals(this.end);
-    }
-
-    isVisited(node) {
-        if (Array.isArray(node)) return this.visited.has(String(node));
-        return this.visited.has(node.id);
-    }
-
-    isWall(node) {
-        if (Array.isArray(node)) return this.walls.has(String(node));
-        return this.walls.has(node.id);
-    }
-
-}
-
-const MessageTypes = {
-    GRID_DATA: 0,
-    ALGORITHM_STEP: 0,
-}
-
 
 onmessage = function(e) {
     switch (e.data[0]) {

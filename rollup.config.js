@@ -4,9 +4,8 @@ import commonjs from 'rollup-plugin-commonjs';
 import livereload from 'rollup-plugin-livereload';
 import svg from 'rollup-plugin-svg-import';
 import sveltePreprocess from 'svelte-preprocess';
-import webworkify from 'rollup-plugin-webworkify';
 import { terser } from 'rollup-plugin-terser';
-
+import webWorkerLoader from 'rollup-plugin-web-worker-loader';
 const production = !process.env.ROLLUP_WATCH;
 
 export default {
@@ -18,6 +17,7 @@ export default {
         file: 'public/build/bundle.js'
     },
     plugins: [
+        webWorkerLoader(),
         svg({ stringify: true }),
         svelte({
             // enable run-time checks when not in production
@@ -54,8 +54,6 @@ export default {
 
         // Watch the `public` directory and refresh the
         // browser on changes when not in production
-        !production && livereload('public'),
-
         // If we're building for production (npm run build
         // instead of npm run dev), minify
         production && terser()

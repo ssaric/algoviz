@@ -20,13 +20,13 @@
 </style>
 
 <script>
-    import {onDestroy, afterUpdate} from 'svelte';
+    import {onDestroy} from 'svelte';
 
     import Navbar from './components/Navbar.svelte';
     import PlaybackControls from './components/loader/PlaybackControls.svelte';
     import MessageTypes from './enums/MessageTypes';
     import Grid from './components/grid/Grid.svelte';
-    import FieldType from './enums/field-type';
+    import FieldType from './enums/FieldType';
     import Legend from './components/legend/Legend.svelte';
     import {getPositionFromDataset} from './util';
     import Noty from 'noty';
@@ -37,7 +37,8 @@
     } from '@fortawesome/free-solid-svg-icons';
     import {icon} from '@fortawesome/fontawesome-svg-core';
 
-    const worker = new Worker('algorithmMincer.worker.js');
+    import AlgorithmMincerWorker from 'web-worker:./algorithmMincer.worker.js';
+    const worker = new AlgorithmMincerWorker();
     let steps = [];
 
     let table;
@@ -177,6 +178,7 @@
         const value = parseInt(e.detail.target.value, 10);
         const nrOfSteps = value - currentStep;
         const direction = nrOfSteps > 0 ? 'forward' : 'backward';
+
         if (direction === 'forward') skipForward(currentStep, nrOfSteps)
         else if (direction === 'backward') skipBackward(currentStep, nrOfSteps);
         currentStep = value;
