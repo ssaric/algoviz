@@ -1,9 +1,57 @@
-button {
+@import "./theme";
+/**
+ * 1. Change the font styles in all browsers.
+ * 2. Remove the margin in Firefox and Safari.
+ */
+
+button,
+input,
+optgroup,
+select,
+textarea {
+  font-family: inherit; /* 1 */
+  font-size: 100%; /* 1 */
+  line-height: 1.15; /* 1 */
+  margin: 0; /* 2 */
+}
+
+/**
+ * Show the overflow in IE.
+ * 1. Show the overflow in Edge.
+ */
+
+button,
+input { /* 1 */
+  overflow: visible;
+}
+
+/**
+ * Remove the inheritance of text transform in Edge, Firefox, and IE.
+ * 1. Remove the inheritance of text transform in Firefox.
+ */
+
+button,
+select { /* 1 */
+  text-transform: none;
+}
+
+/**
+ * Correct the inability to style clickable types in iOS and Safari.
+ */
+
+button,
+[type="button"],
+[type="reset"],
+[type="submit"] {
+  -webkit-appearance: button;
+}
+
+
+%btn {
   position: relative;
   margin: 0;
   padding: 5px 12px;
   height: 60px;
-  width: 150px;
   outline: none;
   text-decoration: none;
   display: flex;
@@ -18,24 +66,7 @@ button {
   font-family: inherit;
   z-index: 0;
   overflow: hidden;
-  transition: all 0.4s cubic-bezier(0.02, 0.01, 0.47, 1);
-}
-
-button:after {
-  position: absolute;
-  right: 0;
-  left: 50%;
-  transition: .3s;
-  content: '';
-  width: 0;
-  bottom: 0;
-  height: 3px;
-  background: white;
-}
-
-button:hover:after {
-  width: 100%;
-  left: 0;
+  transition: all 0.2s cubic-bezier(0.02, 0.01, 0.47, 1);
 }
 
 .btn__icon {
@@ -43,16 +74,31 @@ button:hover:after {
   font-size: 30px;
   width: 40px;
   height: 40px;
-  margin-right: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s cubic-bezier(0.02, 0.01, 0.47, 1);
 }
 
 .btn__text {
+  color: white;
   font-size: 16px;
   position: relative;
   text-transform: uppercase;
+  transition: all 0.2s cubic-bezier(0.02, 0.01, 0.47, 1);
 }
 
+.btn-primary {
+  @extend %btn;
+
+  &:hover {
+    .btn__icon {
+      color: $color-primary30;
+    }
+
+    .btn__text {
+      color: $color-primary30;
+    }
+  }
+}
 

@@ -58,6 +58,7 @@
 
         processStep(data);
         nrOfSteps = steps.length;
+        if (nrOfSteps > 20000) worker.terminate();
         if (!interval) startVisualizingSteps();
     }
 

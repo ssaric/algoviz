@@ -7,7 +7,6 @@
         transition: width 0.6s cubic-bezier(0.075, 0.82, 0.165, 1);
         width: 100%;
         height: 60px;
-        flex-direction: row;
         justify-content: space-between;
         padding: 10px 20px;
     }
@@ -23,12 +22,16 @@
         width: 40px;
         height: 40px;
         cursor: pointer;
+        margin-right: 10px;
+    }
+
+    .navbar__title-wrapper {
+        display: flex;
     }
 
     .navbar__links-wrapper {
         display: flex;
         justify-content: flex-end;
-        width: 500px;
         align-items: center;
         flex-direction: row;
         margin-top: 0;
@@ -41,10 +44,28 @@
 
     }
 </style>
+<script>
+    import logo from '../../public/images/logo.svg';
+    import {
+        faGithub,
+    } from '@fortawesome/free-brands-svg-icons';
+    import Icon from 'svelte-awesome';
+
+</script>
 
 
 <nav class="navbar">
-    <h6 class="navbar__title">
-        Algoviz - Algorithm Visualization
-    </h6>
+    <div class="navbar__title-wrapper">
+        <div class="navbar-button">
+            {@html logo}
+        </div>
+        <h6 class="navbar__title">
+            Algoviz
+        </h6>
+    </div>
+    <div class="navbar__links-wrapper">
+        <a class="btn-primary" href="https://github.com/ssaric/algoviz" target="_blank" rel="noopener noreferrer">
+            <Icon class="btn__icon" data={faGithub} />
+        </a>
+    </div>
 </nav>
