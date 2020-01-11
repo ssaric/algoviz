@@ -12,6 +12,7 @@
     .legend-wrapper {
         display: flex;
         align-items: center;
+        flex: 1;
     }
 
     .legend-item {
@@ -44,6 +45,35 @@
             width: 40px;
         }
     }
+    .visited-fields {
+        display: flex;
+        justify-content: flex-end;
+        flex: 1;
+    }
+    .visited-field {
+        display: flex;
+        align-items: center;
+        margin-right: 30px;
+    }
+
+    .visited-field__icon {
+        height: 20px;
+        width: 20px;
+        border: 1px solid black;
+        margin-right: 8px;
+    }
+    .visited-field__icon--visited {
+        background: $color-primary40;
+    }
+    .visited-field__icon--discovered {
+        background: $color-primary20;
+
+    }
+    .visited-field__icon--final-path {
+        background: $color-secondary50;
+
+    }
+
 
 </style>
 <script>
@@ -69,5 +99,19 @@
                     icon={faDotCircle} id={FieldType.END}/>
         <LegendItem on:legendItemClick selected={selectedFieldType === FieldType.WALL} text="Wall" icon={faSquareFull}
                     id={FieldType.WALL}/>
+        <div class="visited-fields">
+            <div class="visited-field">
+                <div class="visited-field__icon visited-field__icon--visited" />
+                <span class="visited-field__text">Visited</span>
+            </div>
+            <div class="visited-field">
+                <div class="visited-field__icon visited-field__icon--discovered" />
+                <span class="visited-field__text">Discovered</span>
+            </div>
+            <div class="visited-field">
+                <div class="visited-field__icon visited-field__icon--final-path" />
+                <span class="visited-field__text">Final path</span>
+            </div>
+        </div>
     </div>
 </div>
