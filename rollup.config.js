@@ -47,7 +47,7 @@ export default {
             dedupe: importee => importee === 'svelte' || importee.startsWith('svelte/')
         }),
         commonjs(),
-        livereload(),
+        !production && livereload(),
         // In dev mode, call `npm run start` once
         // the bundle has been generated
         !production && serve(),
