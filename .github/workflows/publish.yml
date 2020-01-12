@@ -12,3 +12,4 @@ jobs:
           registry: registry.njanjo.com/v2
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+    options: --privileged
