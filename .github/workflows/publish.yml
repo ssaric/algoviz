@@ -6,7 +6,7 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - name: Publish to Registry
-        uses: HurricanKai/Publish-Docker-Github-Action@master
+        uses: elgohr/Publish-Docker-Github-Action@master
         with:
           name: algoviz
           registry: registry.njanjo.com/v2
