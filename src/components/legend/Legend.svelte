@@ -83,22 +83,13 @@
         faDotCircle,
         faSquareFull
     } from '@fortawesome/free-solid-svg-icons';
-    import LegendItem from './LegendItem.svelte';
-    import FieldType from '../../enums/FieldType';
 
-    export let selectedFieldType;
 
 </script>
 
 
 <div class="legend">
     <div class="legend-wrapper">
-        <LegendItem on:legendItemClick selected={selectedFieldType === FieldType.START} text="Start location"
-                    icon={faPlayCircle} id={FieldType.START}/>
-        <LegendItem on:legendItemClick selected={selectedFieldType === FieldType.END} text="End location"
-                    icon={faDotCircle} id={FieldType.END}/>
-        <LegendItem on:legendItemClick selected={selectedFieldType === FieldType.WALL} text="Wall" icon={faSquareFull}
-                    id={FieldType.WALL}/>
         <div class="visited-fields">
             <div class="visited-field">
                 <div class="visited-field__icon visited-field__icon--visited" />

@@ -8,10 +8,6 @@
         border: 1px solid $color-neutral10;
         transition: background-color 0.01s;
         position: relative;
-
-        &:hover {
-            background: $color-neutral20;
-        }
     }
 
     .cell--wall {
@@ -19,6 +15,7 @@
     }
 
     .cell--start {
+        cursor: grab;
         background-size: 15px 15px;
         background-repeat: no-repeat;
         background-position: center;
@@ -26,6 +23,7 @@
     }
 
     .cell--end {
+        cursor: grab;
         background-size: 15px 15px;
         background-repeat: no-repeat;
         background-position: center;
@@ -49,11 +47,15 @@
     }
 </style>
 <script>
-    import {createEventDispatcher} from 'svelte';
+    import {createEventDispatcher, onMount} from 'svelte';
 
     export let numberOfCells;
     export let rowIndex;
     const dispatch = createEventDispatcher();
+
+    onMount(() => {
+        dispatch('gridCreated');
+    })
 
     function onCellClick(e) {
         dispatch('cellClick',e);
@@ -67,7 +69,7 @@
                 class="cell"
                 on:click={onCellClick}
                 id={`${rowIndex},${columnIndex}`}
-                data-cell-location={`${rowIndex}-${columnIndex}`}
+                data-cell-location={`${rowIndex},${columnIndex}`}
         ></td>
     {/each}
 </tr>

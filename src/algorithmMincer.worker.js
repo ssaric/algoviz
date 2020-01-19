@@ -3,14 +3,13 @@
 import MessageTypes from './enums/MessageTypes';
 import GridNode from './util/GridNode';
 import Grid from './util/Grid';
-let selectedHeuristics;
+import { isLocationValid } from './util';
 
 
-function isLocationValid(location, grid) {
+function isCellWalkable(location, grid) {
     const height = grid.height;
     const width = grid.width;
-    if (location[0] < 0 || location[0] > height - 1 || location[1] < 0 || location[1] > width - 1) return false;
-    return !grid.isWall(location) && !grid.isVisited(location);
+    return isLocationValid(location, width, height) && !grid.isWall(location) && !grid.isVisited(location);
 }
 
 function adjacentNodes(node, grid) {
@@ -21,10 +20,10 @@ function adjacentNodes(node, grid) {
     const right = [node.x, node.y + 1];
     const left = [node.x, node.y - 1];
 
-    if (isLocationValid(up, grid)) nodes.push(new GridNode(up));
-    if (isLocationValid(bottom, grid)) nodes.push(new GridNode(bottom));
-    if (isLocationValid(right, grid)) nodes.push(new GridNode(right));
-    if (isLocationValid(left, grid)) nodes.push(new GridNode(left));
+    if (isCellWalkable(up, grid)) nodes.push(new GridNode(up));
+    if (isCellWalkable(bottom, grid)) nodes.push(new GridNode(bottom));
+    if (isCellWalkable(right, grid)) nodes.push(new GridNode(right));
+    if (isCellWalkable(left, grid)) nodes.push(new GridNode(left));
 
     return nodes;
 }

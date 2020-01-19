@@ -26,7 +26,6 @@
     import PlaybackControls from './components/loader/PlaybackControls.svelte';
     import MessageTypes from './enums/MessageTypes';
     import Grid from './components/grid/Grid.svelte';
-    import FieldType from './enums/FieldType';
     import Legend from './components/legend/Legend.svelte';
     import {getPositionFromDataset} from './util';
     import Noty from 'noty';
@@ -42,7 +41,6 @@
     let steps = [];
 
     let table;
-    let fieldType = FieldType.WALL;
     let nrOfRows;
     let nrOfCells;
     let interval;
@@ -253,7 +251,7 @@
 <main class="root-container">
     <Navbar/>
     <div class="home">
-        <Legend on:legendItemClick={onItemClick} selectedFieldType={fieldType}/>
+        <Legend />
         <PlaybackControls hasData={nrOfSteps > 0}
                           on:playClick={onPlayClick}
                                   on:stopClick={onStopClick}
@@ -266,7 +264,6 @@
             <Grid bind:nrOfRows={nrOfRows}
                   bind:nrOfCells={nrOfCells}
                   bind:table={table}
-                  on:resetGrid={onResetGrid}
-                  selectedFieldType={fieldType}/>
+                  on:resetGrid={onResetGrid}/>
     </div>
 </main>

@@ -8,6 +8,7 @@
     <GridRow
             numberOfCells={numberOfCells}
             rowIndex={rowIndex}
+            on:gridCreated
             on:cellClick
     />
 {/each}
