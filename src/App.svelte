@@ -19,26 +19,31 @@
 
 </style>
 
-<script>
+<script lang="typescript">
     import {onDestroy} from 'svelte';
 
     import Navbar from './components/Navbar.svelte';
+    import {
+        MessageType,
+        StepFunction,
+        GridData,
+        AlgorithmWorkerStepType,
+        AlgorithmInfoMessage,
+        PlaybackDirection
+    } from './constants/types'
     import PlaybackControls from './components/loader/PlaybackControls.svelte';
-    import MessageTypes from './enums/MessageTypes';
     import Grid from './components/grid/Grid.svelte';
     import Legend from './components/legend/Legend.svelte';
     import {getPositionFromDataset} from './util';
+    import {addInfoMessage, infoMessagesMap, heuristics} from './store';
     import Noty from 'noty';
-    import {
-        faPlayCircle,
-        faDotCircle,
-        faSquareFull
-    } from '@fortawesome/free-solid-svg-icons';
-    import {icon} from '@fortawesome/fontawesome-svg-core';
 
-    import AlgorithmMincerWorker from 'web-worker:./algorithmMincer.worker.js';
-    const worker = new AlgorithmMincerWorker();
-    let steps = [];
+    import InfoBubble from './components/grid/InfoBubble.svelte';
+    import {elementsData} from './constants';
+
+    const worker = new Worker('worker.js');
+
+    let steps: Array<StepFunction> = [];
 
     let table;
     let nrOfRows;
@@ -46,24 +51,38 @@
     let interval;
     let nrOfSteps = 0;
     let currentStep = 0;
+    let mousePosition;
+    let infoBubbleContent;
+    let infoBubbleVisible;
+
+    $: {
+        onResetGrid();
+        worker.postMessage([MessageType.SET_HEURISTICS, $heuristics]);
+    }
 
     worker.onmessage = function (e) {
         const data = e.data[1];
-        if (data.type === 'start') {
-            steps = [];
-            return;
+        switch (data.type) {
+            case AlgorithmWorkerStepType.START:
+                steps = [];
+                return;
+            case AlgorithmWorkerStepType.INFO:
+                addInfoMessage(data);
+                break;
+            default:
+                processStep(data);
+                nrOfSteps = steps.length;
+                if (nrOfSteps > 20000) worker.terminate();
+                if (!interval) startVisualizingSteps();
         }
-
-        processStep(data);
-        nrOfSteps = steps.length;
-        if (nrOfSteps > 20000) worker.terminate();
-        if (!interval) startVisualizingSteps();
     }
 
     onDestroy(() => worker.terminate());
-    function onItemClick({detail}) {
-        fieldType = detail.id;
+
+    window.onbeforeunload = () => {
+        if (worker) worker.terminate();
     }
+
 
     function startVisualizingSteps() {
         interval = setInterval(() => {
@@ -71,17 +90,18 @@
                 removeInterval();
                 return;
             }
-            steps[currentStep++]('forward');
+            steps[currentStep++](PlaybackDirection.FORWARD);
         }, 50);
     }
 
     function resetGridVisualizedSteps() {
-        let data = table.getElementsByClassName('cell--visited');
-        [...data].forEach(e => e.classList.remove('cell--visited'));
-        data = table.getElementsByClassName('cell--discovered');
-        [...data].forEach(e => e.classList.remove('cell--discovered'));
-        data = table.getElementsByClassName('cell--path');
-        [...data].forEach(e => e.classList.remove('cell--path'));
+        if (!table) return;
+        const cells = table.querySelectorAll('td.cell--visited, td.cell--discovered, td.cell--path');
+        [...cells].forEach(e => {
+            e.className.remove('cell--visited');
+            e.className.remove('cell--discovered');
+            e.className.remove('cell--path');
+        });
     }
 
     function onResetGrid() {
@@ -89,21 +109,6 @@
         currentStep = 0;
         nrOfSteps = steps.length;
         resetGridVisualizedSteps();
-    }
-
-    const elementsData = {
-        walls: {
-            text: 'walls',
-            icon: icon(faSquareFull).html[0]
-        },
-        startPosition: {
-            text: 'start position',
-            icon: icon(faPlayCircle).html[0]
-        },
-        endPosition: {
-            text: 'end position',
-            icon: icon(faDotCircle).html[0]
-        }
     }
 
     function removeInterval() {
@@ -114,7 +119,7 @@
     function getGridData() {
         const walls = table.getElementsByClassName('cell--wall');
         const startPosition = table.getElementsByClassName('cell--start');
-        const endPosition = table.getElementsByClassName('cell--end')
+        const endPosition = table.getElementsByClassName('cell--end');
         return {
             walls,
             startPosition,
@@ -126,28 +131,32 @@
         return (gridData.walls.length !== 0 && gridData.startPosition.length !== 0 && gridData.endPosition.length !== 0);
     }
 
-    function onStopClick() {
-        removeInterval()
+    function showMissingDataToast(gridData) {
+        const missingData = [];
+        for (const data in gridData) {
+            if (gridData[data].length === 0) missingData.push(`${elementsData[data].text} ${elementsData[data].icon} `);
+        }
+        new Noty({
+            type: 'error',
+            layout: 'bottom',
+            text: `Cannot process algorithm, following data is missing: ${missingData.join(', ')}`
+        }).show();
     }
 
     function onPlayClick() {
         const gridData = getGridData();
 
         if (!canProcessData(gridData)) {
-            const missingData = [];
-            for (const data in gridData) {
-                if (gridData[data].length === 0) missingData.push(`${elementsData[data].text} ${elementsData[data].icon} `);
-            }
-            new Noty({
-                type: 'error',
-                layout: 'bottom',
-                text: `Cannot process algorithm, following data is missing: ${missingData.join(', ')}`
-            }).show();
+            showMissingDataToast(gridData);
         } else if (nrOfSteps === 0) {
             processData(gridData);
         } else {
             startVisualizingSteps();
         }
+    }
+
+    function onStopClick() {
+        removeInterval()
     }
 
     function onBackwardClick() {
@@ -162,13 +171,13 @@
 
     function skipForward(start, nrOfSteps) {
         for (let i = start; i < start + nrOfSteps; i++) {
-            setTimeout(() => steps[i]('forward'), 0);
+            setTimeout(() => steps[i](PlaybackDirection.FORWARD), 0);
         }
     }
 
     function skipBackward(start, nrOfSteps) {
         for (let i = start; i > start + nrOfSteps; i--) {
-            setTimeout(() => steps[i]('backward'), 0);
+            setTimeout(() => steps[i](PlaybackDirection.BACKWARD), 0);
         }
     }
 
@@ -176,10 +185,10 @@
         removeInterval();
         const value = parseInt(e.detail.target.value, 10);
         const nrOfSteps = value - currentStep;
-        const direction = nrOfSteps > 0 ? 'forward' : 'backward';
+        const direction = nrOfSteps > 0 ? PlaybackDirection.FORWARD : PlaybackDirection.BACKWARD;
 
-        if (direction === 'forward') skipForward(currentStep, nrOfSteps)
-        else if (direction === 'backward') skipBackward(currentStep, nrOfSteps);
+        if (direction === PlaybackDirection.FORWARD) skipForward(currentStep, nrOfSteps)
+        else if (direction === PlaybackDirection.BACKWARD) skipBackward(currentStep, nrOfSteps);
         currentStep = value;
     }
 
@@ -187,13 +196,13 @@
     function stepForward(element, step) {
         highlightElement(element);
         switch (step.type) {
-            case 'visit': {
+            case AlgorithmWorkerStepType.VISIT: {
                 return element.classList.add('cell--visited');
             }
-            case 'discover': {
+            case AlgorithmWorkerStepType.DISCOVER: {
                 return element.classList.add('cell--discovered');
             }
-            case 'markPath': {
+            case AlgorithmWorkerStepType.MARK_PATH: {
                 return element.classList.add('cell--path');
             }
         }
@@ -202,21 +211,26 @@
     function stepBackward(element, step) {
         highlightElement(element);
         switch (step.type) {
-            case 'visit': {
+            case AlgorithmWorkerStepType.VISIT: {
                 return element.classList.remove('cell--visited');
             }
-            case 'discover': {
+            case AlgorithmWorkerStepType.DISCOVER: {
                 return element.classList.remove('cell--discovered');
             }
-            case 'markPath': {
+            case AlgorithmWorkerStepType.MARK_PATH: {
                 return element.classList.remove('cell--path');
             }
         }
     }
 
     function createGridPaintMove(element, step, direction) {
-        if (direction === 'forward') stepForward(element, step);
-        else if (direction === 'backward') stepBackward(element, step);
+        console.log(direction);
+        switch (direction) {
+            case PlaybackDirection.FORWARD:
+                return stepForward(element, step);
+            case PlaybackDirection.BACKWARD:
+                return stepBackward(element, step);
+        }
     }
 
     function highlightElement(element) {
@@ -224,46 +238,61 @@
         setTimeout(() => element.classList.remove('cell--highlighted'), 200);
     }
 
+    function renderInfoBubble(e) {
+        mousePosition = [e.pageX, e.pageY];
+        if (e.target.dataset.cellLocation) {
+            infoBubbleContent = $infoMessagesMap[e.target.dataset.cellLocation]
+        } else {
+            infoBubbleContent = null;
+        }
+    }
+
+    function onMouseMove(e) {
+        // renderInfoBubble(e);
+    }
+
     function processStep(step) {
         const element = document.getElementById(String(step.location));
-        if (element === null) debugger;
         steps.push(direction => createGridPaintMove(element, step, direction))
     }
 
-    function processData(gridData) {
+    function processData(gridData: GridData) {
         const walls = [...gridData.walls];
         const wallPositions = walls.map(w => getPositionFromDataset(w));
-        const startPosition = getPositionFromDataset(gridData.startPosition[0])
-        const endPosition = getPositionFromDataset(gridData.endPosition[0])
+        const startPosition = getPositionFromDataset(gridData.startPosition[0]);
+        const endPosition = getPositionFromDataset(gridData.endPosition[0]);
 
-        worker.postMessage([MessageTypes.GRID_DATA, {
+        worker.postMessage([MessageType.GRID_DATA, {
             width: nrOfCells,
             height: nrOfRows,
             start: startPosition,
             end: endPosition,
-            walls: wallPositions
+            walls: wallPositions,
+            heuristics: $heuristics
         }]);
     }
-
-
 </script>
 
-<main class="root-container">
+<main class="root-container"
+      on:mousemove={onMouseMove}
+>
     <Navbar/>
     <div class="home">
-        <Legend />
+        <Legend/>
+        <InfoBubble {mousePosition} content={infoBubbleContent}/>
         <PlaybackControls hasData={nrOfSteps > 0}
                           on:playClick={onPlayClick}
                                   on:stopClick={onStopClick}
                                   on:backwardClick={onBackwardClick}
                                   on:forwardClick={onForwardClick}
                                   on:loaderChange={onManualLoaderChange}
-                              isPlaying={interval != undefined}
+                                  isPlaying={interval != undefined}
                               {nrOfSteps}
                               {currentStep}/>
             <Grid bind:nrOfRows={nrOfRows}
                   bind:nrOfCells={nrOfCells}
                   bind:table={table}
-                  on:resetGrid={onResetGrid}/>
+                  on:resetGrid={onResetGrid}
+            />
     </div>
 </main>

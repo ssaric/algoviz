@@ -1,5 +1,6 @@
 <script>
     import GridRow from './GridRow.svelte';
+    let infoMessagesMap;
     export let nrOfRows;
     export let numberOfCells;
 </script>

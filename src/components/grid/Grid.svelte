@@ -1,23 +1,20 @@
 <script>
-    import MouseClick from '../../enums/MouseClick';
-    import FieldType from '../../enums/FieldType';
     import GridCore from './GridCore.svelte';
-    import GridNode from '../../util/GridNode';
+    import {MouseClick} from '../../constants/types'
+    import GridNode, {GridCoordinates} from '../../util/GridNode';
     import {afterUpdate, onDestroy, onMount} from 'svelte';
     import {createEventDispatcher} from 'svelte';
     import {debounce, isLocationValid} from '../../util';
-
-    export let selectedFieldType;
-    export let table;
-
+    import {infoMessagesMap} from '../../store';
 
     const dispatch = createEventDispatcher();
-
     const CELL_SIZE = 20;
     const sets = [];
+    export let table;
     export let nrOfRows = 0;
     export let nrOfCells = 0;
     let gridHeight;
+    let selectedFieldType;
     let gridWidth;
     let selectedCells = new Map(sets);
     let draggingStartCell = false;
@@ -26,21 +23,29 @@
     let startNode = undefined;
     let endNode = undefined;
 
-
     for (let i = 0; i < nrOfRows; i++) {
         sets.push([`${i}`, new Set()]);
     }
 
     const dbAdjustNumberOfCells = debounce(adjustNumberOfCells, 250);
 
-    function adjustNumberOfCells(e) {
+    function adjustNumberOfCells() {
         nrOfCells = Math.floor(gridWidth / CELL_SIZE);
         nrOfRows = Math.floor(gridHeight / CELL_SIZE);
     }
+    // TODO add gradient based on heuristics value
+    function getGradientClass(cellId) {
+        if (!$infoMessagesMap[cellId]) return;
+        const maxHeuristicsValue = $infoMessagesMap.maxGhValues[1];
+        const relativeValue = $infoMessagesMap[cellId].ghValues[1] / maxHeuristicsValue;
+        const discreteValue = Math.round(relativeValue * 10) * 10;
+        return `gradient-${discreteValue}`;
+    }
+
 
     function isAlreadyOccupied(location) {
         const element = document.getElementById(String(location));
-        if (element === null) debugger;
+        if (element == null) return false;
         return element.classList.contains('cell--wall') ||
                 element.classList.contains('cell--start') ||
                 element.classList.contains('cell--end')
@@ -51,15 +56,15 @@
     }
 
     function getAdjacentNodes(gridNode) {
-        const up = new GridNode([gridNode.x - 1, gridNode.y]);
-        const bottom = new GridNode([gridNode.x + 1, gridNode.y]);
-        const right = new GridNode([gridNode.x, gridNode.y + 1]);
-        const left = new GridNode([gridNode.x, gridNode.y - 1]);
+        const up = new GridCoordinates(gridNode.x - 1, gridNode.y);
+        const bottom = new GridCoordinates(gridNode.x + 1, gridNode.y);
+        const right = new GridCoordinates(gridNode.x, gridNode.y + 1);
+        const left = new GridCoordinates(gridNode.x, gridNode.y - 1);
         const nodes = [];
-        if (isLocationValid(up.toArray(), nrOfCells, nrOfRows)) nodes.push(up);
-        if (isLocationValid(bottom.toArray(), nrOfCells, nrOfRows)) nodes.push(bottom);
-        if (isLocationValid(right.toArray(), nrOfCells, nrOfRows)) nodes.push(right);
-        if (isLocationValid(left.toArray(), nrOfCells, nrOfRows)) nodes.push(left);
+        if (isLocationValid(up.toArray(), nrOfCells, nrOfRows)) nodes.push(new GridNode(up));
+        if (isLocationValid(bottom.toArray(), nrOfCells, nrOfRows)) nodes.push(new GridNode(bottom));
+        if (isLocationValid(right.toArray(), nrOfCells, nrOfRows)) nodes.push(new GridNode(right));
+        if (isLocationValid(left.toArray(), nrOfCells, nrOfRows)) nodes.push(new GridNode(left));
         return nodes;
     }
 
@@ -73,7 +78,7 @@
         const startNode = new GridNode(location);
         visited.add(startNode.id);
         let nodes = getAdjacentNodes(startNode);
-        while(nodes.length > 0) {
+        while (nodes.length > 0) {
             const neighbour = nodes.shift();
             if (isCellFree(neighbour.toArray())) return neighbour.toArray();
             visited.add(neighbour.id);
@@ -95,31 +100,38 @@
     afterUpdate(() => {
         if (nrOfCells === 0) nrOfCells = Math.floor(gridWidth / CELL_SIZE);
         if (nrOfRows === 0) nrOfRows = Math.floor(gridHeight / CELL_SIZE);
-
+        if (!endNode || endNode && document.getElementById(endNode.id) == undefined) {
+            createEndNode();
+        }
+        if (!startNode || startNode && document.getElementById(startNode.id) == undefined) {
+            createStartNode();
+        }
     })
-
 
     onDestroy(() => {
         document.removeEventListener('mouseout', onMouseOut);
         window.removeEventListener('resize', dbAdjustNumberOfCells);
     });
 
-    function onGridCreated() {
-        if (!startNode) {
-            const startNodeRow = Math.floor(nrOfRows / 2);
-            const startNodeColumn = Math.floor(nrOfCells / 8);
-            startNode = document.getElementById([startNodeRow, startNodeColumn].toString());
-            if (startNode) startNode.classList.add('cell--start');
-        }
-
-        if (!endNode) {
-            const endNodeRow = Math.floor(nrOfRows / 2);
-            const endNodeColumn = Math.floor(nrOfCells * (7 / 8));
-            endNode = document.getElementById([endNodeRow, endNodeColumn].toString());
-            if (endNode) endNode.classList.add('cell--end');
-        }
+    function createStartNode() {
+        const startNodeRow = Math.floor(nrOfRows / 2);
+        const startNodeColumn = Math.floor(nrOfCells / 8);
+        startNode = document.getElementById([startNodeRow, startNodeColumn].toString());
+        if (startNode) startNode.classList.add('cell--start');
     }
 
+    function createEndNode() {
+        const endNodeRow = Math.floor(nrOfRows / 2);
+        const endNodeColumn = Math.floor(nrOfCells * (7 / 8));
+        endNode = document.getElementById([endNodeRow, endNodeColumn].toString());
+        if (endNode) endNode.classList.add('cell--end');
+    }
+
+
+    function onGridCreated() {
+        if (!startNode) createStartNode();
+        if (!endNode) createEndNode();
+    }
 
     function resetGrid() {
         dispatch('resetGrid');
@@ -131,9 +143,10 @@
         document.addEventListener('touchcancel', onMouseOut);
         resetGrid();
         if (e.target.classList.contains('cell--start')) draggingStartCell = true;
-        else if(e.target.classList.contains('cell--end')) draggingEndCell = true;
+        else if (e.target.classList.contains('cell--end')) draggingEndCell = true;
         else dragSelect = true;
     }
+
 
     function onMouseMove(e) {
         if (!dragSelect && !draggingStartCell && !draggingEndCell) return;
@@ -142,9 +155,9 @@
     }
 
     function onTouchMove(e) {
-        const { touches } = e;
+        const {touches} = e;
         const touch = touches[0];
-        const { clientX, clientY } = touch;
+        const {clientX, clientY} = touch;
         const element = document.elementFromPoint(clientX, clientY);
         if (!element.dataset.cellLocation) return;
         handleMovementEvent(element);
@@ -171,20 +184,21 @@
             startNode.classList.remove('cell--start');
             startNode = targetElement;
             startNode.classList.add('cell--start');
-        } else if(draggingEndCell) {
+        } else if (draggingEndCell) {
             if (endNode && endNode === targetElement) return;
             endNode.classList.remove('cell--end');
             endNode = targetElement;
             endNode.classList.add('cell--end');
-        } if (dragSelect) {
+        }
+        if (dragSelect) {
             if (targetElement.classList.contains('cell--start')) {
                 const location = findNearestFreeCell(targetElement);
-                startNode = document.getElementById(String(location));;
+                startNode = document.getElementById(String(location));
                 startNode.classList.add('cell--start');
                 targetElement.classList.remove('cell--start');
             } else if (targetElement.classList.contains('cell--end')) {
                 const location = findNearestFreeCell(targetElement);
-                endNode = document.getElementById(String(location));;
+                endNode = document.getElementById(String(location));
                 endNode.classList.add('cell--end');
                 targetElement.classList.remove('cell--end');
             }
@@ -199,7 +213,6 @@
     }
 
 
-
 </script>
 <style lang="scss" global>
     @import '../../scss/theme.scss';
@@ -210,7 +223,7 @@
         height: calc(100% - 240px);
         user-select: none;
 
-        &.table--wall-overlay{
+        &.table--wall-overlay {
             td:not(.cell--start):not(.cell--end):hover.cell:after {
                 content: "";
                 height: 15px;

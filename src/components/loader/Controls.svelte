@@ -26,8 +26,8 @@
     } from '@fortawesome/free-solid-svg-icons';
     import Icon from 'svelte-awesome';
 
-    export let nrOfSteps;
-    export let currentStep;
+    let nrOfSteps;
+    let currentStep;
     export let hasData;
     export let isPlaying;
     const dispatch = createEventDispatcher();

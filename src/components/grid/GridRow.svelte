@@ -45,6 +45,48 @@
     .cell--highlighted {
         border: 2px solid blue;
     }
+    .cell--visited {
+        &.gradient-0 {
+            background-color: #0067E5;
+        }
+
+        &.gradient-10 {
+            background-color: #0B6FDC;
+        }
+
+        &.gradient-20 {
+            background-color: #1677D3;
+        }
+
+        &.gradient-30 {
+            background-color: #2180CA;
+        }
+
+        &.gradient-40 {
+            background-color: #2C88C1;
+        }
+
+        &.gradient-50 {
+            background-color: #3890B8;
+        }
+
+        &.gradient-60 {
+            background-color: #4399AF;
+        }
+
+        &.gradient-70 {
+            background-color: #4EA1A6;
+        }
+
+        &.gradient-80 {
+            background-color: #59A99D;
+        }
+
+        &.gradient-90 {
+            background-color: #65B294;
+        }
+    }
+
 </style>
 <script>
     import {createEventDispatcher, onMount} from 'svelte';
