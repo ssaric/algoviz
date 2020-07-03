@@ -1,4 +1,3 @@
-import path from "path";
 import commonjs from "@rollup/plugin-commonjs";
 import resolve from "@rollup/plugin-node-resolve";
 import html2 from "rollup-plugin-html2";
@@ -8,8 +7,9 @@ import { terser } from "rollup-plugin-terser";
 import livereload from "rollup-plugin-livereload";
 import sveltePreprocessor from "svelte-preprocess";
 import svg from 'rollup-plugin-svg-import'
-import typescript from "@rollup/plugin-typescript";
+import typescript from "rollup-plugin-typescript2";
 import postcss from "rollup-plugin-postcss";
+import copy from "rollup-plugin-copy";
 
 const isDevelopment = process.env.NODE_ENV === "development";
 const extensions = [
@@ -34,8 +34,13 @@ const plugins = [
         browser: true,
         dedupe: importee => importee === 'svelte' || importee.startsWith('svelte/')
     }),
+    copy({
+        targets: [
+            { src: 'src/assets/*', dest: 'dist/' },
+        ]
+    }),
     html2({
-        template: "public/index.html",
+        template: "src/index.html",
     }),
 ];
 if (isDevelopment) {

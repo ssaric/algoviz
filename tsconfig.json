@@ -1,15 +1,12 @@
 {
-  "include": ["src/**/*"],
-  "exclude": ["node_modules/*"],
   "compilerOptions": {
-    "target": "es2015",
-    "module": "es2015",
-    "allowSyntheticDefaultImports": true,
+    "target": "es6",
+    "baseUrl": "./",
     "types": ["svelte"],
-    "moduleResolution": "node"
+    "allowSyntheticDefaultImports": true,
   },
-  "awesomeTypescriptLoaderOptions": {
-    "useBabel": true,
-    "babelCore": "@babel/core"
-  }
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": ["./node_modules/svelte"]
 }
