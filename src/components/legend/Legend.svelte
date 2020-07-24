@@ -89,7 +89,7 @@
 
 
 <div class="legend">
-    <HeuristicsPicker />
+    <HeuristicsPicker on:resetGrid/>
     <div class="legend-wrapper">
         <div class="visited-fields">
             <div class="visited-field">

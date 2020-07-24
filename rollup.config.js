@@ -59,7 +59,7 @@ if (isDevelopment) {
 const appEntry = {
     input: "src/index.ts",
     output: {
-        sourcemap: true,
+        sourcemap: 'inline',
         format: 'iife',
         name: 'app',
         file: 'dist/bundle.js'

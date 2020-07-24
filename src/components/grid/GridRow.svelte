@@ -90,8 +90,8 @@
 </style>
 <script>
     import {createEventDispatcher, onMount} from 'svelte';
+    import {gridSize} from '../../store';
 
-    export let numberOfCells;
     export let rowIndex;
     const dispatch = createEventDispatcher();
 
@@ -106,7 +106,7 @@
 </script>
 
 <tr class="row">
-    {#each Array(numberOfCells) as c, columnIndex}
+    {#each Array($gridSize.nrOfColumns) as c, columnIndex}
         <td
                 class="cell"
                 on:click={onCellClick}

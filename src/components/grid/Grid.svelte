@@ -1,18 +1,18 @@
-<script>
+<script lang="ts">
     import GridCore from './GridCore.svelte';
     import {MouseClick} from '../../constants/types'
     import GridNode, {GridCoordinates} from '../../util/GridNode';
     import {afterUpdate, onDestroy, onMount} from 'svelte';
     import {createEventDispatcher} from 'svelte';
     import {debounce, isLocationValid} from '../../util';
-    import {infoMessagesMap} from '../../store';
+    import {gridStart, gridEnd, gridWalls, gridSize, infoMessagesMap, setInitialGridState, updateGridStartEnd} from '../../store';
 
     const dispatch = createEventDispatcher();
     const CELL_SIZE = 20;
     const sets = [];
     export let table;
-    export let nrOfRows = 0;
-    export let nrOfCells = 0;
+    const { nrOfRows, nrOfColumns } = $gridSize;
+    console.log($gridSize);
     let gridHeight;
     let selectedFieldType;
     let gridWidth;
@@ -20,8 +20,6 @@
     let draggingStartCell = false;
     let draggingEndCell = false;
     let dragSelect = false;
-    let startNode = undefined;
-    let endNode = undefined;
 
     for (let i = 0; i < nrOfRows; i++) {
         sets.push([`${i}`, new Set()]);
@@ -29,9 +27,24 @@
 
     const dbAdjustNumberOfCells = debounce(adjustNumberOfCells, 250);
 
+    onMount(() => {
+        window.addEventListener('resize', dbAdjustNumberOfCells);
+    })
+
+    afterUpdate(() => {
+        if (nrOfColumns === 0) $gridSize.nrOfColumns = Math.floor(gridWidth / CELL_SIZE);
+        if (nrOfRows === 0) $gridSize.nrOfRows = Math.floor(gridHeight / CELL_SIZE);
+        updateGridStartEnd();
+    })
+
+    onDestroy(() => {
+        document.removeEventListener('mouseout', onMouseOut);
+        window.removeEventListener('resize', dbAdjustNumberOfCells);
+    });
+
     function adjustNumberOfCells() {
-        nrOfCells = Math.floor(gridWidth / CELL_SIZE);
-        nrOfRows = Math.floor(gridHeight / CELL_SIZE);
+        $gridSize.nrOfColumns = Math.floor(gridWidth / CELL_SIZE);
+        $gridSize.nrOfRows = Math.floor(gridHeight / CELL_SIZE);
     }
     // TODO add gradient based on heuristics value
     function getGradientClass(cellId) {
@@ -43,7 +56,7 @@
     }
 
 
-    function isAlreadyOccupied(location) {
+    function isAlreadyOccupied(location: [number, number]) {
         const element = document.getElementById(String(location));
         if (element == null) return false;
         return element.classList.contains('cell--wall') ||
@@ -52,32 +65,32 @@
     }
 
     function isCellFree(location) {
-        return isLocationValid(location, nrOfCells, nrOfRows) && !isAlreadyOccupied(location);
+        return isLocationValid(location, nrOfColumns, nrOfRows) && !isAlreadyOccupied(location);
     }
 
-    function getAdjacentNodes(gridNode) {
-        const up = new GridCoordinates(gridNode.x - 1, gridNode.y);
-        const bottom = new GridCoordinates(gridNode.x + 1, gridNode.y);
-        const right = new GridCoordinates(gridNode.x, gridNode.y + 1);
-        const left = new GridCoordinates(gridNode.x, gridNode.y - 1);
+    function getAdjacentNodes(gridCoordinates: GridCoordinates) {
+        const up = new GridCoordinates(gridCoordinates.x - 1, gridCoordinates.y);
+        const bottom = new GridCoordinates(gridCoordinates.x + 1, gridCoordinates.y);
+        const right = new GridCoordinates(gridCoordinates.x, gridCoordinates.y + 1);
+        const left = new GridCoordinates(gridCoordinates.x, gridCoordinates.y - 1);
         const nodes = [];
-        if (isLocationValid(up.toArray(), nrOfCells, nrOfRows)) nodes.push(new GridNode(up));
-        if (isLocationValid(bottom.toArray(), nrOfCells, nrOfRows)) nodes.push(new GridNode(bottom));
-        if (isLocationValid(right.toArray(), nrOfCells, nrOfRows)) nodes.push(new GridNode(right));
-        if (isLocationValid(left.toArray(), nrOfCells, nrOfRows)) nodes.push(new GridNode(left));
+        if (isLocationValid(up.toArray(), nrOfColumns, nrOfRows)) nodes.push(new GridNode(up));
+        if (isLocationValid(bottom.toArray(), nrOfColumns, nrOfRows)) nodes.push(new GridNode(bottom));
+        if (isLocationValid(right.toArray(), nrOfColumns, nrOfRows)) nodes.push(new GridNode(right));
+        if (isLocationValid(left.toArray(), nrOfColumns, nrOfRows)) nodes.push(new GridNode(left));
         return nodes;
     }
 
-    function getNeighbours(gridNode, visited) {
-        const adjacentNodes = getAdjacentNodes(gridNode);
+    function getNeighbours(gridNode: GridNode, visited: Set<string>) {
+        const adjacentNodes = getAdjacentNodes(gridNode.coordinates);
         return adjacentNodes.filter(n => !visited.has(n.id));
     }
 
     function nearestFreeCell(location) {
-        const visited = new Set();
-        const startNode = new GridNode(location);
+        const visited = new Set<string>();
+        const startNode = new GridNode(new GridCoordinates(location[0], location[1]));
         visited.add(startNode.id);
-        let nodes = getAdjacentNodes(startNode);
+        let nodes: GridNode[] = getAdjacentNodes(startNode.coordinates);
         while (nodes.length > 0) {
             const neighbour = nodes.shift();
             if (isCellFree(neighbour.toArray())) return neighbour.toArray();
@@ -87,70 +100,33 @@
         }
     }
 
-    function findNearestFreeCell(targetCell) {
+    function findNearestFreeCell(targetCell: HTMLElement) {
         const location = targetCell.dataset.cellLocation.split(',').map(s => parseInt(s, 10));
-
         return nearestFreeCell(location);
-    }
-
-    onMount(() => {
-        window.addEventListener('resize', dbAdjustNumberOfCells);
-    })
-
-    afterUpdate(() => {
-        if (nrOfCells === 0) nrOfCells = Math.floor(gridWidth / CELL_SIZE);
-        if (nrOfRows === 0) nrOfRows = Math.floor(gridHeight / CELL_SIZE);
-        if (!endNode || endNode && document.getElementById(endNode.id) == undefined) {
-            createEndNode();
-        }
-        if (!startNode || startNode && document.getElementById(startNode.id) == undefined) {
-            createStartNode();
-        }
-    })
-
-    onDestroy(() => {
-        document.removeEventListener('mouseout', onMouseOut);
-        window.removeEventListener('resize', dbAdjustNumberOfCells);
-    });
-
-    function createStartNode() {
-        const startNodeRow = Math.floor(nrOfRows / 2);
-        const startNodeColumn = Math.floor(nrOfCells / 8);
-        startNode = document.getElementById([startNodeRow, startNodeColumn].toString());
-        if (startNode) startNode.classList.add('cell--start');
-    }
-
-    function createEndNode() {
-        const endNodeRow = Math.floor(nrOfRows / 2);
-        const endNodeColumn = Math.floor(nrOfCells * (7 / 8));
-        endNode = document.getElementById([endNodeRow, endNodeColumn].toString());
-        if (endNode) endNode.classList.add('cell--end');
-    }
-
-
-    function onGridCreated() {
-        if (!startNode) createStartNode();
-        if (!endNode) createEndNode();
     }
 
     function resetGrid() {
         dispatch('resetGrid');
     }
 
+    function onGridCreated() {
+        setInitialGridState();
+    }
+
     function onMouseDown(e) {
         if (e.button !== undefined && e.button !== MouseClick.LEFT) return;
         document.addEventListener('mouseout', onMouseOut);
         document.addEventListener('touchcancel', onMouseOut);
-        resetGrid();
         if (e.target.classList.contains('cell--start')) draggingStartCell = true;
         else if (e.target.classList.contains('cell--end')) draggingEndCell = true;
         else dragSelect = true;
     }
 
 
-    function onMouseMove(e) {
+    function onMouseMove(e: MouseEvent) {
         if (!dragSelect && !draggingStartCell && !draggingEndCell) return;
-        if (!e.target.dataset.cellLocation) return;
+        const target  = e.target as HTMLElement;
+        if (!target.dataset.cellLocation) return;
         handleMovementEvent(e.target);
     }
 
@@ -158,7 +134,7 @@
         const {touches} = e;
         const touch = touches[0];
         const {clientX, clientY} = touch;
-        const element = document.elementFromPoint(clientX, clientY);
+        const element = document.elementFromPoint(clientX, clientY) as HTMLElement;
         if (!element.dataset.cellLocation) return;
         handleMovementEvent(element);
 
@@ -178,31 +154,22 @@
         }
     }
 
+
     function handleMovementEvent(targetElement) {
         if (draggingStartCell) {
-            if (startNode && startNode === targetElement) return;
-            startNode.classList.remove('cell--start');
-            startNode = targetElement;
-            startNode.classList.add('cell--start');
+            gridStart.set(targetElement);
         } else if (draggingEndCell) {
-            if (endNode && endNode === targetElement) return;
-            endNode.classList.remove('cell--end');
-            endNode = targetElement;
-            endNode.classList.add('cell--end');
+            gridEnd.set(targetElement);
         }
         if (dragSelect) {
-            if (targetElement.classList.contains('cell--start')) {
-                const location = findNearestFreeCell(targetElement);
-                startNode = document.getElementById(String(location));
-                startNode.classList.add('cell--start');
-                targetElement.classList.remove('cell--start');
-            } else if (targetElement.classList.contains('cell--end')) {
-                const location = findNearestFreeCell(targetElement);
-                endNode = document.getElementById(String(location));
-                endNode.classList.add('cell--end');
-                targetElement.classList.remove('cell--end');
+            if (gridStart.equals(targetElement)) {
+                const newLocation = findNearestFreeCell(targetElement);
+                gridStart.set(document.getElementById(String(newLocation)));
+            } else if (gridEnd.equals(targetElement)) {
+                const newLocation = findNearestFreeCell(targetElement);
+                gridEnd.set(document.getElementById(String(newLocation)));
             }
-            targetElement.classList.add('cell--wall');
+            gridWalls.add(targetElement);
         }
     }
 
@@ -246,9 +213,7 @@
        on:touchstart={onMouseDown}
        on:mousemove={onMouseMove}
        on:touchmove={onTouchMove}>
-    <GridCore nrOfRows={nrOfRows}
-              numberOfCells={nrOfCells}
-              selectedCells={selectedCells}
+    <GridCore selectedCells={selectedCells}
               on:cellClick={onCellClick}
               on:gridCreated={onGridCreated}
     />

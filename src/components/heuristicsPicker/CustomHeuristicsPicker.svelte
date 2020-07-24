@@ -9,10 +9,10 @@
     import {createEventDispatcher} from 'svelte';
     const dispatch = createEventDispatcher();
 
-    export let formula = '';
+    let formula = '';
 
     function apply() {
-        dispatch('applyFormula');
+        dispatch('applyFormula', formula);
     }
 
 </script>
@@ -24,6 +24,6 @@
             representing respective horizontal and vertical distances.
             The formula will be parsed via <a target="_blank" href="https://mathjs.org/docs/expressions/parsing.html">math.js</a>
         </span>
-    <input value={formula} placeholder="formula"/>
+    <input bind:value={formula} placeholder="formula"/>
     <button on:click={apply}>Apply</button>
 </div>

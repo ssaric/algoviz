@@ -1,10 +1,15 @@
 <style lang="scss" global>
     @import '../../scss/theme';
 
+    .heuristics-toggle {
+        display: flex;
+        align-items: center;
+    }
+
     .heuristics {
         display: flex;
         flex-direction: column;
-        width: 550px;
+        width: 750px;
     }
 
     .heuristics__title {
@@ -15,6 +20,28 @@
         position: absolute;
         visibility: hidden;
         display: none;
+    }
+
+    .reset-icon {
+        margin: 0 10px;
+        font-size: 30px;
+        height: 30px;
+        width: 30px;
+    }
+
+    .reset-button {
+        display: flex;
+        align-items: center;
+        width: 170px;
+        margin: 0 20px;
+        height: 35px;
+        white-space: nowrap;
+        cursor: pointer;
+        color: #9a929e;
+        font-weight: bold;
+        border: solid 3px $color-primary30;
+        justify-content: space-between;
+        padding: 0 20px;
     }
 
     label {
@@ -45,20 +72,27 @@
     import { Heuristics } from '../../constants/types';
     import CustomHeuristicsPicker from './CustomHeuristicsPicker.svelte';
     import {createEventDispatcher} from 'svelte';
+    import {
+        faTimes,
+    } from '@fortawesome/free-solid-svg-icons';
+    import Icon from 'svelte-awesome';
     const dispatch = createEventDispatcher();
     import {heuristics} from '../../store';
 
     let heuristicsValue = Heuristics.EUCLIDEAN;
-    let formula = '';
 
+
+    function onResetClick(e) {
+        dispatch('resetGrid', e);
+    }
 
     $: {
         heuristics.update(() => ({
             type: heuristicsValue
         }));
     }
-    function applyFormula() {
-        heuristics.update(() => ({ type: Heuristics.CUSTOM, formula }));
+    function applyFormula(event) {
+        heuristics.update(() => ({ type: Heuristics.CUSTOM, formula: event.detail }));
     }
 
 </script>
@@ -73,8 +107,12 @@
                 for="manhattan">Manhattan</label>
             <input id="custom" type=radio bind:group={heuristicsValue} value={Heuristics.CUSTOM}><label for="custom">Custom</label>
         </div>
+        <div class="reset-button" on:click={onResetClick}>
+            <span>Reset Grid</span>
+            <Icon class="reset-icon" data={faTimes}/>
+        </div>
     </div>
     {#if heuristicsValue === Heuristics.CUSTOM}
-        <CustomHeuristicsPicker {formula} on:applyFormula={applyFormula} />
+        <CustomHeuristicsPicker on:applyFormula={applyFormula} />
     {/if}
 </div>

@@ -1,4 +1,4 @@
-export function getPositionFromDataset(element) {
+export function getPositionFromDataset(element: HTMLElement) {
     const cl = element.dataset.cellLocation.split(',');
     return [parseInt(cl[0], 10), parseInt(cl[1], 10)];
 }

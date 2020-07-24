@@ -1,5 +1,7 @@
 import GridNode, {GridCoordinates} from './GridNode';
 import {GridConstructorData, Heuristics, HeuristicsData} from "../constants/types";
+import { evaluate } from "mathjs";
+
 
 export interface HeuristicsFunction {
     (nodeA: GridCoordinates, nodeB: GridCoordinates): number;
@@ -7,16 +9,18 @@ export interface HeuristicsFunction {
 
 
 function manhattanHeuristics(nodeA: GridCoordinates, nodeB: GridCoordinates) {
-    console.log('using manhattan');
     return (Math.abs(nodeA.x - nodeB.x) + (Math.abs(nodeA.y - nodeB.y)));
 }
 function euclideanHeuristics(nodeA: GridCoordinates, nodeB: GridCoordinates) {
-    console.log('using euclidian');
     return ((nodeA.x - nodeB.x)**2 + (nodeA.y - nodeB.y)**2);
 }
 
-function customHeuristics(nodeA: GridCoordinates, nodeB: GridCoordinates) {
-
+const customHeuristics = (formula) => (nodeA: GridCoordinates, nodeB: GridCoordinates) => {
+    const scope = {
+        a: nodeA.x - nodeB.x,
+        b: nodeA.y - nodeB.y,
+    };
+    return evaluate(formula, scope);
 }
 
 
@@ -31,7 +35,7 @@ export function setHeuristicsFunction(heuristicsData: HeuristicsData) {
             Grid.heuristicsFunction = manhattanHeuristics;
             break;
         case Heuristics.CUSTOM:
-            // TODO
+            Grid.heuristicsFunction = customHeuristics(heuristicsData.formula);
             break;
 
     }

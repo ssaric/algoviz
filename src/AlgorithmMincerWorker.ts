@@ -14,7 +14,6 @@ const ctx: Worker = self as any;
 
 
 function processNeighbours(node: GridNode, neighbours: GridNode[], open: GridNode[], end: GridNode, grid: Grid) {
-
     neighbours.forEach(neighbour => {
         neighbour.setParameters(end, node);
         const existingNode = open.find(n => n.id === neighbour.id);

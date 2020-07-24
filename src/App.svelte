@@ -34,8 +34,7 @@
     import PlaybackControls from './components/loader/PlaybackControls.svelte';
     import Grid from './components/grid/Grid.svelte';
     import Legend from './components/legend/Legend.svelte';
-    import {getPositionFromDataset} from './util';
-    import {addInfoMessage, infoMessagesMap, heuristics} from './store';
+    import {addInfoMessage, infoMessagesMap, heuristics, resetGridData, getGridData} from './store';
     import Noty from 'noty';
 
     import InfoBubble from './components/grid/InfoBubble.svelte';
@@ -56,7 +55,6 @@
     let infoBubbleVisible;
 
     $: {
-        onResetGrid();
         worker.postMessage([MessageType.SET_HEURISTICS, $heuristics]);
     }
 
@@ -98,9 +96,9 @@
         if (!table) return;
         const cells = table.querySelectorAll('td.cell--visited, td.cell--discovered, td.cell--path');
         [...cells].forEach(e => {
-            e.className.remove('cell--visited');
-            e.className.remove('cell--discovered');
-            e.className.remove('cell--path');
+            e.classList.remove('cell--visited');
+            e.classList.remove('cell--discovered');
+            e.classList.remove('cell--path');
         });
     }
 
@@ -108,6 +106,7 @@
         steps = [];
         currentStep = 0;
         nrOfSteps = steps.length;
+        resetGridData();
         resetGridVisualizedSteps();
     }
 
@@ -116,22 +115,13 @@
         interval = null;
     }
 
-    function getGridData() {
-        const walls = table.getElementsByClassName('cell--wall');
-        const startPosition = table.getElementsByClassName('cell--start');
-        const endPosition = table.getElementsByClassName('cell--end');
-        return {
-            walls,
-            startPosition,
-            endPosition
-        }
+    function canProcessData() {
+        const gridData = getGridData();
+        return (gridData.walls.length !== 0 && gridData.start.length !== 0 && gridData.end.length !== 0);
     }
 
-    function canProcessData(gridData) {
-        return (gridData.walls.length !== 0 && gridData.startPosition.length !== 0 && gridData.endPosition.length !== 0);
-    }
-
-    function showMissingDataToast(gridData) {
+    function showMissingDataToast() {
+        const gridData = getGridData();
         const missingData = [];
         for (const data in gridData) {
             if (gridData[data].length === 0) missingData.push(`${elementsData[data].text} ${elementsData[data].icon} `);
@@ -144,12 +134,11 @@
     }
 
     function onPlayClick() {
-        const gridData = getGridData();
 
-        if (!canProcessData(gridData)) {
-            showMissingDataToast(gridData);
+        if (!canProcessData()) {
+            showMissingDataToast();
         } else if (nrOfSteps === 0) {
-            processData(gridData);
+            processData();
         } else {
             startVisualizingSteps();
         }
@@ -224,7 +213,6 @@
     }
 
     function createGridPaintMove(element, step, direction) {
-        console.log(direction);
         switch (direction) {
             case PlaybackDirection.FORWARD:
                 return stepForward(element, step);
@@ -256,18 +244,11 @@
         steps.push(direction => createGridPaintMove(element, step, direction))
     }
 
-    function processData(gridData: GridData) {
-        const walls = [...gridData.walls];
-        const wallPositions = walls.map(w => getPositionFromDataset(w));
-        const startPosition = getPositionFromDataset(gridData.startPosition[0]);
-        const endPosition = getPositionFromDataset(gridData.endPosition[0]);
-
+    function processData() {
         worker.postMessage([MessageType.GRID_DATA, {
             width: nrOfCells,
             height: nrOfRows,
-            start: startPosition,
-            end: endPosition,
-            walls: wallPositions,
+            ...getGridData(),
             heuristics: $heuristics
         }]);
     }
@@ -278,7 +259,7 @@
 >
     <Navbar/>
     <div class="home">
-        <Legend/>
+        <Legend on:resetGrid={onResetGrid}/>
         <InfoBubble {mousePosition} content={infoBubbleContent}/>
         <PlaybackControls hasData={nrOfSteps > 0}
                           on:playClick={onPlayClick}
