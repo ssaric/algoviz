@@ -17,15 +17,14 @@ function euclideanHeuristics(nodeA: GridCoordinates, nodeB: GridCoordinates) {
 
 const customHeuristics = (formula) => (nodeA: GridCoordinates, nodeB: GridCoordinates) => {
     const scope = {
-        a: nodeA.x - nodeB.x,
-        b: nodeA.y - nodeB.y,
+        x: nodeA.x - nodeB.x,
+        y: nodeA.y - nodeB.y,
     };
     return evaluate(formula, scope);
 }
 
 
 export function setHeuristicsFunction(heuristicsData: HeuristicsData) {
-    console.log(heuristicsData);
     switch (heuristicsData.type) {
         default:
         case Heuristics.EUCLIDEAN:

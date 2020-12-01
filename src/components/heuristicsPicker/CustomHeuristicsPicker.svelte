@@ -4,13 +4,18 @@
         display: flex;
         flex-direction: column;
     }
+    .custom-heuristics__text {
+      padding: 10px;
+    }
 </style>
 <script lang="ts">
-    import {createEventDispatcher} from 'svelte';
+    import {createEventDispatcher, onMount} from 'svelte';
     const dispatch = createEventDispatcher();
 
-    let formula = '';
-
+    let formula = 'sqrt(x^2 + y^2)';
+    onMount(()=> {
+        dispatch('applyFormula', formula);
+    })
     function apply() {
         dispatch('applyFormula', formula);
     }
@@ -19,7 +24,7 @@
 
 
 <div class="custom-heuristics">
-   <span>Input a custom heuristics formula using the variables
+   <span class="custom-heuristics__text">Input a custom heuristics formula using the variables
             <code>x</code> and <code>y</code>
             representing respective horizontal and vertical distances.
             The formula will be parsed via <a target="_blank" href="https://mathjs.org/docs/expressions/parsing.html">math.js</a>

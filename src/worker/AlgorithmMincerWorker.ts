@@ -1,5 +1,5 @@
 /* eslint-disable no-param-reassign */
-import Grid, {setHeuristicsFunction} from './util/Grid';
+import Grid, {setHeuristicsFunction} from '../util/Grid';
 import {
     AlgorithmInfoMessage,
     AlgorithmStep,
@@ -7,8 +7,8 @@ import {
     GridConstructorData, Heuristics, HeuristicsData,
     MessageType,
     WorkerGridTransferData
-} from "./constants/types";
-import GridNode, {GridCoordinates} from "./util/GridNode";
+} from "../constants/types";
+import GridNode, {GridCoordinates} from "../util/GridNode";
 
 const ctx: Worker = self as any;
 

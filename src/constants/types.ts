@@ -1,4 +1,4 @@
-import {GridCoordinates} from "../util/GridNode";
+import type {GridCoordinates} from "../util/GridNode";
 
 export enum MessageType {
     GRID_DATA,
@@ -62,9 +62,9 @@ export interface StepFunction {
 }
 
 export enum Heuristics {
-    EUCLIDEAN,
-    MANHATTAN,
-    CUSTOM
+    EUCLIDEAN = "0",
+    MANHATTAN = "1",
+    CUSTOM = "2"
 }
 
 export type AlgorithmStep = {

@@ -3,11 +3,11 @@ import resolve from "@rollup/plugin-node-resolve";
 import html2 from "rollup-plugin-html2";
 import svelte from "rollup-plugin-svelte";
 import serve from "rollup-plugin-serve";
-import { terser } from "rollup-plugin-terser";
+import {terser} from "rollup-plugin-terser";
 import livereload from "rollup-plugin-livereload";
 import sveltePreprocessor from "svelte-preprocess";
 import svg from 'rollup-plugin-svg-import'
-import typescript from "rollup-plugin-typescript2";
+import typescript from '@rollup/plugin-typescript';
 import postcss from "rollup-plugin-postcss";
 import copy from "rollup-plugin-copy";
 
@@ -17,26 +17,36 @@ const extensions = [
 ];
 
 const plugins = [
-    svg({ stringify: true }),
+    svg({stringify: true}),
     svelte({
         dev: isDevelopment,
-        extensions: [".svelte"],
-        preprocess: sveltePreprocessor(),
+        preprocess: sveltePreprocessor({
+            }
+        ),
         emitCss: true,
     }),
     postcss({
         extract: true,
+        minimize: true,
+        use: [
+            ['sass', {
+                includePaths: [
+                    './src/scss',
+                    './node_modules'
+                ]
+            }]
+        ]
     }),
-    typescript(),
-    commonjs({ include: "node_modules/**", extensions: [".js", ".ts"] }),
+    typescript({sourceMap: isDevelopment, inlineSources: isDevelopment}),
+    commonjs({include: "node_modules/**", extensions: [".js", ".ts"]}),
     resolve({
         extensions,
         browser: true,
-        dedupe: importee => importee === 'svelte' || importee.startsWith('svelte/')
+        dedupe: ["svelte"],
     }),
     copy({
         targets: [
-            { src: 'src/assets/*', dest: 'dist/' },
+            {src: 'src/assets/*', dest: 'dist/'},
         ]
     }),
     html2({
@@ -49,31 +59,30 @@ if (isDevelopment) {
             contentBase: "./dist",
             open: false,
         }),
-        livereload({ watch: "./dist" })
+        livereload({watch: "./dist"})
     );
 } else {
-    plugins.push(terser({ sourcemap: true }));
+    plugins.push(terser({sourcemap: true}));
 }
 
 
 const appEntry = {
     input: "src/index.ts",
     output: {
-        sourcemap: 'inline',
+        sourcemap: isDevelopment,
         format: 'iife',
         name: 'app',
         file: 'dist/bundle.js'
     },
     globals: {
-        '@fortawesome/fontawesome-svg-core' : 'fontawesomeSvgCore'
+        '@fortawesome/fontawesome-svg-core': 'fontawesomeSvgCore'
     },
     plugins,
 };
 
 
-
 const workerEntry = {
-    input: './src/AlgorithmMincerWorker.ts',
+    input: './src/worker/AlgorithmMincerWorker.ts',
     output: {
         file: './dist/worker.js',
         sourcemap: process.env.development,

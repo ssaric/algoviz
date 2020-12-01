@@ -12,7 +12,6 @@
     const sets = [];
     export let table;
     const { nrOfRows, nrOfColumns } = $gridSize;
-    console.log($gridSize);
     let gridHeight;
     let selectedFieldType;
     let gridWidth;
@@ -32,8 +31,8 @@
     })
 
     afterUpdate(() => {
-        if (nrOfColumns === 0) $gridSize.nrOfColumns = Math.floor(gridWidth / CELL_SIZE);
-        if (nrOfRows === 0) $gridSize.nrOfRows = Math.floor(gridHeight / CELL_SIZE);
+        if ($gridSize.nrOfColumns === 0) $gridSize.nrOfColumns = Math.floor(gridWidth / CELL_SIZE);
+        if ($gridSize.nrOfRows === 0) $gridSize.nrOfRows = Math.floor(gridHeight / CELL_SIZE);
         updateGridStartEnd();
     })
 
@@ -65,10 +64,12 @@
     }
 
     function isCellFree(location) {
+        const { nrOfRows, nrOfColumns } = $gridSize;
         return isLocationValid(location, nrOfColumns, nrOfRows) && !isAlreadyOccupied(location);
     }
 
     function getAdjacentNodes(gridCoordinates: GridCoordinates) {
+        const { nrOfRows, nrOfColumns } = $gridSize;
         const up = new GridCoordinates(gridCoordinates.x - 1, gridCoordinates.y);
         const bottom = new GridCoordinates(gridCoordinates.x + 1, gridCoordinates.y);
         const right = new GridCoordinates(gridCoordinates.x, gridCoordinates.y + 1);
@@ -186,6 +187,7 @@
 
     .table {
         border-spacing: 0;
+      border-collapse: unset;
         width: 100%;
         height: calc(100% - 240px);
         user-select: none;
@@ -193,8 +195,8 @@
         &.table--wall-overlay {
             td:not(.cell--start):not(.cell--end):hover.cell:after {
                 content: "";
-                height: 15px;
-                width: 15px;
+                height: 14px;
+                width: 14px;
                 display: block;
                 background-size: 15px 15px;
                 background-repeat: no-repeat;

@@ -2,7 +2,6 @@
 {
     "parser": "@typescript-eslint/parser", // Specifies the ESLint parser
     "extends": [
-        "airbnb-typescript",
         "plugin:@typescript-eslint/recommended",
         "prettier/@typescript-eslint", // Uses eslint-config-prettier to disable ESLint rules from @typescript-eslint/eslint-plugin that would conflict with prettier
         "plugin:prettier/recommended" // Enables eslint-plugin-prettier and eslint-config-prettier. This will display prettier errors as ESLint errors. Make sure this is always the last configuration in the extends array.
@@ -20,56 +19,5 @@
     "parserOptions": {
         "ecmaVersion": 2019, // Allows for the parsing of modern ECMAScript features
         "sourceType": "module" // Allows for the use of imports
-    },
-    "rules": {
-        "@typescript-eslint/ban-ts-ignore": 0,
-        "jsx-a11y/click-events-have-key-events": 0,
-        "no-debugger": 0,
-        "import/no-unresolved": 0,
-        "import/no-absolute-path": 0,
-        "import/extensions": 0,
-        "import/first": 0,
-        "max-len": 0,
-        "import/named": 0,
-        "import/no-cycle": 0,
-        "react/prop-types": 0,
-        "react/jsx-props-no-spreading": 0,
-        "jsx-a11y/label-has-associated-control": 0,
-        "react/jsx-indent-props": [
-            "error",
-            4
-        ],
-        "no-underscore-dangle": 0,
-        "no-console": [
-            "warn",
-            {
-                "allow": [
-                    "warn",
-                    "error"
-                ]
-            }
-        ],
-        "arrow-parens": [
-            "error",
-            "as-needed"
-        ],
-        "comma-dangle": [
-            "error",
-            {
-                "arrays": "always-multiline",
-                "objects": "always-multiline",
-                "imports": "always-multiline",
-                "exports": "always-multiline",
-                "functions": "ignore"
-            }
-        ],
-        "default-case": 0,
-        "no-multi-assign": 0,
-        "one-var": 0,
-        "one-var-declaration-per-line": 0,
-        "no-continue": 0,
-        "react/forbid-prop-types": 0,
-        "class-methods-use-this": 0,
-        "jsx-a11y/no-static-element-interactions": 0
     }
 }

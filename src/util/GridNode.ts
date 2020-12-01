@@ -1,5 +1,6 @@
 import Grid from "./Grid";
 
+export type ArrayLikeCoordinates = [number, number];
 
 export class GridCoordinates {
     public x: number;
@@ -13,7 +14,7 @@ export class GridCoordinates {
         return `${this.x},${this.y}`;
     }
 
-    toArray(): [number, number] {
+    toArray(): ArrayLikeCoordinates {
         return [this.x, this.y];
     }
 

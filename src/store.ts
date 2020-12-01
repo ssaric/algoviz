@@ -5,7 +5,7 @@ import {getPositionFromDataset} from "./util";
 const STORAGE_KEY = 'algoviz-grid-data';
 
 const infoMessagesMap = writable({});
-const heuristics = writable({
+const heuristics = writable<{ type: Heuristics, formula?: string}>({
     type: Heuristics.EUCLIDEAN,
 });
 
@@ -69,7 +69,6 @@ function convertToGridData(persistedData: PersistedData, document: Document) {
 
 function parseStartNode(oldPosition, newPosition) {
     if (oldPosition && oldPosition === newPosition) return oldPosition;
-    console.log('reseted');
     oldPosition && oldPosition.classList.remove('cell--start');
     newPosition && newPosition.classList.add('cell--start');
     return newPosition;
@@ -122,7 +121,7 @@ const gridWalls = (() => {
                 existingWalls.delete(gridCell);
                 return existingWalls;
             }),
-        set: gridWalls => gridWallsStore.set(new Set([...gridWalls].map((w: HTMLElement) => {
+        set: gridWalls => gridWallsStore.set(new Set([...gridWalls].filter(w => w !== null).map((w: HTMLElement) => {
             w.classList.add('cell--wall');
             return w;
         }))),
@@ -146,15 +145,23 @@ function setInitialGridState() {
     if (!INITIAL_STATE.end) {
         INITIAL_STATE.end = createEndNode();
     }
+    if (!INITIAL_STATE.walls) {
+        INITIAL_STATE.walls = [];
+    }
+    console.log(INITIAL_STATE);
     gridWalls.set(INITIAL_STATE.walls);
     gridStart.set(INITIAL_STATE.start);
     gridEnd.set(INITIAL_STATE.end);
 }
 
 function updateGridStartEnd() {
-    if (!gridStart.get() || !document.getElementById(gridStart.get().id))
+    const isStartDefined = gridStart.get() != undefined;
+    const isEndDefined = gridStart.get() != undefined;
+    const isStartOutsideGrid = isStartDefined && document.getElementById(gridStart.get().id) == undefined;
+    const isEndOutsideGrid = isEndDefined && document.getElementById(gridStart.get().id) == undefined;
+    if (!isStartDefined || isStartOutsideGrid)
         gridStart.set(createStartNode());
-    if (!gridEnd.get() || document.getElementById(gridEnd.get().id))
+    if (!isEndDefined || isEndOutsideGrid)
         gridEnd.set(createEndNode());
 }
 
