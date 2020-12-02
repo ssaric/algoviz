@@ -46,7 +46,7 @@ const plugins = [
     }),
     copy({
         targets: [
-            {src: 'src/assets/*', dest: 'dist/'},
+            {src: 'src/assets/*', dest: 'build/'},
         ]
     }),
     html2({
@@ -56,10 +56,10 @@ const plugins = [
 if (isDevelopment) {
     plugins.push(
         serve({
-            contentBase: "./dist",
+            contentBase: "./build",
             open: false,
         }),
-        livereload({watch: "./dist"})
+        livereload({watch: "./build"})
     );
 } else {
     plugins.push(terser());
@@ -72,7 +72,7 @@ const appEntry = {
         sourcemap: isDevelopment,
         format: 'iife',
         name: 'app',
-        file: 'dist/bundle.js'
+        file: 'build/bundle.js'
     },
     globals: {
         '@fortawesome/fontawesome-svg-core': 'fontawesomeSvgCore'
@@ -84,7 +84,7 @@ const appEntry = {
 const workerEntry = {
     input: './src/worker/AlgorithmMincerWorker.ts',
     output: {
-        file: './dist/worker.js',
+        file: './build/worker.js',
         sourcemap: process.env.development,
         format: 'es'
     },
