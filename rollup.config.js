@@ -62,7 +62,7 @@ if (isDevelopment) {
         livereload({watch: "./dist"})
     );
 } else {
-    plugins.push(terser({sourcemap: true}));
+    plugins.push(terser());
 }
 
 
