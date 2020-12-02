@@ -77,6 +77,7 @@
 
 </style>
 <script>
+    import HeuristicsPicker from '../heuristicsPicker/HeuristicsPicker.svelte';
     import Icon from 'svelte-awesome';
     import {
         faPlayCircle,
@@ -84,11 +85,11 @@
         faSquareFull
     } from '@fortawesome/free-solid-svg-icons';
 
-
 </script>
 
 
 <div class="legend">
+    <HeuristicsPicker on:resetGrid/>
     <div class="legend-wrapper">
         <div class="visited-fields">
             <div class="visited-field">

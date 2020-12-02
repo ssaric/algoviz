@@ -1,0 +1,9 @@
+{
+  "extends": "@tsconfig/svelte/tsconfig.json",
+  "compilerOptions": {
+    "target": "es6",
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["src/**/*", "src/node_modules"],
+  "exclude": ["node_modules/*", "__sapper__/*", "public/*"]
+}

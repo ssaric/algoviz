@@ -45,7 +45,7 @@
     }
 </style>
 <script>
-    import logo from '../../public/images/logo.svg';
+    import logo from '../assets/images/logo.svg';
     import {
         faGithub,
     } from '@fortawesome/free-brands-svg-icons';
