@@ -3,12 +3,12 @@ A project focusing on visualzing A* pathfinding algorithm. Available at https://
 
 ## Roadmap
 
--[x] Multiple heuristics
+- [x] Multiple heuristics
 
--[x] Seekable timeline
+- [x] Seekable timeline
 
--[x] Typescript ready
+- [x] Typescript ready
 
--[ ] Algorithm "thoughts" (algorithm should display in each field what was it trying to do)
+- [ ] Algorithm "thoughts" (algorithm should display in each field what was it trying to do)
 
--[ ] Side-by-side maps to compare different heuristics
+- [ ] Side-by-side maps to compare different heuristics
