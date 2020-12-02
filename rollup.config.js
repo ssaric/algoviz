@@ -12,17 +12,16 @@ import postcss from "rollup-plugin-postcss";
 import copy from "rollup-plugin-copy";
 
 const isDevelopment = process.env.NODE_ENV === "development";
-const extensions = [
-    '.js', '.jsx', '.ts', '.tsx',
-];
 
 const plugins = [
     svg({stringify: true}),
     svelte({
         dev: isDevelopment,
-        preprocess: sveltePreprocessor({
-            }
-        ),
+        compilerOptions: {
+            // enable run-time checks when not in production
+            dev: isDevelopment
+        },
+        preprocess: sveltePreprocessor(),
         emitCss: true,
     }),
     postcss({
@@ -37,10 +36,9 @@ const plugins = [
             }]
         ]
     }),
-    typescript({sourceMap: isDevelopment, inlineSources: isDevelopment}),
     commonjs({include: "node_modules/**", extensions: [".js", ".ts"]}),
+    typescript({sourceMap: isDevelopment, inlineSources: isDevelopment}),
     resolve({
-        extensions,
         browser: true,
         dedupe: ["svelte"],
     }),
@@ -91,7 +89,6 @@ const workerEntry = {
     plugins: [
         commonjs(),
         resolve({
-            extensions,
             browser: true,
         }),
         typescript(),

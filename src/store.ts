@@ -156,9 +156,9 @@ function setInitialGridState() {
 
 function updateGridStartEnd() {
     const isStartDefined = gridStart.get() != undefined;
-    const isEndDefined = gridStart.get() != undefined;
+    const isEndDefined = gridEnd.get() != undefined;
     const isStartOutsideGrid = isStartDefined && document.getElementById(gridStart.get().id) == undefined;
-    const isEndOutsideGrid = isEndDefined && document.getElementById(gridStart.get().id) == undefined;
+    const isEndOutsideGrid = isEndDefined && document.getElementById(gridEnd.get().id) == undefined;
     if (!isStartDefined || isStartOutsideGrid)
         gridStart.set(createStartNode());
     if (!isEndDefined || isEndOutsideGrid)
