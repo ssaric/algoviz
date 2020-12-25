@@ -76,6 +76,9 @@ export default class Painter {
     public _steps: Writable<Array<StepFunction>> = writable([]);
     constructor(worker) {
         this.worker = worker;
+        heuristics.subscribe(() => {
+            this.reset();
+        })
     }
     get currentStep(): number {
         return get(this._currentStep);
@@ -122,12 +125,11 @@ export default class Painter {
 
     private startProcessingData = () => {
         const {nrOfColumns, nrOfRows} = get(gridSize);
-        const {type} = get(heuristics);
         this.worker.postMessage([MessageType.GRID_DATA, {
             width: nrOfColumns,
             height: nrOfRows,
             ...getGridData(),
-            heuristics: type
+            heuristics: get(heuristics),
         }]);
     };
 
@@ -188,13 +190,13 @@ export default class Painter {
 
     public startPlaying = () => {
         this._interval.set(setInterval(() => {
-            if (this.currentStep > this.totalNumberOfSteps - 1) {
+            if (this.currentStep >= this.totalNumberOfSteps - 1) {
                 this.removeInterval();
                 return;
             }
             const stepToExecute = this.steps[this.currentStep++];
             stepToExecute(PlaybackDirection.FORWARD);
-        }, 50));
+        }, 20));
     }
 
 }

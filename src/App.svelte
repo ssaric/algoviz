@@ -56,6 +56,7 @@
         switch (data.type) {
             case AlgorithmWorkerStepType.START:
                 painter.reset();
+                resetGridVisualizedSteps();
                 return;
             case AlgorithmWorkerStepType.INFO:
                 addInfoMessage(data);
