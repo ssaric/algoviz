@@ -22,7 +22,7 @@
     "@fortawesome/free-solid-svg-icons": "^5.13.1",
     "mathjs": "^7.0.2",
     "noty": "^3.2.0-beta",
-    "postcss": "^7.0.25",
+    "postcss": "^7.0.36",
     "serialize-to-js": "^3.0.2",
     "sirv-cli": "^0.4.5",
     "svelte-awesome": "2.3.0"
