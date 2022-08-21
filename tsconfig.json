@@ -1,7 +1,9 @@
 {
-  "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
     "target": "es6",
+    "moduleResolution": "Node",
+    "preserveValueImports": false,
+    "isolatedModules": false,
     "allowSyntheticDefaultImports": true
   },
   "include": ["src/**/*", "src/node_modules"],

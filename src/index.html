@@ -4,23 +4,18 @@
     <link rel="icon" href="./assets/icon-48x48.png">
     <meta charset="utf-8">
     <title>Algoviz</title>
+    <script src="https://kit.fontawesome.com/5befacdcda.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
 </head>
 <body>
-<!-- Fathom - simple website analytics - https://github.com/usefathom/fathom -->
-<script>
+<div class="wrapper">
+    <div class="controls">
+        <div class="range-slider">
+            <input id="rs-range-line" class="rs-range" type="range" value="0" min="0" max="200">
+        </div>
 
-    (function(f, a, t, h, o, m){
-        a[h]=a[h]||function(){
-            (a[h].q=a[h].q||[]).push(arguments)
-        };
-        o=f.createElement('script'),
-            m=f.getElementsByTagName('script')[0];
-        o.async=1; o.src=t; o.id='fathom-script';
-        m.parentNode.insertBefore(o,m)
-    })(document, window, '//fathom.njanjo.com/tracker.js', 'fathom');
-    fathom('set', 'siteId', 'PPPNB');
-    fathom('trackPageview');
-</script>
-<!-- / Fathom -->
+    </div>
+<div id="root"></div>
+</div>
 </body>
 </html>

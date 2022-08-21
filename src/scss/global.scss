@@ -1,5 +1,5 @@
 body {
-  background: $color-neutral70;
+  background: $color-neutral5;
   position: fixed;
   font-family: Source Sans Pro, sans-serif;
   top: 0;
@@ -13,14 +13,28 @@ body {
   touch-action: manipulation;
 }
 
+.controls {
+  height: 200px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+  width: 100%;
+}
+
 *, *:before, *:after {
   box-sizing: inherit;
 }
-
-#__next {
+#root{
+  height: 100%;
   width: 100%;
-  flex-grow: 0;
-  display: flex;
 }
 
 .subtitle-1, .subtitle-2, .body-1, .body-2, .button, .caption,
