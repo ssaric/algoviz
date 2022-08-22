@@ -1,8 +1,8 @@
 import { MouseClick } from "../constants/types";
-import UI from "./UI";
+import type Painter from "./Painter";
 
 class MouseHandlers {
-  private ui: UI;
+  private painter: Painter;
   private dragSelect = false;
   private draggingStartCell = false;
   private draggingEndCell = false;
@@ -13,21 +13,21 @@ class MouseHandlers {
   private mouseclickCallback = this.onMouseClick.bind(this);
   private mouseOutCallback = this.onMouseOut.bind(this);
 
-  constructor(ui: UI) {
-    this.ui = ui;
+  constructor(painter: Painter) {
+    this.painter = painter;
   }
   public bind() {
-    this.ui.table.addEventListener("mousedown", this.mouseDownCallback);
-    this.ui.table.addEventListener("click", this.mouseclickCallback);
-    this.ui.table.addEventListener("mouseup", this.mouseUpCallback);
-    this.ui.table.addEventListener("mousemove", this.mouseMoveCallback);
+    this.painter.container.addEventListener("mousedown", this.mouseDownCallback);
+    this.painter.container.addEventListener("click", this.mouseclickCallback);
+    this.painter.container.addEventListener("mouseup", this.mouseUpCallback);
+    this.painter.container.addEventListener("mousemove", this.mouseMoveCallback);
   }
 
   public unbind() {
-    this.ui.table.removeEventListener("click", this.mouseclickCallback);
-    this.ui.table.removeEventListener("mousedown", this.mouseDownCallback);
-    this.ui.table.removeEventListener("mouseup", this.mouseUpCallback);
-    this.ui.table.removeEventListener("mousemove", this.mouseMoveCallback);
+    this.painter.container.removeEventListener("click", this.mouseclickCallback);
+    this.painter.container.removeEventListener("mousedown", this.mouseDownCallback);
+    this.painter.container.removeEventListener("mouseup", this.mouseUpCallback);
+    this.painter.container.removeEventListener("mousemove", this.mouseMoveCallback);
   }
 
   onMouseMove(e: MouseEvent) {
@@ -40,27 +40,29 @@ class MouseHandlers {
 
   handleMovementEvent(targetElement: HTMLTableCellElement) {
     if (this.draggingStartCell) {
-      this.ui.setGridStart(targetElement);
+      this.painter.renderStartAtCell(targetElement);
     } else if (this.draggingEndCell) {
-      this.ui.setGridEnd(targetElement);
+      this.painter.renderEndAtCell(targetElement);
     }
     if (this.dragSelect) {
-      this.ui.addWall(targetElement);
+      this.painter.addWall(targetElement);
     }
   }
 
-  onMouseClick(e) {
+  onMouseClick(e: MouseEvent) {
     if (!e.target) return;
+    if (!(e.target instanceof HTMLTableCellElement)) return;
     if (!e.target.getAttribute("columnIndex")) return;
     if (e.button !== MouseClick.LEFT) return;
     e.target.classList.toggle("cell--wall");
   }
 
-  onMouseDown(e) {
+  onMouseDown(e: MouseEvent) {
+    if (!(e.target instanceof HTMLTableCellElement)) return;
     if (e.button !== undefined && e.button !== MouseClick.LEFT) return;
-    this.ui.table.addEventListener("mouseout", this.mouseOutCallback);
-    this.ui.table.addEventListener("touchcancel", this.mouseOutCallback);
-    this.ui.table.addEventListener("mouseup", this.mouseUpCallback);
+    this.painter.container.addEventListener("mouseout", this.mouseOutCallback);
+    this.painter.container.addEventListener("touchcancel", this.mouseOutCallback);
+    this.painter.container.addEventListener("mouseup", this.mouseUpCallback);
     if (e.target.classList.contains("cell--start"))
       this.draggingStartCell = true;
     else if (e.target.classList.contains("cell--end"))
@@ -68,14 +70,14 @@ class MouseHandlers {
     else this.dragSelect = true;
   }
   onMouseUp() {
-    this.ui.table.removeEventListener("mouseout", this.mouseOutCallback);
+    this.painter.container.removeEventListener("mouseout", this.mouseOutCallback);
     this.dragSelect = false;
     this.draggingStartCell = false;
     this.draggingEndCell = false;
   }
-  onMouseOut(e) {
-    const from = e.relatedTarget;
-    if (!from || from.nodeName === "HTML") {
+  onMouseOut(e: MouseEvent | TouchEvent) {
+    const from = e.target;
+    if (!from) {
       this.dragSelect = false;
     }
   }

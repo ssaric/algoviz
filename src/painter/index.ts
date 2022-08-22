@@ -1,12 +1,7 @@
 import type { ArrayLikeCoordinates } from "./GridNode";
 
-export function getPositionFromDataset(element: HTMLElement) {
-  const cl = element.dataset.cellLocation.split(",");
-  return [parseInt(cl[0], 10), parseInt(cl[1], 10)];
-}
-
 export function debounce(func: any, wait: number, immediate?: false) {
-  let timeout;
+  let timeout: number | null;
   return function () {
     // @ts-ignore
     const context: any = this;
@@ -16,8 +11,8 @@ export function debounce(func: any, wait: number, immediate?: false) {
       if (!immediate) func.apply(context, args);
     };
     const callNow = immediate && !timeout;
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
+    timeout !== null && clearTimeout(timeout);
+    timeout = window.setTimeout(later, wait);
     if (callNow) func.apply(context, args);
   };
 }
@@ -35,6 +30,6 @@ export function isLocationValid(
   );
 }
 
-export function clamp(number, min, max) {
+export function clamp(number: number, min: number, max: number): number {
   return Math.max(min, Math.min(number, max));
 }

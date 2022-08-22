@@ -59,9 +59,8 @@ export type GridData = {
   endPosition: Array<Element>;
 };
 
-export interface StepFunction {
-  (direction: PlaybackDirection): void;
-}
+export type GridPaintStroke = (direction: PlaybackDirection) => void;
+
 
 export enum Heuristics {
   EUCLIDEAN = "0",
@@ -91,6 +90,8 @@ export type CellInfoMessage = {
 };
 
 export type HeuristicsData = {
-  type: Heuristics;
-  formula?: string;
-};
+  type: Heuristics.EUCLIDEAN | Heuristics.MANHATTAN;
+} | {
+  type: Heuristics.CUSTOM;
+  formula: string;
+}
