@@ -7,7 +7,7 @@ import {
 } from "../constants/types";
 import MouseHandlers from "./MouseHandlers";
 import {get, writable, Writable} from "svelte/store";
-import {heuristics} from "../store";
+import {currentStep, heuristics, interval, removeInterval, steps} from "../store";
 import { clamp } from ".";
 
 const TABLE_ID = "table";
@@ -20,9 +20,6 @@ class Painter {
   public container: HTMLDivElement;
   public algorithmWorker: Worker | undefined = undefined;
   private mouseHandlers = new MouseHandlers(this);
-  public _steps: Writable<Array<GridPaintStroke>> = writable([]);
-  public _currentStep = writable(0);
-  public _interval = writable<number | null>(null);
 
   constructor() {
     const root = document.getElementById("root") as HTMLDivElement;
@@ -66,30 +63,6 @@ class Painter {
     this.mouseHandlers.unbind();
   }
 
-  get steps(): Array<GridPaintStroke> {
-    return get(this._steps);
-  }
-
-  get interval(): number | null{
-    return get(this._interval);
-  }
-
-
-  get currentStep() {
-    return get(this._currentStep);
-  }
-
-  set currentStep(index: number) {
-    this._currentStep.set(index);
-  }
-
-  get isPlaying(): boolean {
-    return this.interval !== null;
-  }
-
-  get totalNumberOfSteps(): number {
-    return this.steps.length;
-  }
 
   private startProcessingData = () => {
     this.algorithmWorker?.postMessage([MessageType.GRID_DATA, {
@@ -105,9 +78,10 @@ class Painter {
 
 
   public startVisualizingSteps = () => {
+    const totalNumberOfSteps = get(steps).length;
     if (!this.canProcessData()) {
       // showMissingDataToast();
-    } else if (this.totalNumberOfSteps === 0) {
+    } else if (totalNumberOfSteps === 0) {
       this.startProcessingData();
     } else {
       this.startPlaying();
@@ -116,11 +90,6 @@ class Painter {
 
   private canProcessData() {
     return this.grid.isGridValid();
-  }
-
-  private removeInterval() {
-    this.interval && clearInterval(this.interval);
-    this._interval.set(null);
   }
 
   updateCellNumberListener() {
@@ -262,57 +231,59 @@ class Painter {
   }
 
   private queueForwardSteps(nrOfSteps = STEP_SIZE) {
-    const start = this.currentStep;
+    const start = get(currentStep);
     for (let i = start; i < start + nrOfSteps; i++) {
-      setTimeout(() => this.steps[i](PlaybackDirection.FORWARD), 0);
+      setTimeout(() => get(steps)[i](PlaybackDirection.FORWARD), 0);
     }
   }
 
   private queueBackwardsSteps(nrOfSteps = STEP_SIZE) {
-    const start = this.currentStep;
+    const start = get(currentStep);
     for (let i = start; i > start + nrOfSteps; i--) {
       setTimeout(() => {
-        if (!this.steps[i]) debugger;
-        this.steps[i](PlaybackDirection.BACKWARD);
+        if (!get(steps)[i]) debugger;
+        get(steps)[i](PlaybackDirection.BACKWARD);
       }, 0);
     }
   }
 
   public skipBackward = () => {
-    const nrOfSteps = clamp(-STEP_SIZE, -this.currentStep, 0)
+    const nrOfSteps = clamp(-STEP_SIZE, -get(currentStep), 0)
     this.queueBackwardsSteps(nrOfSteps);
-    this.currentStep = this.currentStep + nrOfSteps;
+    currentStep.update(value => value  + nrOfSteps);
   };
 
   public skipForward = () => {
-    const nrOfSteps = clamp(STEP_SIZE, 0, (this.steps.length - 1) - this.currentStep)
+    const nrOfSteps = clamp(STEP_SIZE, 0, (get(steps).length - 1) - get(currentStep))
     this.queueForwardSteps(nrOfSteps);
-    this.currentStep = this.currentStep + nrOfSteps;
+    currentStep.update(value => value  + nrOfSteps);
   };
 
-  public onManualLoaderChange(e) {
-    this.removeInterval();
+  onManualLoaderChange = (e: CustomEvent) => {
+    removeInterval();
     const value = parseInt(e.detail.target.value, 10);
-    const nrOfSteps = value - this.currentStep;
+    const nrOfSteps = value - get(currentStep);
     const direction = nrOfSteps > 0 ? PlaybackDirection.FORWARD : PlaybackDirection.BACKWARD;
     if (direction === PlaybackDirection.FORWARD) this.queueForwardSteps(nrOfSteps)
     else if (direction === PlaybackDirection.BACKWARD) this.queueBackwardsSteps(nrOfSteps);
-    this.currentStep = value;
+    currentStep.set(value);
   };
 
   public stopPlaying  (){
-    if (this.interval === null) return;
-    clearInterval(this.interval);
-    this._interval.set(null);
+    const _interval = get(interval);
+    if (_interval === null) return;
+    clearInterval(_interval);
+    interval.set(null);
   };
 
   public startPlaying() {
-    this._interval.set(window.setInterval(() => {
-      if (this.currentStep >= this.totalNumberOfSteps - 1) {
-        this.removeInterval();
+    interval.set(window.setInterval(() => {
+      if (get(currentStep) >= get(steps).length - 1) {
+        removeInterval();
         return;
       }
-      const stepToExecute = this.steps[this.currentStep++];
+      const stepToExecute = get(steps)[get(currentStep)];
+      currentStep.update(value => value + 1);
       stepToExecute(PlaybackDirection.FORWARD);
     }, 20));
   }
@@ -322,13 +293,13 @@ class Painter {
       if (!location) return;
       const element = this.getCell(location[0], location[1]);
       if (!element) return;
-      this._steps.update(s => [...s, direction => this.createGridPaintMove(element, type, direction)]);
-      if (!this.interval) this.startVisualizingSteps();
+      steps.update(s => [...s, direction => this.createGridPaintMove(element, type, direction)]);
+      if (!get(interval)) this.startVisualizingSteps();
   }
 
   public resetGrid() {
-    this._steps.set([]);
-    this.currentStep = 0;
+    steps.set([]);
+    currentStep.set(0);
     const cells = this.container.querySelectorAll('td.cell--visited, td.cell--discovered, td.cell--path');
     [...cells].forEach(e => {
       e.classList.remove('cell--visited');

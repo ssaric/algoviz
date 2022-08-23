@@ -25,11 +25,14 @@
         faStepForward
     } from '@fortawesome/free-solid-svg-icons';
     import Icon from 'svelte-awesome';
+    import { interval } from "../../store.ts";
 
-    let nrOfSteps;
-    let currentStep;
+    let isPlaying;
+    $: {
+          isPlaying = $interval !== null;
+    }
+
     export let hasData;
-    export let isPlaying;
     const dispatch = createEventDispatcher();
 
     function onSkipBackwardClick() {

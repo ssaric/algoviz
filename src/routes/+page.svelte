@@ -31,13 +31,18 @@
     import Legend from "../components/legend/Legend.svelte";
     import Painter from "../painter/Painter";
     import {onDestroy, onMount} from "svelte";
+    import {steps} from "../store";
+    import {currentStep} from "../store.js";
 
     let painter: Painter;
 
+
     let hasData;
+    let nrOfSteps;
 
     $: {
-        hasData = painter?.steps.length > 0;
+        hasData = $steps.length > 0;
+        nrOfSteps = $steps.length;
     }
 
     onDestroy(() => {
@@ -66,9 +71,8 @@
                 on:backwardClick={painter?.skipBackward}
                 on:forwardClick={painter?.skipForward}
                 on:loaderChange={painter?.onManualLoaderChange}
-                isPlaying={painter?.isPlaying}
-                nrOfSteps={painter?.steps.length}
-                currentStep={painter?.currentStep}/>
+                nrOfSteps={nrOfSteps}
+                currentStep={$currentStep}/>
         <div id="root"></div>
     </div>
 </main>

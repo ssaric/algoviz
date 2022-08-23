@@ -144,7 +144,6 @@
 <script>
     import {createEventDispatcher} from 'svelte';
     import Controls from './Controls.svelte';
-    export let isPlaying;
     export let hasData;
     export let nrOfSteps;
     export let currentStep;
@@ -170,5 +169,5 @@
         />
         <span>{nrOfSteps}</span>
     </div>
-    <Controls on:playClick on:stopClick on:forwardClick on:backwardClick {hasData} {isPlaying}/>
+    <Controls on:playClick on:stopClick on:forwardClick on:backwardClick {hasData}/>
 </div>
