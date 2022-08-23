@@ -1,6 +1,7 @@
 {
   "name": "svelte-algoviz",
-  "version": "1.0.0",
+  "version": "1.1.0",
+  "license": "MIT",
   "description": "AlgoViz implemented in Svelte",
   "scripts": {
     "dev": "vite dev",
@@ -37,8 +38,7 @@
     "vite": "^3.0.4",
     "postcss": "^8.4.14",
     "postcss-load-config": "^4.0.1",
-    "autoprefixer": "^10.4.7",
-    "tailwindcss": "^3.1.5"
+    "autoprefixer": "^10.4.7"
   },
   "type": "module",
   "dependencies": {
