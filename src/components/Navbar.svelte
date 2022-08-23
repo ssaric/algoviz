@@ -45,7 +45,6 @@
     }
 </style>
 <script>
-    import logo from '../assets/images/logo.svg';
     import {
         faGithub,
     } from '@fortawesome/free-brands-svg-icons';
@@ -56,9 +55,7 @@
 
 <nav class="navbar">
     <div class="navbar__title-wrapper">
-        <div class="navbar-button">
-            {@html logo}
-        </div>
+        <img alt="njanjo-logo" src="/logo.svg" class="navbar-button"/>
         <h6 class="navbar__title">
             Algoviz
         </h6>

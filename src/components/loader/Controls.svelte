@@ -12,6 +12,10 @@
         align-items: center;
         height: 50px;
         justify-content: space-between;
+        > div {
+            display: flex;
+            justify-content: center;
+        }
     }
 
 </style>
@@ -25,11 +29,14 @@
         faStepForward
     } from '@fortawesome/free-solid-svg-icons';
     import Icon from 'svelte-awesome';
+    import { interval } from "../../store.ts";
 
-    let nrOfSteps;
-    let currentStep;
+    let isPlaying;
+    $: {
+          isPlaying = $interval !== null;
+    }
+
     export let hasData;
-    export let isPlaying;
     const dispatch = createEventDispatcher();
 
     function onSkipBackwardClick() {

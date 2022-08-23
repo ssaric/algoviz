@@ -1,94 +1,97 @@
-import type {GridCoordinates} from "../util/GridNode";
+import type { GridCoordinates } from "../painter/GridNode";
+
+export const CELL_SIZE = 20;
 
 export enum MessageType {
-    GRID_DATA,
-    INFO_DATA,
-    ALGORITHM_STEP,
-    SET_HEURISTICS,
+  GRID_DATA,
+  INFO_DATA,
+  ALGORITHM_STEP,
+  SET_HEURISTICS,
 }
 
 export enum AlgorithmWorkerStepType {
-    START,
-    END,
-    INFO,
-    MARK_PATH,
-    VISIT,
-    DISCOVER
+  START,
+  END,
+  INFO,
+  MARK_PATH,
+  VISIT,
+  DISCOVER,
 }
 
 export enum FieldType {
-    START,
-    END,
-    WALL,
+  START,
+  END,
+  WALL,
 }
 
 export enum MouseClick {
-    LEFT,
-    MIDDLE,
-    RIGHT,
+  LEFT,
+  MIDDLE,
+  RIGHT,
 }
 
 export enum PlaybackDirection {
-    FORWARD= "forward",
-    BACKWARD = "backward"
+  FORWARD = "forward",
+  BACKWARD = "backward",
 }
 
 export type WorkerGridTransferData = {
-    width: number,
-    height: number,
-    start: Array<number>,
-    end: Array<number>,
-    walls: Array<Array<number>>,
-    heuristics: HeuristicsData
-}
+  columns: number;
+  rows: number;
+  start: Array<number>;
+  end: Array<number>;
+  walls: Array<Array<number>>;
+  heuristics: HeuristicsData;
+};
 
 export type GridConstructorData = {
-    width: number,
-    height: number,
-    start: GridCoordinates,
-    end: GridCoordinates,
-    walls: Array<GridCoordinates>,
-    heuristics: HeuristicsData
-}
+  columns: number;
+  rows: number;
+  start?: GridCoordinates;
+  end?: GridCoordinates;
+  walls?: Array<GridCoordinates>;
+  heuristics?: HeuristicsData;
+};
 
 export type GridData = {
-    walls: Array<Element>;
-    startPosition: Array<Element>;
-    endPosition: Array<Element>;
-}
+  walls: Array<Element>;
+  startPosition: Array<Element>;
+  endPosition: Array<Element>;
+};
 
-export interface StepFunction {
-    (direction: PlaybackDirection): void;
-}
+export type GridPaintStroke = (direction: PlaybackDirection) => void;
+
 
 export enum Heuristics {
-    EUCLIDEAN = "0",
-    MANHATTAN = "1",
-    CUSTOM = "2"
+  EUCLIDEAN = "0",
+  MANHATTAN = "1",
+  CUSTOM = "2",
 }
 
 export type AlgorithmStep = {
-    type: AlgorithmWorkerStepType;
-    location?: Array<number>;
-    neighbours?: [number, number][];
-    info?: string;
-}
+  type: AlgorithmWorkerStepType;
+  location?: Array<number>;
+  neighbours?: [number, number][];
+  info?: string;
+};
 
 export type AlgorithmInfoMessage = {
-    type: AlgorithmWorkerStepType;
-    tileId: string;
-    ghValues?: [number, number]
-    info: string;
-    parent? : string;
-}
+  type: AlgorithmWorkerStepType;
+  tileId: string;
+  ghValues?: [number, number];
+  info: string;
+  parent?: string;
+};
 
 export type CellInfoMessage = {
-    ghValues?: [number, number]
-    info: string[];
-    parent? : string;
-}
+  ghValues?: [number, number];
+  info: string[];
+  parent?: string;
+};
 
 export type HeuristicsData = {
-    type: Heuristics;
-    formula?: string;
+  type: Heuristics.EUCLIDEAN | Heuristics.MANHATTAN;
+} | {
+  type: Heuristics.CUSTOM;
+  formula: string;
 }

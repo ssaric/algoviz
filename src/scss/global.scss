@@ -11,16 +11,15 @@ body {
   display: flex;
   box-sizing: border-box;
   touch-action: manipulation;
+  div {
+    width: 100%;
+    flex-grow: 0;
+    display: flex;
+  }
 }
 
 *, *:before, *:after {
   box-sizing: inherit;
-}
-
-#__next {
-  width: 100%;
-  flex-grow: 0;
-  display: flex;
 }
 
 .subtitle-1, .subtitle-2, .body-1, .body-2, .button, .caption,

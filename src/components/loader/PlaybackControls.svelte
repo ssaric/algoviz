@@ -1,10 +1,19 @@
 <style lang="scss" global>
+    @import '../../scss/theme';
+
     .playback-controls {
         display: flex;
         flex-direction: column;
-        width: 100%;
         align-items: center;
-        margin-bottom: 20px;
+        border: 1px solid $color-neutral40;
+        position: absolute;
+        bottom: 20px;
+        width: 500px;
+        border-radius: 10px;
+        background: $color-neutral10;
+        padding: 10px;
+        z-index: 10;
+        box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
         user-select: none;
     }
 
@@ -139,24 +148,39 @@
         background: #367ebd;
     }
 
+    .drag-grip {
+        cursor: grab;
+        position: absolute;
+        right: calc(50% - 12px);
+        top: 4px;
+        color: $color-neutral40;
+        width: 25px;
+        height: 25px;
+        z-index: 11;
+    }
+
 </style>
 
 <script>
     import {createEventDispatcher} from 'svelte';
     import Controls from './Controls.svelte';
-    export let isPlaying;
+    import { faGripHorizontal} from '@fortawesome/free-solid-svg-icons';
+    import { draggable } from 'svelte-drag';
+    import Icon from "svelte-awesome";
     export let hasData;
     export let nrOfSteps;
     export let currentStep;
     const dispatch = createEventDispatcher();
 
     function onLoaderChange(e) {
+          e.stopPropagation();
         dispatch('loaderChange', e);
     }
 
 
 </script>
-<div class="playback-controls">
+<div class="playback-controls" use:draggable={{ handle: '.drag-grip'}}>
+    <Icon class="drag-grip"  data={faGripHorizontal}/>
     <div class="loader-wrapper" class:disabled={!hasData}>
         <span>0</span>
         <input
@@ -170,5 +194,5 @@
         />
         <span>{nrOfSteps}</span>
     </div>
-    <Controls on:playClick on:stopClick on:forwardClick on:backwardClick {hasData} {isPlaying}/>
+    <Controls on:playClick on:stopClick on:forwardClick on:backwardClick {hasData}/>
 </div>

@@ -1,48 +1,61 @@
 /* eslint-disable no-param-reassign */
-import Grid, {setHeuristicsFunction} from '../util/Grid';
+import Grid, {setHeuristicsFunction} from "../painter/Grid";
 import {
     AlgorithmInfoMessage,
     AlgorithmStep,
     AlgorithmWorkerStepType,
-    GridConstructorData, Heuristics, HeuristicsData,
+    GridConstructorData,
+    Heuristics,
+    HeuristicsData,
     MessageType,
-    WorkerGridTransferData
+    WorkerGridTransferData,
 } from "../constants/types";
-import GridNode, {GridCoordinates} from "../util/GridNode";
+import GridNode, {GridCoordinates} from "../painter/GridNode";
 
 const ctx: Worker = self as any;
 
-
-function processNeighbours(node: GridNode, neighbours: GridNode[], open: GridNode[], end: GridNode, grid: Grid) {
-    neighbours.forEach(neighbour => {
+function processNeighbours(
+    node: GridNode,
+    neighbours: GridNode[],
+    open: GridNode[],
+    end: GridNode,
+    grid: Grid
+) {
+    neighbours.forEach((neighbour) => {
         neighbour.setParameters(end, node);
-        const existingNode = open.find(n => n.id === neighbour.id);
+        const existingNode = open.find((n) => n.id === neighbour.id);
         if (existingNode && neighbour.g > existingNode.g) {
-            sendAlgorithmInfoMessage(createInfoStep(
-                neighbour.id,
-                `This node was previously discovered and alternative path to it proves to be better`,
-            ))
+            sendAlgorithmInfoMessage(
+                createInfoStep(
+                    neighbour.id,
+                    `This node was previously discovered and alternative path to it proves to be better`
+                )
+            );
             return;
         } else if (existingNode) {
-            sendAlgorithmInfoMessage(createInfoStep(
-                neighbour.id,
-                `This node was previously discovered and but better path was found`
-            ))
+            sendAlgorithmInfoMessage(
+                createInfoStep(
+                    neighbour.id,
+                    `This node was previously discovered and but better path was found`
+                )
+            );
             open.splice(open.indexOf(existingNode), 1);
         }
-        sendAlgorithmInfoMessage(createInfoStep(
-            neighbour.id,
-            `Discovered a new node and sending it to open stack`,
-            [neighbour.g, neighbour.h],
-            node.id,
-        ))
+        sendAlgorithmInfoMessage(
+            createInfoStep(
+                neighbour.id,
+                `Discovered a new node and sending it to open stack`,
+                [neighbour.g, neighbour.h],
+                node.id
+            )
+        );
         grid.discover(neighbour);
         sendAlgorithmStep(createDiscoverStep(neighbour));
         open.push(neighbour);
     });
 }
 
-function markPath(endNode) {
+function markPath(endNode: GridNode) {
     let backtrackNode = endNode;
     while (backtrackNode.parent != undefined) {
         sendAlgorithmStep(createMarkPathStep(backtrackNode));
@@ -61,47 +74,55 @@ function sendAlgorithmInfoMessage(step: AlgorithmInfoMessage) {
 
 function createStartStep() {
     return {
-        type: AlgorithmWorkerStepType.START
-    }
+        type: AlgorithmWorkerStepType.START,
+    };
 }
 
-function createInfoStep(tileId: string, info: string, ghValues?: [number, number], parent?: string): AlgorithmInfoMessage {
+function createInfoStep(
+    tileId: string,
+    info: string,
+    ghValues?: [number, number],
+    parent?: string
+): AlgorithmInfoMessage {
     return {
         type: AlgorithmWorkerStepType.INFO,
         info,
         ghValues,
         tileId,
         parent,
-    }
+    };
 }
 
 function createMarkPathStep(node: GridNode): AlgorithmStep {
     return {
         type: AlgorithmWorkerStepType.MARK_PATH,
-        location: node.toArray()
-    }
+        location: node.toArray(),
+    };
 }
 
 function createEndStep(node: GridNode): AlgorithmStep {
     return {
         type: AlgorithmWorkerStepType.END,
-        location: node.toArray()
-    }
+        location: node.toArray(),
+    };
 }
 
-function createVisitStep(node: GridNode, neighbours: [number, number][]): AlgorithmStep {
+function createVisitStep(
+    node: GridNode,
+    neighbours: [number, number][]
+): AlgorithmStep {
     return {
         type: AlgorithmWorkerStepType.VISIT,
         neighbours,
-        location: node.toArray()
-    }
+        location: node.toArray(),
+    };
 }
 
 function createDiscoverStep(node: GridNode): AlgorithmStep {
     return {
         type: AlgorithmWorkerStepType.DISCOVER,
-        location: node.toArray()
-    }
+        location: node.toArray(),
+    };
 }
 
 function sortOpenNodes(open: GridNode[]) {
@@ -114,42 +135,48 @@ function sortOpenNodes(open: GridNode[]) {
     });
 }
 
-
 function process(grid: Grid) {
+    if (!grid.start || !grid.end) return;
     const startNode = grid.start;
     const endNode = grid.end;
     const open = [startNode];
     sendAlgorithmStep(createStartStep());
     while (open.length > 0) {
-        const currentNode: GridNode | undefined = open.pop();
+        const currentNode: GridNode | null | undefined = open.pop();
         if (!currentNode) return;
-
         grid.visit(currentNode);
-
-        if (grid.isEndNode(currentNode)) {
+        if (grid.isEnd(currentNode)) {
             sendAlgorithmStep(createEndStep(currentNode));
             markPath(currentNode);
             return;
         }
-        const neighbours: GridNode[] = grid.adjacentNodes(currentNode);
-        sendAlgorithmStep(createVisitStep(currentNode, neighbours.map(n => n.toArray())));
+        const neighbours: GridNode[] = [
+            ...grid.getWalkableNeighbours(currentNode).values(),
+        ];
+        sendAlgorithmStep(
+            createVisitStep(
+                currentNode,
+                neighbours.map((n) => n.toArray())
+            )
+        );
 
         processNeighbours(currentNode, neighbours, open, endNode, grid);
         sortOpenNodes(open);
     }
 }
 
-function parseWorkerGridTransferData(gridData: WorkerGridTransferData): GridConstructorData {
+function parseWorkerGridTransferData(
+    gridData: WorkerGridTransferData
+): GridConstructorData {
     return {
-        width: gridData.width,
-        height: gridData.height,
         start: new GridCoordinates(gridData.start[0], gridData.start[1]),
         end: new GridCoordinates(gridData.end[0], gridData.end[1]),
-        walls: gridData.walls.map(w => new GridCoordinates(w[0], w[1])),
+        walls: gridData.walls.map((w) => new GridCoordinates(w[0], w[1])),
+        columns: gridData.columns,
+        rows: gridData.rows,
         heuristics: gridData.heuristics,
-    }
+    };
 }
-
 
 let grid: Grid;
 onmessage = function (e) {
@@ -167,4 +194,6 @@ onmessage = function (e) {
             break;
         }
     }
-}
+};
+
+export {}
