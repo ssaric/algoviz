@@ -25,7 +25,6 @@
 </style>
 
 <script lang="ts">
-
     import PlaybackControls from '../components/loader/PlaybackControls.svelte';
     import Navbar from '../components/Navbar.svelte';
     import Legend from "../components/legend/Legend.svelte";
@@ -63,7 +62,7 @@
 <main class="root-container">
     <Navbar/>
     <div class="home">
-        <Legend />
+        <Legend on:resetGrid={painter?.resetGrid} />
         <PlaybackControls
                 hasData={hasData}
                 on:playClick={painter?.startVisualizingSteps}

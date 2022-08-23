@@ -54,7 +54,7 @@ class MouseHandlers {
     if (!(e.target instanceof HTMLTableCellElement)) return;
     if (!e.target.getAttribute("columnIndex")) return;
     if (e.button !== MouseClick.LEFT) return;
-    e.target.classList.toggle("cell--wall");
+    this.painter.toggleWall(e.target);
   }
 
   onMouseDown(e: MouseEvent) {

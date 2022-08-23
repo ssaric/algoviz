@@ -36,6 +36,7 @@ class Painter {
     this.renderGrid();
     this.updateCellNumberListener();
     this.renderStarAndEndNodes();
+    heuristics.subscribe(() => this.resetVisualization());
   }
   public async loadWorker () {
     const AlgorithmWorker = await import('../worker/AlgorithmMincerWorker?worker');
@@ -44,7 +45,7 @@ class Painter {
       const data = e.data[1];
       switch (data.type) {
         case AlgorithmWorkerStepType.START:
-          this.resetGrid();
+          this.resetVisualization();
           return;
         case AlgorithmWorkerStepType.INFO:
           break;
@@ -137,7 +138,7 @@ class Painter {
     rowIndex: number,
     columnIndex: number
   ): HTMLTableCellElement {
-    const existingCell = this.getColumnElement(row, rowIndex, columnIndex);
+    const existingCell = this.getColumnElement(row, columnIndex, rowIndex);
     if (!existingCell) {
       const tableCell = document.createElement("td");
       tableCell.setAttribute("columnIndex", `${columnIndex}`);
@@ -170,8 +171,8 @@ class Painter {
 
   getColumnElement(
     row: HTMLTableRowElement,
-    rowIndex: number,
-    columnIndex: number
+    columnIndex: number,
+  rowIndex: number,
   ): HTMLTableCellElement | null {
     return row.querySelector(
       `td[rowIndex="${rowIndex}"][columnIndex="${columnIndex}"]`
@@ -297,7 +298,7 @@ class Painter {
       if (!get(interval)) this.startVisualizingSteps();
   }
 
-  public resetGrid() {
+  public resetVisualization() {
     steps.set([]);
     currentStep.set(0);
     const cells = this.container.querySelectorAll('td.cell--visited, td.cell--discovered, td.cell--path');
@@ -305,6 +306,14 @@ class Painter {
       e.classList.remove('cell--visited');
       e.classList.remove('cell--discovered');
       e.classList.remove('cell--path');
+    });
+  }
+
+  public resetGrid = () => {
+   this.resetVisualization();
+    const cells = this.container.querySelectorAll('td.cell--wall');
+    [...cells].forEach(e => {
+      e.classList.remove('cell--wall');
     });
   }
 
@@ -338,12 +347,15 @@ class Painter {
   }
 
   addWall(targetElement: HTMLTableCellElement) {
+    if (get(steps).length > 0) {
+      this.resetVisualization();
+    }
     const columnIndex = parseInt(targetElement.getAttribute("columnIndex") as string);
     const rowIndex = parseInt(targetElement.getAttribute("rowIndex") as string);
     this.adjustStartCell(targetElement, columnIndex, rowIndex);
     this.adjustEndCell(targetElement, columnIndex, rowIndex);
     this.grid.addWall(columnIndex, rowIndex);
-    this.renderWall(targetElement);
+    targetElement.classList.add("cell--wall");
   }
 
   renderStartAtCell(targetElement: HTMLTableCellElement) {
@@ -375,16 +387,13 @@ class Painter {
   toggleWall(targetElement: HTMLTableCellElement) {
     const columnIndex = parseInt(targetElement.getAttribute("columnIndex") as string);
     const rowIndex = parseInt(targetElement.getAttribute("rowIndex") as string);
-    this.grid.toggleWall(rowIndex, columnIndex);
-    this.renderToggleWall(targetElement);
-  }
-
-  renderToggleWall(targetElement: HTMLTableCellElement) {
-    targetElement.classList.toggle("cell--wall");
-  }
-
-  renderWall(targetElement: HTMLTableCellElement) {
-    targetElement.classList.add("cell--wall");
+    if (targetElement.classList.contains("cell--wall")) {
+      this.grid.removeWall(columnIndex, rowIndex);
+      targetElement.classList.remove("cell--wall");
+    } else {
+      this.grid.addWall(columnIndex, rowIndex);
+      targetElement.classList.add("cell--wall");
+    }
   }
 
   renderStarAndEndNodes() {

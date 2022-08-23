@@ -12,6 +12,10 @@
         align-items: center;
         height: 50px;
         justify-content: space-between;
+        > div {
+            display: flex;
+            justify-content: center;
+        }
     }
 
 </style>

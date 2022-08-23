@@ -3,7 +3,7 @@
 
     .legend {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: space-between;
         width: 100%;
         padding: 20px;
@@ -46,6 +46,7 @@
         }
     }
     .visited-fields {
+        flex-direction: column;
         display: flex;
         justify-content: flex-end;
         flex: 1;
@@ -53,7 +54,7 @@
     .visited-field {
         display: flex;
         align-items: center;
-        margin-right: 30px;
+        margin-bottom: 8px;
     }
 
     .visited-field__icon {
@@ -61,6 +62,7 @@
         width: 20px;
         border: 1px solid black;
         margin-right: 8px;
+        flex-shrink: 0;
     }
     .visited-field__icon--visited {
         background: $color-primary40;

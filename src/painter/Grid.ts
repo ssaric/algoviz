@@ -115,6 +115,12 @@ class Grid {
     );
   }
 
+  public removeWall(columnIndex: number, rowIndex: number) {
+    this.walls.delete(
+      [columnIndex, rowIndex].toString()
+    );
+  }
+
   public setStart(columnIndex: number, rowIndex: number) {
     this.start = new GridNode(new GridCoordinates(columnIndex, rowIndex));
   }
@@ -123,15 +129,6 @@ class Grid {
     this.end = new GridNode(new GridCoordinates(columnIndex, rowIndex));
   }
 
-  public toggleWall(columnIndex: number, rowIndex: number) {
-    const key = [columnIndex, rowIndex].toString();
-    if (this.walls.has(key)) this.walls.delete(key);
-    else
-      this.walls.set(
-        key,
-        new GridNode(new GridCoordinates(columnIndex, rowIndex))
-      );
-  }
 
   public updateColumns(newColumns: number) {
     this.columns = newColumns;
