@@ -22,12 +22,10 @@
 
 <script>
     import {createEventDispatcher} from 'svelte';
-    import {
-        faStepBackward,
-        faPlay,
-        faStop,
-        faStepForward
-    } from '@fortawesome/free-solid-svg-icons';
+    import { faStepBackward } from '@fortawesome/free-solid-svg-icons/faStepBackward';
+    import { faPlay } from '@fortawesome/free-solid-svg-icons/faPlay';
+    import { faStop } from '@fortawesome/free-solid-svg-icons/faStop';
+    import { faStepForward } from '@fortawesome/free-solid-svg-icons/faStepForward';
     import Icon from 'svelte-awesome';
     import { interval } from "../../store.ts";
 

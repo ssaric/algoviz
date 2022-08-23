@@ -1,3 +1,5 @@
+[![Publish Docker](https://github.com/ssaric/algoviz/actions/workflows/publish.yml/badge.svg)](https://github.com/ssaric/algoviz/actions/workflows/publish.yml)
+
 # Algoviz
 A project focusing on visualzing A* pathfinding algorithm. Available at https://algoviz.njanjo.com.
 

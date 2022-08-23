@@ -41,7 +41,7 @@
     import {Select, Button} from 'flowbite-svelte';
     import {
         faTimes,
-    } from '@fortawesome/free-solid-svg-icons';
+    } from '@fortawesome/free-solid-svg-icons/faTimes';
     import Icon from 'svelte-awesome';
 
     const dispatch = createEventDispatcher();

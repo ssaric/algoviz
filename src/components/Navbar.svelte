@@ -47,7 +47,7 @@
 <script>
     import {
         faGithub,
-    } from '@fortawesome/free-brands-svg-icons';
+    } from '@fortawesome/free-brands-svg-icons/faGithub';
     import Icon from 'svelte-awesome';
 
 </script>

@@ -164,7 +164,7 @@
 <script>
     import {createEventDispatcher} from 'svelte';
     import Controls from './Controls.svelte';
-    import { faGripHorizontal} from '@fortawesome/free-solid-svg-icons';
+    import { faGripHorizontal } from '@fortawesome/free-solid-svg-icons/faGripHorizontal';
     import { draggable } from 'svelte-drag';
     import Icon from "svelte-awesome";
     export let hasData;
