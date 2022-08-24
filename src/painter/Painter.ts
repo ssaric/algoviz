@@ -311,6 +311,7 @@ class Painter {
 
   public resetGrid = () => {
    this.resetVisualization();
+   this.grid.reset();
     const cells = this.container.querySelectorAll('td.cell--wall');
     [...cells].forEach(e => {
       e.classList.remove('cell--wall');
@@ -369,6 +370,7 @@ class Painter {
     const rowIndex = parseInt(targetElement.getAttribute("rowIndex") as string);
     this.grid.setStart(columnIndex, rowIndex);
     targetElement.classList.add("cell--start");
+    if (get(steps).length > 0) this.resetVisualization();
   }
 
   renderEndAtCell(targetElement: HTMLTableCellElement) {
@@ -382,6 +384,7 @@ class Painter {
     const rowIndex = parseInt(targetElement.getAttribute("rowIndex") as string);
     this.grid.setEnd(columnIndex, rowIndex);
     targetElement.classList.add("cell--end");
+    if (get(steps).length > 0) this.resetVisualization();
   }
 
   toggleWall(targetElement: HTMLTableCellElement) {

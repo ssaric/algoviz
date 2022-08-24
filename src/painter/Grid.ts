@@ -246,6 +246,10 @@ class Grid {
     );
   }
 
+  public reset(): void {
+    this.walls = new Map();
+  }
+
   public getWalkableNeighbours(gridNode: GridNode) {
     return this.getNeighboursTemplate(
       gridNode,
