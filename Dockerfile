@@ -1,5 +1,5 @@
 # Stage 0, "build-stage", based on Node.js, to build and compile the frontend
-FROM node:latest as build-stage
+FROM node:20 as build-stage
 # Setting working directory. All the path will be relative to WORKDIR
 WORKDIR /usr/src/app
 
