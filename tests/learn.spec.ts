@@ -1,9 +1,18 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 
 const boards = (page: Page) => page.locator('.panel');
 const settled = async (page: Page) => {
   // Both searches finish and report a verdict.
   await expect(page.locator('.panel__verdict')).toHaveCount(2, { timeout: 30000 });
+};
+
+/** The search finishing and the scrubber animation catching up to the end are
+ *  two different things -- `settled` only waits for the former. The figures
+ *  under a board are now live against wherever the scrubber sits, so reading
+ *  "the final numbers" means explicitly moving it there first. */
+const seekToEnd = async (page: Page) => {
+  const scrubber = page.getByRole('slider', { name: 'Timeline' });
+  await scrubber.fill((await scrubber.getAttribute('max')) ?? '0');
 };
 
 // The suite below covers "compare" lessons (two boards, one clock), which is
@@ -23,6 +32,7 @@ test('a compare lesson runs two boards on one clock', async ({ page }) => {
 
 test('shows the measured cost of an optimistic heuristic', async ({ page }) => {
   await settled(page);
+  await seekToEnd(page);
 
   const stats = await page.locator('.panel__stats').allInnerTexts();
   const expanded = stats.map((text) => Number(text.match(/expanded\s+(\d+)/)?.[1]));
@@ -218,5 +228,179 @@ test.describe('the speed-vs-correctness scoreboard', () => {
 
     await expect(page.getByText('optimal').first()).toBeVisible();
     await expect(page.getByText(/\+\d+ cells$/).first()).toBeVisible();
+  });
+});
+
+test.describe('single-step and live figures', () => {
+  test('the single-step buttons move the timeline by exactly one step', async ({ page }) => {
+    await settled(page);
+    const scrubber = page.getByRole('slider', { name: 'Timeline' });
+    await scrubber.fill('50');
+    expect(await scrubber.inputValue()).toBe('50');
+
+    await page.getByRole('button', { name: 'Step forward one' }).click();
+    expect(await scrubber.inputValue()).toBe('51');
+
+    await page.getByRole('button', { name: 'Step forward one' }).click();
+    expect(await scrubber.inputValue()).toBe('52');
+
+    await page.getByRole('button', { name: 'Step back one' }).click();
+    expect(await scrubber.inputValue()).toBe('51');
+  });
+
+  test('the skip buttons still move by a larger amount than a single step', async ({ page }) => {
+    await settled(page);
+    const scrubber = page.getByRole('slider', { name: 'Timeline' });
+    await scrubber.fill('50');
+
+    await page.getByRole('button', { name: 'Skip forward' }).click();
+    const afterSkip = Number(await scrubber.inputValue());
+    expect(afterSkip).toBeGreaterThan(51);
+  });
+
+  test("the board's figures update as the timeline scrubs, not just at the end", async ({
+    page
+  }) => {
+    await settled(page);
+    const scrubber = page.getByRole('slider', { name: 'Timeline' });
+
+    await scrubber.fill('5');
+    const early = await page.locator('.panel__stats').first().innerText();
+    const earlyExpanded = Number(early.match(/expanded\s+(\d+)/)?.[1]);
+
+    await seekToEnd(page);
+    const final = await page.locator('.panel__stats').first().innerText();
+    const finalExpanded = Number(final.match(/expanded\s+(\d+)/)?.[1]);
+
+    // "This is the final stuff" is not what should show at step 5.
+    expect(earlyExpanded).toBeGreaterThan(0);
+    expect(earlyExpanded).toBeLessThan(finalExpanded);
+  });
+
+  test('the figure keeps a fixed height as the frontier list grows and shrinks', async ({
+    page
+  }) => {
+    await page.goto('/?lesson=meet-the-frontier');
+    const figure = page.locator('figure');
+    await figure.waitFor();
+
+    const heightAtStart = (await figure.boundingBox())?.height;
+    // Let the run progress well into the middle, where the frontier is at
+    // its widest and used to make the whole row grow with it.
+    await page.waitForTimeout(1500);
+    const heightMidRun = (await figure.boundingBox())?.height;
+
+    expect(heightAtStart).toBeGreaterThan(0);
+    expect(heightMidRun).toBe(heightAtStart);
+  });
+});
+
+test.describe('the queue ties the board and the frontier panel together', () => {
+  /** The row's cell coordinate, from its `.tabular-nums` span -- not just any
+   *  `span`, since the top row's leading `▸` marker is one too. */
+  const rowCell = async (row: Locator) => {
+    const text = await row.locator('span.tabular-nums').first().innerText();
+    const [x, y] = text
+      .replace(/[()]/g, '')
+      .split(',')
+      .map((n) => n.trim());
+    return { x, y };
+  };
+
+  /** This lesson auto-plays continuously, so reading a row's coordinates and
+   *  then hovering them are two separate moments -- by the second one, the
+   *  cursor has moved on and that cell is no longer what the row described.
+   *  Waiting for a real frontier and then pausing gives a snapshot that
+   *  actually holds still for the rest of the test. */
+  const frozenFrontier = async (page: Page) => {
+    const rows = page.locator('.frontier-panel__row');
+    await expect(rows).toHaveCount(2, { timeout: 10000 });
+    await page.getByRole('button', { name: 'Stop' }).click();
+    return rows;
+  };
+
+  test('hovering the cell at the top of the queue says so', async ({ page }) => {
+    await page.goto('/?lesson=meet-the-frontier');
+    const rows = await frozenFrontier(page);
+
+    const { x, y } = await rowCell(rows.first());
+    await page.locator(`td[data-x="${x}"][data-y="${y}"]`).hover();
+
+    await expect(page.locator('.thoughts')).toContainText('Checking this one next');
+  });
+
+  test('hovering a queued cell further back reports its position', async ({ page }) => {
+    await page.goto('/?lesson=meet-the-frontier');
+    const rows = await frozenFrontier(page);
+
+    const { x, y } = await rowCell(rows.nth(1));
+    await page.locator(`td[data-x="${x}"][data-y="${y}"]`).hover();
+
+    await expect(page.locator('.thoughts')).toContainText('Currently waiting at position');
+  });
+
+  test('hovering a queued cell highlights its row in the frontier panel', async ({ page }) => {
+    await page.goto('/?lesson=meet-the-frontier');
+    const rows = await frozenFrontier(page);
+
+    const targetRow = rows.nth(1);
+    const { x, y } = await rowCell(targetRow);
+
+    // The style attribute always carries a box-shadow declaration; only its
+    // value (none vs. an inset ring) says whether the row is highlighted.
+    await expect(targetRow).toHaveAttribute('style', /box-shadow:\s*none/);
+    await page.locator(`td[data-x="${x}"][data-y="${y}"]`).hover();
+    await expect(targetRow).toHaveAttribute('style', /box-shadow:\s*inset/);
+  });
+});
+
+test.describe('the pull vector', () => {
+  test('draws all four directions, with the strongest one emphasised', async ({ page }) => {
+    await settled(page);
+    await page.locator('.panel').first().locator('td.cell--visited').nth(10).hover();
+
+    const arrow = page.locator('.pull-arrow');
+    await expect(arrow).toHaveCount(1);
+    // One line per direction, drawn twice over (muted pass, then winner pass).
+    expect(await arrow.locator('line').count()).toBe(4);
+
+    const winners = arrow.locator('line[stroke="var(--color-vector)"]');
+    const muted = arrow.locator('line[stroke="var(--color-ink-subtle)"]');
+    expect(await winners.count()).toBeGreaterThanOrEqual(1);
+    expect((await winners.count()) + (await muted.count())).toBe(4);
+  });
+});
+
+test.describe('reading like an article', () => {
+  test('the lede appears before the board figure, and the rest of the body after', async ({
+    page
+  }) => {
+    // The lede is the paragraph directly under the intro wrapper -- not the
+    // "Lesson N of M" label, which sits nested inside the header above it.
+    const ledeBox = await page.locator('article > div > p').first().boundingBox();
+    const figureBox = await page.locator('figure').boundingBox();
+    const restBox = await page.locator('article > div:last-of-type > p').first().boundingBox();
+
+    expect(ledeBox).not.toBeNull();
+    expect(figureBox).not.toBeNull();
+    expect(restBox).not.toBeNull();
+    expect(ledeBox!.y).toBeLessThan(figureBox!.y);
+    expect(figureBox!.y).toBeLessThan(restBox!.y);
+  });
+
+  test('previous/next navigation moves between adjacent lessons', async ({ page }) => {
+    const nav = page.getByRole('navigation', { name: 'Next lesson' });
+    await expect(nav).toBeVisible();
+
+    const startTitle = await page.getByRole('heading', { level: 1 }).textContent();
+
+    await nav.getByRole('button', { name: /Next/ }).click();
+    await expect(page).not.toHaveURL(/lesson=exact-vs-optimistic/);
+    const nextTitle = await page.getByRole('heading', { level: 1 }).textContent();
+    expect(nextTitle).not.toBe(startTitle);
+
+    await nav.getByRole('button', { name: /Previous/ }).click();
+    await expect(page).toHaveURL(/lesson=exact-vs-optimistic/);
+    expect(await page.getByRole('heading', { level: 1 }).textContent()).toBe(startTitle);
   });
 });

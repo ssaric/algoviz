@@ -2,19 +2,34 @@
   import AlgorithmPicker from '../controls/AlgorithmPicker.svelte';
   import HeuristicsPicker from '../controls/HeuristicsPicker.svelte';
   import Icon from '../Icon.svelte';
+  import type { Painter } from '../../board/Painter';
   import { ALGORITHMS, type AlgorithmId } from '../../core/algorithms';
   import type { HeuristicSpec } from '../../core/heuristics';
   import type { SearchOutcome } from '../../core/protocol';
 
   type Props = {
     algorithm: AlgorithmId;
+    painter: Painter | undefined;
+    cursor: number;
     outcome: SearchOutcome | null;
     onAlgorithmChange: (id: AlgorithmId) => void;
     onHeuristicChange: (spec: HeuristicSpec) => void;
     onResetGrid: () => void;
   };
 
-  let { algorithm, outcome, onAlgorithmChange, onHeuristicChange, onResetGrid }: Props = $props();
+  let {
+    algorithm,
+    painter,
+    cursor,
+    outcome,
+    onAlgorithmChange,
+    onHeuristicChange,
+    onResetGrid
+  }: Props = $props();
+
+  // Live rather than frozen at the final outcome, same reasoning as the
+  // Learn boards: at step 3 these are not the numbers from the end of the run.
+  const stats = $derived(painter ? painter.statsAt(cursor) : null);
 
   const swatches = [
     { color: 'bg-brand', label: 'Visited' },
@@ -46,10 +61,10 @@
       {/each}
     </div>
 
-    {#if outcome}
+    {#if stats && stats.visited > 0}
       <p data-testid="stats" class="text-ink-subtle text-xs tabular-nums">
-        {outcome.stats.visited} expanded &middot; {outcome.stats.discovered} discovered
-        {#if outcome.found}
+        {stats.visited} expanded &middot; {stats.discovered} discovered
+        {#if outcome?.found}
           &middot; path of {outcome.stats.pathLength}
         {/if}
       </p>

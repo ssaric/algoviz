@@ -10,7 +10,7 @@
   import type { HeuristicSpec } from '../../core/heuristics';
 
   let boardElement: HTMLDivElement;
-  let painter: Painter | undefined;
+  let painter = $state<Painter | undefined>();
 
   let algorithm = $state<AlgorithmId>(DEFAULT_ALGORITHM);
 
@@ -55,6 +55,8 @@
   <div class="relative flex min-h-0 flex-1 flex-col items-center">
     <Legend
       {algorithm}
+      {painter}
+      cursor={board.cursor}
       outcome={board.outcome}
       onAlgorithmChange={setAlgorithm}
       onHeuristicChange={setHeuristic}
@@ -70,8 +72,10 @@
       message={board.message}
       onPlay={() => painter?.solve()}
       onStop={() => painter?.pause()}
-      onBackward={() => painter?.skipBackward()}
-      onForward={() => painter?.skipForward()}
+      onSkipBackward={() => painter?.skipBackward()}
+      onSkipForward={() => painter?.skipForward()}
+      onStepBackward={() => painter?.stepBy(-1)}
+      onStepForward={() => painter?.stepBy(1)}
       onSeek={(cursor) => painter?.seek(cursor)}
     />
   </div>

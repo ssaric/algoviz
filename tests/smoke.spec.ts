@@ -96,14 +96,35 @@ test('reports when the goal is walled off', async ({ page }) => {
 });
 
 test('hovering a searched cell explains what the algorithm thought', async ({ page }) => {
+  // The sandbox's default start and end sit on the same row, where Euclidean
+  // collapses to Manhattan (lesson 2's exact scenario) -- on an open board
+  // with either, every visited cell ends up on the final path, leaving
+  // nothing that is only "expanded". A wall placed directly on that row
+  // forces a detour, so Euclidean's usual fan-out (lesson 1) shows up here
+  // too instead of a second straight line.
+  await page.getByLabel('Heuristic').selectOption('euclidean');
+  const start = page.locator('td.cell--start');
+  const end = page.locator('td.cell--end');
+  const row = Number(await end.getAttribute('data-y'));
+  const midColumn = Math.floor(
+    (Number(await start.getAttribute('data-x')) + Number(await end.getAttribute('data-x'))) / 2
+  );
+  await page.locator(`td[data-x="${midColumn}"][data-y="${row}"]`).click();
   await solve(page);
+  // solve() only waits for the first path cell to appear -- the backtrack
+  // animation is still actively adding more of them at that point, which
+  // makes ":not(.cell--path)" a moving target. Wait for playback to fully
+  // stop so the class list underneath the hover is no longer changing.
+  await expect(page.getByRole('button', { name: 'Play' })).toBeVisible({ timeout: 20000 });
 
-  // A cell the search definitely expanded.
-  await page.locator('td.cell--visited').nth(3).hover();
+  // A cell the search expanded but that never made it onto the final path --
+  // .cell--visited alone can also match a path cell, whose badge would
+  // correctly read "On the path" instead.
+  await page.locator('td.cell--visited:not(.cell--path)').nth(3).hover();
 
   const thoughts = page.locator('.thoughts');
   await expect(thoughts).toBeVisible();
-  await expect(thoughts).toContainText(/Expanded|Discovered/);
+  await expect(thoughts).toContainText('Expanded');
   await expect(thoughts).toContainText('f = g + h');
 });
 
@@ -218,4 +239,65 @@ test('reset grid clears walls', async ({ page }) => {
   await page.getByRole('button', { name: 'Reset Grid' }).click();
 
   await expect(page.locator('td.cell--wall')).toHaveCount(0);
+});
+
+test('the single-step buttons move the timeline by exactly one step', async ({ page }) => {
+  await solve(page);
+  await expect(page.getByRole('button', { name: 'Play' })).toBeVisible({ timeout: 20000 });
+
+  const scrubber = page.getByRole('slider', { name: 'Timeline' });
+  await scrubber.fill('20');
+  expect(await scrubber.inputValue()).toBe('20');
+
+  await page.getByRole('button', { name: 'Step forward one' }).click();
+  expect(await scrubber.inputValue()).toBe('21');
+
+  await page.getByRole('button', { name: 'Step back one' }).click();
+  await page.getByRole('button', { name: 'Step back one' }).click();
+  expect(await scrubber.inputValue()).toBe('19');
+});
+
+test('the skip buttons move by more than a single step', async ({ page }) => {
+  await solve(page);
+  await expect(page.getByRole('button', { name: 'Play' })).toBeVisible({ timeout: 20000 });
+
+  const scrubber = page.getByRole('slider', { name: 'Timeline' });
+  await scrubber.fill('20');
+  await page.getByRole('button', { name: 'Skip backward' }).click();
+  const afterSkip = Number(await scrubber.inputValue());
+
+  expect(afterSkip).toBeLessThan(19);
+});
+
+test('the stats line updates live during playback, not just at the end', async ({ page }) => {
+  // The default start/end sit on the same row, where every heuristic is
+  // exact; a wall forces some cells to be explored and discarded so the
+  // expanded count actually keeps climbing rather than jumping straight to
+  // its final value in one step.
+  await page.getByLabel('Heuristic').selectOption('euclidean');
+  const start = page.locator('td.cell--start');
+  const end = page.locator('td.cell--end');
+  const row = Number(await end.getAttribute('data-y'));
+  const midColumn = Math.floor(
+    (Number(await start.getAttribute('data-x')) + Number(await end.getAttribute('data-x'))) / 2
+  );
+  await page.locator(`td[data-x="${midColumn}"][data-y="${row}"]`).click();
+
+  await page.getByRole('button', { name: 'Play' }).click();
+
+  const stats = page.getByTestId('stats');
+  await expect(stats).toBeVisible({ timeout: 20000 });
+  const early = await stats.innerText();
+  const earlyExpanded = Number(early.match(/(\d+)\s+expanded/)?.[1]);
+
+  await expect(page.locator('td.cell--path').first()).toBeVisible({ timeout: 20000 });
+  await expect(page.getByRole('button', { name: 'Play' })).toBeVisible({ timeout: 20000 });
+  const scrubber = page.getByRole('slider', { name: 'Timeline' });
+  await scrubber.fill((await scrubber.getAttribute('max')) ?? '0');
+
+  const final = await stats.innerText();
+  const finalExpanded = Number(final.match(/(\d+)\s+expanded/)?.[1]);
+
+  expect(earlyExpanded).toBeGreaterThan(0);
+  expect(earlyExpanded).toBeLessThan(finalExpanded);
 });

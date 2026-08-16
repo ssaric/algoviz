@@ -2,7 +2,7 @@
   import type { CellInspection } from '../board/Painter';
   import { ALGORITHMS } from '../core/algorithms';
   import { heuristicTex, HEURISTIC_LABELS } from '../core/heuristics';
-  import type { StepKind } from '../core/protocol';
+  import type { Step, StepKind } from '../core/protocol';
   import Formula from './Formula.svelte';
 
   type Props = {
@@ -19,44 +19,68 @@
     path: { label: 'On the path', tone: 'bg-path text-white' }
   };
 
+  /** Only these three kinds leave a colour on the board -- a reopen or a skip
+   *  changes the numbers but not the cell's paint, so "why is it this colour"
+   *  has to look past them to whichever of these happened most recently. */
+  const PAINTS_CELL: readonly StepKind[] = ['visit', 'discover', 'path'];
+
   const algorithm = $derived(ALGORITHMS[inspection.algorithm]);
   const usesHeuristic = $derived(algorithm.usesHeuristic);
 
-  /** The last thing that happened here is what the numbers describe. */
-  const latest = $derived(inspection.events[inspection.events.length - 1].step);
+  /** The freshest thing that happened here at all -- used for the numbers,
+   *  since a reopen updates cost without repainting the cell. */
+  const latest = $derived(inspection.events[inspection.events.length - 1]);
+
+  /** The freshest thing that actually explains the current colour. */
+  const painted = $derived(
+    [...inspection.events].reverse().find((e) => PAINTS_CELL.includes(e.step.kind)) ?? latest
+  );
+
+  const arrivedVia = $derived(latest.step.parent);
+
+  /** The rest of the history, oldest first, as a single breadcrumb line
+   *  rather than a repeating card per event -- the story of how this cell got
+   *  here, told in one sentence instead of a log. */
+  const MAX_TRAIL = 6;
+  const trail = $derived(inspection.events.slice(0, -1));
+  const trailShown = $derived(trail.slice(-MAX_TRAIL));
+  const trailHidden = $derived(Math.max(0, trail.length - MAX_TRAIL));
 
   const heuristic = $derived(
-    heuristicTex(inspection.heuristic, inspection.delta.dx, inspection.delta.dy, latest.h)
+    heuristicTex(inspection.heuristic, inspection.delta.dx, inspection.delta.dy, latest.step.h)
   );
 
   // Only breadth-first reads `order`, and for it priority is the discovery
   // order, so passing it through is exact rather than a stand-in.
-  const score = $derived(
-    algorithm.scoreTexFor({ g: latest.g, h: latest.h, order: latest.priority })
+  const scoreNow = $derived(
+    algorithm.scoreTexFor({ g: latest.step.g, h: latest.step.h, order: latest.step.priority })
   );
 
   const pull = $derived(inspection.pull);
+  const bestDirection = $derived(
+    pull?.directions.find((d) => d.deltaH === -pull.best)?.name ?? null
+  );
 
-  /** What the gradient means for the shape of the search. */
+  /** What the gradient means for what happens next from here. */
   const verdict = $derived.by(() => {
     if (!pull) return { text: '', tone: '' };
     if (pull.ratio >= 1.001)
       return {
-        text: 'More than the step costs, so f falls as it advances: the search charges at the goal, and the shortest-path guarantee is gone.',
+        text: 'More than the step costs, so f falls as the search advances from here: it will charge straight at the goal, at the cost of the shortest-path guarantee.',
         tone: 'text-path'
       };
     if (pull.ratio >= 0.999)
       return {
-        text: 'Exactly what the step costs, so f stays flat along an optimal route and the search barely wanders.',
+        text: 'Exactly what the step costs, so f stays flat from here on an optimal route -- the search will barely wander.',
         tone: 'text-brand'
       };
     return {
-      text: `Less than the step costs, so f creeps up by ${round(1 - pull.best)} per move. Rival directions stay competitive and the search fans out.`,
+      text: `Less than the step costs, so f will creep up by ${round(1 - pull.best)} per move from here. Other directions stay competitive, which is why the search fans out.`,
       tone: 'text-ink-muted'
     };
   });
 
-  const WIDTH = 360;
+  const WIDTH = 420;
   const GAP = 10;
 
   let viewportWidth = $state(1024);
@@ -78,13 +102,16 @@
   const top = $derived(inspection.anchor.top + inspection.anchor.height + GAP);
   const bottom = $derived(viewportHeight - inspection.anchor.top + GAP);
 
-  // Cap to the room actually available on the chosen side, so a long history
-  // scrolls inside the card instead of running off the screen.
+  // Cap to the room actually available on the chosen side. The narrative
+  // below is short enough that this is rarely reached, but a cell touched
+  // many times can still run long, and this is the fallback for that case.
   const maxHeight = $derived(
     Math.max(160, below ? viewportHeight - top - GAP : inspection.anchor.top - 2 * GAP)
   );
 
   const round = (n: number) => (Number.isInteger(n) ? `${n}` : n.toFixed(2));
+  const trailLabel = (event: { index: number; step: Step }) =>
+    `${KINDS[event.step.kind].label} (step ${event.index + 1})`;
 </script>
 
 <svelte:window bind:innerWidth={viewportWidth} bind:innerHeight={viewportHeight} />
@@ -106,42 +133,74 @@
     </span>
   </header>
 
+  <!-- How it got here, and why it is this colour right now. -->
   <section class="bg-canvas mb-3 rounded-xl p-3">
-    {#if usesHeuristic}
-      <p class="text-ink-subtle mb-1 text-[11px] font-semibold tracking-wider uppercase">
-        Heuristic &mdash; how far it still looks
+    <span
+      class="inline-block rounded-md px-2 py-0.5 text-[11px] font-semibold tracking-wide uppercase {KINDS[
+        painted.step.kind
+      ].tone}"
+    >
+      {KINDS[painted.step.kind].label}
+    </span>
+
+    <p class="text-ink mt-2 text-sm leading-relaxed">{latest.step.note}</p>
+
+    {#if inspection.queueRank === 1}
+      <p
+        class="mt-2 rounded-lg px-2 py-1.5 text-xs font-medium"
+        style:background="var(--color-playhead-soft)"
+        style:color="var(--color-playhead)"
+      >
+        Checking this one next &mdash; it is at the top of the queue right now.
       </p>
-      <Formula tex={heuristic.definition} display class="text-ink text-sm" />
-      <Formula tex={heuristic.substituted} display class="text-ink-muted mt-1 text-sm" />
+    {:else if inspection.queueRank !== null}
       <p class="text-ink-subtle mt-1.5 text-xs">
-        with &Delta;x = {round(inspection.delta.dx)}, &Delta;y = {round(inspection.delta.dy)} to the goal
-      </p>
-    {:else}
-      <p class="text-ink-subtle mb-1 text-[11px] font-semibold tracking-wider uppercase">
-        No heuristic
-      </p>
-      <p class="text-ink-muted text-xs leading-relaxed">
-        {algorithm.name} does not estimate the distance remaining, so <em>h</em> stays 0.
+        Currently waiting at position {inspection.queueRank} in the queue.
       </p>
     {/if}
 
-    <p class="text-ink-subtle mt-3 mb-1 text-[11px] font-semibold tracking-wider uppercase">
-      Score &mdash; how it is ordered
+    <p class="text-ink-subtle mt-1.5 text-xs">
+      {#if arrivedVia}
+        arrived via ({arrivedVia.x}, {arrivedVia.y}) &middot;
+      {:else}
+        the start of the search &middot;
+      {/if}
+      step {latest.index + 1} of {inspection.totalSteps}
     </p>
-    <Formula tex={algorithm.scoreTex} display class="text-ink text-sm" />
-    <Formula tex={score} display class="text-ink-muted mt-1 text-sm" />
+
+    {#if trailShown.length > 0}
+      <p class="text-ink-subtle mt-1.5 text-xs italic">
+        {#if trailHidden > 0}&hellip; and {trailHidden} earlier &middot;
+        {/if}
+        {trailShown.map(trailLabel).join(' → ')}
+      </p>
+    {/if}
+
+    <p class="text-ink-subtle mt-2.5 mb-1 text-[11px] font-semibold tracking-wider uppercase">
+      Scored by
+    </p>
+    <Formula tex={algorithm.scoreTex} class="text-ink text-sm" />
+    <Formula tex={scoreNow} class="text-ink-muted ml-2 text-sm" />
   </section>
 
-  {#if pull && pull.best > 0}
-    <section class="bg-canvas mb-3 rounded-xl p-3">
-      <p class="text-ink-subtle mb-1 text-[11px] font-semibold tracking-wider uppercase">
-        Pull &mdash; how hard it steers
-      </p>
+  <!-- Where the heuristic points from here. -->
+  <section class="bg-canvas rounded-xl p-3">
+    <p class="text-ink-subtle mb-1 text-[11px] font-semibold tracking-wider uppercase">
+      From here, where next
+    </p>
+
+    {#if usesHeuristic}
+      <p class="text-ink-subtle mb-1 text-xs">Scored by how far it still looks:</p>
+      <Formula tex={heuristic.definition} class="text-ink text-sm" />
+      <Formula tex={heuristic.substituted} class="text-ink-muted mt-1 mb-2 text-sm" />
+    {/if}
+
+    {#if pull && pull.best > 0}
       <p class="text-ink text-sm leading-relaxed">
-        The best step from here drops <em>h</em> by
-        <strong class="tabular-nums">{round(pull.best)}</strong>, and every step costs 1.
+        The best step from here is <strong class="capitalize">{bestDirection}</strong> &mdash; it
+        drops <em>h</em> by <strong class="tabular-nums">{round(pull.best)}</strong>.
+        <span class={verdict.tone}>{verdict.text}</span>
       </p>
-      <p class="mt-1 text-xs leading-relaxed {verdict.tone}">{verdict.text}</p>
 
       <div class="mt-2 grid grid-cols-4 gap-1.5 text-center text-[11px]">
         {#each pull.directions as direction (direction.name)}
@@ -157,40 +216,16 @@
           </div>
         {/each}
       </div>
-    </section>
-  {/if}
-
-  <ol class="m-0 flex list-none flex-col gap-3 p-0">
-    {#each inspection.events as event (event.index)}
-      <li class="border-line border-t pt-3 first:border-t-0 first:pt-0">
-        <div class="flex items-center justify-between gap-2">
-          <span
-            class="inline-block rounded-md px-2 py-0.5 text-[11px] font-semibold tracking-wide uppercase {KINDS[
-              event.step.kind
-            ].tone}"
-          >
-            {KINDS[event.step.kind].label}
-          </span>
-          <span class="text-ink-subtle text-[11px] tabular-nums">
-            step {event.index + 1} of {inspection.totalSteps}
-          </span>
-        </div>
-        <p class="text-ink mt-2 text-sm leading-relaxed">{event.step.note}</p>
-        <dl class="text-ink-subtle mt-2 flex gap-4 text-xs tabular-nums">
-          <div class="flex gap-1">
-            <dt class="font-semibold">g</dt>
-            <dd class="m-0">{round(event.step.g)}</dd>
-          </div>
-          <div class="flex gap-1">
-            <dt class="font-semibold">h</dt>
-            <dd class="m-0">{round(event.step.h)}</dd>
-          </div>
-          <div class="flex gap-1">
-            <dt class="font-semibold">score</dt>
-            <dd class="m-0">{round(event.step.priority)}</dd>
-          </div>
-        </dl>
-      </li>
-    {/each}
-  </ol>
+    {:else if usesHeuristic}
+      <p class="text-ink-muted text-xs leading-relaxed">
+        Every direction from here looks equally far from the goal, so nothing about the heuristic
+        favours one over another.
+      </p>
+    {:else}
+      <p class="text-ink-muted text-xs leading-relaxed">
+        No heuristic: {algorithm.name} does not estimate the remaining distance, so there is no preferred
+        direction from here &mdash; every neighbour looks equally worth trying next.
+      </p>
+    {/if}
+  </section>
 </aside>

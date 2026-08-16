@@ -10,8 +10,10 @@
     message: string | null;
     onPlay: () => void;
     onStop: () => void;
-    onForward: () => void;
-    onBackward: () => void;
+    onSkipForward: () => void;
+    onSkipBackward: () => void;
+    onStepForward: () => void;
+    onStepBackward: () => void;
     onSeek: (cursor: number) => void;
   };
 
@@ -22,8 +24,10 @@
     message,
     onPlay,
     onStop,
-    onForward,
-    onBackward,
+    onSkipForward,
+    onSkipBackward,
+    onStepForward,
+    onStepBackward,
     onSeek
   }: Props = $props();
 
@@ -65,6 +69,15 @@
   </div>
 
   <div class="mt-2 flex justify-center">
-    <Controls {hasData} {isPlaying} {onPlay} {onStop} {onForward} {onBackward} />
+    <Controls
+      {hasData}
+      {isPlaying}
+      {onPlay}
+      {onStop}
+      {onSkipForward}
+      {onSkipBackward}
+      {onStepForward}
+      {onStepBackward}
+    />
   </div>
 </div>

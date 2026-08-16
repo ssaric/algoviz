@@ -8,7 +8,8 @@ import {
   type HeuristicSpec
 } from '../core/heuristics';
 import { frontierAt as reconstructFrontier, type FrontierEntry } from '../core/frontier';
-import type { SearchOutcome, Step, StepKind } from '../core/protocol';
+import type { SearchOutcome, SearchStats, Step, StepKind } from '../core/protocol';
+import { statsAt as reconstructStats } from '../core/stats';
 import { PointerController, type BoardEditor } from './PointerController';
 import { Timeline, type Direction, type TimelineState } from './Timeline';
 import { WorkerClient } from './WorkerClient';
@@ -61,6 +62,11 @@ export type CellInspection = {
   readonly totalSteps: number;
   /** How hard the heuristic leans on this cell; null when there is none. */
   readonly pull: HeuristicPull | null;
+  /** 1-based position on the frontier right now, or null once it has been
+   *  expanded (or was never on it in the first place). Ties the popup back to
+   *  the same queue the frontier panel shows -- rank 1 is what gets checked
+   *  next. */
+  readonly queueRank: number | null;
   readonly events: readonly InspectedEvent[];
 };
 
@@ -221,6 +227,10 @@ export class Painter implements BoardEditor {
       .filter((event): event is InspectedEvent => event.step !== null);
 
     if (events.length === 0) return null;
+
+    const targetId = cellId(target);
+    const rank = this.frontierAt(cursor).findIndex((entry) => cellId(entry.cell) === targetId);
+
     return {
       cell: target,
       anchor,
@@ -231,6 +241,7 @@ export class Painter implements BoardEditor {
       pull: ALGORITHMS[this.algorithm].usesHeuristic
         ? heuristicPull(this.heuristic, target, this.grid.end)
         : null,
+      queueRank: rank === -1 ? null : rank + 1,
       events
     };
   }
@@ -245,6 +256,15 @@ export class Painter implements BoardEditor {
    */
   frontierAt(cursor: number): readonly FrontierEntry[] {
     return reconstructFrontier(this.timeline.knownSteps, cursor);
+  }
+
+  /**
+   * Expanded/discovered/path counts as of a given point in the timeline, so a
+   * "cells expanded" figure reflects where the scrubber actually is rather
+   * than sitting frozen at the final total until the run completes.
+   */
+  statsAt(cursor: number): SearchStats {
+    return reconstructStats(this.timeline.knownSteps, cursor);
   }
 
   subscribe(listener: BoardListener): () => void {
@@ -285,14 +305,19 @@ export class Painter implements BoardEditor {
     this.timeline.seek(cursor);
   }
 
-  skipForward(): void {
+  /** Moves the playhead by an arbitrary number of steps, positive or
+   *  negative. `skipForward`/`skipBackward` are just this at a fixed size. */
+  stepBy(delta: number): void {
     this.pause();
-    this.timeline.stepBy(SKIP_SIZE);
+    this.timeline.stepBy(delta);
+  }
+
+  skipForward(): void {
+    this.stepBy(SKIP_SIZE);
   }
 
   skipBackward(): void {
-    this.pause();
-    this.timeline.stepBy(-SKIP_SIZE);
+    this.stepBy(-SKIP_SIZE);
   }
 
   setAlgorithm(id: AlgorithmId): void {
