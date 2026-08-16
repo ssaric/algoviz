@@ -28,9 +28,10 @@ export default ts.config(
     }
   },
   {
-    // The board renders itself with plain DOM APIs and must stay
-    // framework-free so it can be tested and reused without Svelte.
-    files: ['src/board/**'],
+    // The board renders itself with plain DOM APIs and the core model is
+    // shared with the worker. Both must stay framework-free so they can be
+    // tested and reused without Svelte.
+    files: ['src/board/**', 'src/core/**', 'src/worker/**'],
     rules: {
       'no-restricted-imports': ['error', { patterns: ['svelte', 'svelte/*', '$app/*'] }]
     }

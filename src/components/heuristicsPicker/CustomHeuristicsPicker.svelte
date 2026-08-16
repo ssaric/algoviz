@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { DEFAULT_CUSTOM_FORMULA } from '../../core/heuristics';
 
   type Props = {
     onApplyFormula: (formula: string) => void;
@@ -7,11 +8,11 @@
 
   let { onApplyFormula }: Props = $props();
 
-  let formula = $state('sqrt(x^2 + y^2)');
+  let formula = $state(DEFAULT_CUSTOM_FORMULA);
 
-  // Publish the default once on mount so "Custom" is never selected without a
-  // formula behind it. Typing must not re-apply, or every keystroke would
-  // restart the visualization.
+  // Publish once on mount so "Custom" is never selected without a formula
+  // behind it. Typing must not re-apply, or every keystroke would restart the
+  // visualization.
   onMount(() => onApplyFormula(formula));
 </script>
 

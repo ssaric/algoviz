@@ -1,4 +1,12 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+const emptyCell = (page: Page, nth: number) =>
+  page.locator('td.cell:not(.cell--start):not(.cell--end)').nth(nth);
+
+const solve = async (page: Page) => {
+  await page.getByRole('button', { name: 'Play' }).click();
+  await expect(page.locator('td.cell--path').first()).toBeVisible({ timeout: 20000 });
+};
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -14,7 +22,7 @@ test('renders the board with a start and an end cell', async ({ page }) => {
 });
 
 test('toggles a wall when a cell is clicked', async ({ page }) => {
-  const cell = page.locator('td.cell:not(.cell--start):not(.cell--end)').nth(20);
+  const cell = emptyCell(page, 20);
 
   await cell.click();
   await expect(cell).toHaveClass(/cell--wall/);
@@ -23,18 +31,72 @@ test('toggles a wall when a cell is clicked', async ({ page }) => {
   await expect(cell).not.toHaveClass(/cell--wall/);
 });
 
-test('play runs the search and paints a path to the goal', async ({ page }) => {
-  // isGridValid() requires at least one wall before the search will start.
-  await page.locator('td.cell:not(.cell--start):not(.cell--end)').nth(20).click();
+test('drags a stroke of walls without flickering them back off', async ({ page }) => {
+  const from = await emptyCell(page, 200).boundingBox();
+  const to = await emptyCell(page, 205).boundingBox();
+  if (!from || !to) throw new Error('cells are not laid out');
+
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 12 });
+  await page.mouse.up();
+
+  expect(await page.locator('td.cell--wall').count()).toBeGreaterThan(1);
+});
+
+test('runs the search on an empty board and paints a path', async ({ page }) => {
+  await solve(page);
+
+  expect(await page.locator('td.cell--visited').count()).toBeGreaterThan(0);
+  expect(await page.locator('td.cell--path').count()).toBeGreaterThan(0);
+});
+
+test('rewinding the timeline undoes every painted cell', async ({ page }) => {
+  await solve(page);
+  await expect(page.locator('td.cell--discovered').first()).toBeVisible();
+
+  const slider = page.getByRole('slider', { name: 'Timeline' });
+  await slider.fill('0');
+
+  await expect(page.locator('td.cell--visited')).toHaveCount(0);
+  await expect(page.locator('td.cell--discovered')).toHaveCount(0);
+  await expect(page.locator('td.cell--path')).toHaveCount(0);
+});
+
+test('seeking forward and back returns the board to the same state', async ({ page }) => {
+  await solve(page);
+  const slider = page.getByRole('slider', { name: 'Timeline' });
+
+  await slider.fill('40');
+  const visitedAt40 = await page.locator('td.cell--visited').count();
+
+  await slider.fill('120');
+  await slider.fill('40');
+
+  expect(await page.locator('td.cell--visited').count()).toBe(visitedAt40);
+});
+
+test('reports when the goal is walled off', async ({ page }) => {
+  // Fence the end cell in on all four sides.
+  const end = page.locator('td.cell--end');
+  const x = Number(await end.getAttribute('data-x'));
+  const y = Number(await end.getAttribute('data-y'));
+  for (const [dx, dy] of [
+    [-1, 0],
+    [1, 0],
+    [0, -1],
+    [0, 1]
+  ]) {
+    await page.locator(`td[data-x="${x + dx}"][data-y="${y + dy}"]`).click();
+  }
 
   await page.getByRole('button', { name: 'Play' }).click();
 
-  await expect(page.locator('td.cell--visited').first()).toBeVisible({ timeout: 15000 });
-  await expect(page.locator('td.cell--path').first()).toBeVisible({ timeout: 15000 });
+  await expect(page.getByRole('status')).toContainText('No path exists', { timeout: 20000 });
 });
 
 test('reset grid clears walls', async ({ page }) => {
-  const cell = page.locator('td.cell:not(.cell--start):not(.cell--end)').nth(20);
+  const cell = emptyCell(page, 20);
   await cell.click();
   await expect(cell).toHaveClass(/cell--wall/);
 

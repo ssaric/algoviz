@@ -1,15 +1,17 @@
 <script lang="ts">
   import HeuristicsPicker from '../heuristicsPicker/HeuristicsPicker.svelte';
+  import type { HeuristicSpec } from '../../core/heuristics';
 
   type Props = {
     onResetGrid: () => void;
+    onHeuristicChange: (spec: HeuristicSpec) => void;
   };
 
-  let { onResetGrid }: Props = $props();
+  let { onResetGrid, onHeuristicChange }: Props = $props();
 </script>
 
 <div class="legend">
-  <HeuristicsPicker {onResetGrid} />
+  <HeuristicsPicker {onResetGrid} {onHeuristicChange} />
   <div class="legend-wrapper">
     <div class="visited-fields">
       <div class="visited-field">

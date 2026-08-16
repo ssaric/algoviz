@@ -1,44 +1,42 @@
 <script lang="ts">
-  import { Heuristics } from '../../constants/types';
-  import { heuristics } from '../../store';
+  import { HEURISTIC_LABELS, type HeuristicKind, type HeuristicSpec } from '../../core/heuristics';
   import CustomHeuristicsPicker from './CustomHeuristicsPicker.svelte';
   import Icon from '../Icon.svelte';
 
   type Props = {
     onResetGrid: () => void;
+    onHeuristicChange: (spec: HeuristicSpec) => void;
   };
 
-  let { onResetGrid }: Props = $props();
+  let { onResetGrid, onHeuristicChange }: Props = $props();
 
-  const heuristicChoices = [
-    { value: Heuristics.MANHATTAN, name: 'Manhattan' },
-    { value: Heuristics.EUCLIDEAN, name: 'Euclidean' },
-    { value: Heuristics.CUSTOM, name: 'Custom' }
-  ];
+  const choices: HeuristicKind[] = ['manhattan', 'euclidean', 'custom'];
 
-  let heuristicsValue = $state<Heuristics>(Heuristics.EUCLIDEAN);
+  let kind = $state<HeuristicKind>('euclidean');
 
-  // While "Custom" is selected the formula picker owns the store, so publishing
-  // a bare { type: CUSTOM } here would leave it without a formula to evaluate.
-  $effect(() => {
-    if (heuristicsValue === Heuristics.CUSTOM) return;
-    heuristics.set({ type: heuristicsValue });
-  });
-
-  function applyFormula(formula: string) {
-    heuristics.set({ type: Heuristics.CUSTOM, formula });
+  function selectKind(next: HeuristicKind) {
+    kind = next;
+    // The formula picker publishes the custom spec itself once it mounts, so
+    // "custom" is never announced without a formula behind it.
+    if (next !== 'custom') onHeuristicChange({ kind: next });
   }
 </script>
 
 <div class="heuristics">
   <div class="heuristics-picker">
-    <select bind:value={heuristicsValue} aria-label="Heuristic">
-      {#each heuristicChoices as choice (choice.value)}
-        <option value={choice.value}>{choice.name}</option>
+    <select
+      value={kind}
+      onchange={(event) => selectKind(event.currentTarget.value as HeuristicKind)}
+      aria-label="Heuristic"
+    >
+      {#each choices as choice (choice)}
+        <option value={choice}>{HEURISTIC_LABELS[choice]}</option>
       {/each}
     </select>
-    {#if heuristicsValue === Heuristics.CUSTOM}
-      <CustomHeuristicsPicker onApplyFormula={applyFormula} />
+    {#if kind === 'custom'}
+      <CustomHeuristicsPicker
+        onApplyFormula={(formula) => onHeuristicChange({ kind: 'custom', formula })}
+      />
     {/if}
   </div>
   <div class="button-wrapper">

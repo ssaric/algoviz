@@ -1,188 +1,60 @@
-import Grid, { setHeuristicsFunction } from '../painter/Grid';
+import { Grid } from '../core/Grid';
+import { createHeuristic } from '../core/heuristics';
 import {
-  AlgorithmWorkerStepType,
-  MessageType,
-  type AlgorithmInfoMessage,
-  type AlgorithmStep,
-  type GridConstructorData,
-  type WorkerGridTransferData
-} from '../constants/types';
-import GridNode, { GridCoordinates } from '../painter/GridNode';
+  STEP_BATCH_SIZE,
+  type Step,
+  type WorkerRequest,
+  type WorkerResponse
+} from '../core/protocol';
+import { search } from '../core/search';
 
 const ctx = self as unknown as Worker;
 
-function processNeighbours(
-  node: GridNode,
-  neighbours: GridNode[],
-  open: GridNode[],
-  end: GridNode,
-  grid: Grid
-) {
-  neighbours.forEach((neighbour) => {
-    neighbour.setParameters(end, node);
-    const existingNode = open.find((n) => n.id === neighbour.id);
-    if (existingNode && neighbour.g > existingNode.g) {
-      sendAlgorithmInfoMessage(
-        createInfoStep(
-          neighbour.id,
-          `This node was previously discovered and alternative path to it proves to be better`
-        )
-      );
-      return;
-    } else if (existingNode) {
-      sendAlgorithmInfoMessage(
-        createInfoStep(
-          neighbour.id,
-          `This node was previously discovered and but better path was found`
-        )
-      );
-      open.splice(open.indexOf(existingNode), 1);
-    }
-    sendAlgorithmInfoMessage(
-      createInfoStep(
-        neighbour.id,
-        `Discovered a new node and sending it to open stack`,
-        [neighbour.g, neighbour.h],
-        node.id
-      )
-    );
-    grid.discover(neighbour);
-    sendAlgorithmStep(createDiscoverStep(neighbour));
-    open.push(neighbour);
+const post = (message: WorkerResponse): void => ctx.postMessage(message);
+
+function run(request: WorkerRequest): void {
+  const { runId } = request;
+  post({ kind: 'started', runId });
+
+  const grid = new Grid({
+    columns: request.grid.columns,
+    rows: request.grid.rows,
+    start: request.grid.start,
+    end: request.grid.end,
+    walls: request.grid.walls
   });
-}
 
-function markPath(endNode: GridNode) {
-  let backtrackNode = endNode;
-  while (backtrackNode.parent != undefined) {
-    sendAlgorithmStep(createMarkPathStep(backtrackNode));
-    backtrackNode = backtrackNode.parent;
-  }
-  sendAlgorithmStep(createMarkPathStep(backtrackNode));
-}
+  const steps = search(grid, createHeuristic(request.heuristic));
+  let batch: Step[] = [];
 
-function sendAlgorithmStep(step: AlgorithmStep) {
-  ctx.postMessage([MessageType.ALGORITHM_STEP, step]);
-}
-
-function sendAlgorithmInfoMessage(step: AlgorithmInfoMessage) {
-  ctx.postMessage([MessageType.INFO_DATA, step]);
-}
-
-function createStartStep() {
-  return {
-    type: AlgorithmWorkerStepType.START
+  const flush = (): void => {
+    if (batch.length === 0) return;
+    post({ kind: 'steps', runId, steps: batch });
+    batch = [];
   };
-}
 
-function createInfoStep(
-  tileId: string,
-  info: string,
-  ghValues?: [number, number],
-  parent?: string
-): AlgorithmInfoMessage {
-  return {
-    type: AlgorithmWorkerStepType.INFO,
-    info,
-    ghValues,
-    tileId,
-    parent
-  };
-}
-
-function createMarkPathStep(node: GridNode): AlgorithmStep {
-  return {
-    type: AlgorithmWorkerStepType.MARK_PATH,
-    location: node.toArray()
-  };
-}
-
-function createEndStep(node: GridNode): AlgorithmStep {
-  return {
-    type: AlgorithmWorkerStepType.END,
-    location: node.toArray()
-  };
-}
-
-function createVisitStep(node: GridNode, neighbours: [number, number][]): AlgorithmStep {
-  return {
-    type: AlgorithmWorkerStepType.VISIT,
-    neighbours,
-    location: node.toArray()
-  };
-}
-
-function createDiscoverStep(node: GridNode): AlgorithmStep {
-  return {
-    type: AlgorithmWorkerStepType.DISCOVER,
-    location: node.toArray()
-  };
-}
-
-function sortOpenNodes(open: GridNode[]) {
-  open.sort((a, b) => {
-    const costDiff = b.totalCost - a.totalCost;
-    if (costDiff === 0) {
-      return b.hCost - a.hCost;
-    }
-    return costDiff;
-  });
-}
-
-function process(grid: Grid) {
-  if (!grid.start || !grid.end) return;
-  const startNode = grid.start;
-  const endNode = grid.end;
-  const open = [startNode];
-  sendAlgorithmStep(createStartStep());
-  while (open.length > 0) {
-    const currentNode: GridNode | null | undefined = open.pop();
-    if (!currentNode) return;
-    grid.visit(currentNode);
-    if (grid.isEnd(currentNode)) {
-      sendAlgorithmStep(createEndStep(currentNode));
-      markPath(currentNode);
+  for (;;) {
+    const next = steps.next();
+    if (next.done) {
+      flush();
+      post({ kind: 'finished', runId, outcome: next.value });
       return;
     }
-    const neighbours: GridNode[] = [...grid.getWalkableNeighbours(currentNode).values()];
-    sendAlgorithmStep(
-      createVisitStep(
-        currentNode,
-        neighbours.map((n) => n.toArray())
-      )
-    );
-
-    processNeighbours(currentNode, neighbours, open, endNode, grid);
-    sortOpenNodes(open);
+    batch.push(next.value);
+    if (batch.length >= STEP_BATCH_SIZE) flush();
   }
 }
 
-function parseWorkerGridTransferData(gridData: WorkerGridTransferData): GridConstructorData {
-  return {
-    start: new GridCoordinates(gridData.start[0], gridData.start[1]),
-    end: new GridCoordinates(gridData.end[0], gridData.end[1]),
-    walls: gridData.walls.map((w) => new GridCoordinates(w[0], w[1])),
-    columns: gridData.columns,
-    rows: gridData.rows,
-    heuristics: gridData.heuristics
-  };
-}
-
-let grid: Grid;
-onmessage = function (e) {
-  switch (e.data[0]) {
-    case MessageType.GRID_DATA: {
-      const gridData = e.data[1];
-      grid = new Grid(parseWorkerGridTransferData(gridData));
-      setHeuristicsFunction(gridData.heuristics);
-      process(grid);
-      break;
-    }
-    case MessageType.SET_HEURISTICS: {
-      const message = e.data[1];
-      setHeuristicsFunction(message);
-      break;
-    }
+ctx.onmessage = (event: MessageEvent<WorkerRequest>) => {
+  const request = event.data;
+  try {
+    run(request);
+  } catch (error) {
+    post({
+      kind: 'failed',
+      runId: request.runId,
+      message: error instanceof Error ? error.message : String(error)
+    });
   }
 };
 

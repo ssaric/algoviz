@@ -1,18 +1,16 @@
 <script lang="ts">
   import Icon from '../Icon.svelte';
-  import { interval } from '../../store';
 
   type Props = {
     hasData: boolean;
+    isPlaying: boolean;
     onPlay: () => void;
     onStop: () => void;
     onForward: () => void;
     onBackward: () => void;
   };
 
-  let { hasData, onPlay, onStop, onForward, onBackward }: Props = $props();
-
-  const isPlaying = $derived($interval !== null);
+  let { hasData, isPlaying, onPlay, onStop, onForward, onBackward }: Props = $props();
 </script>
 
 <div class="controls">

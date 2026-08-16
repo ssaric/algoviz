@@ -4,18 +4,30 @@
   import Icon from '../Icon.svelte';
 
   type Props = {
-    hasData: boolean;
-    nrOfSteps: number;
-    currentStep: number;
+    totalSteps: number;
+    cursor: number;
+    isPlaying: boolean;
+    message: string | null;
     onPlay: () => void;
     onStop: () => void;
     onForward: () => void;
     onBackward: () => void;
-    onSeek: (step: number) => void;
+    onSeek: (cursor: number) => void;
   };
 
-  let { hasData, nrOfSteps, currentStep, onPlay, onStop, onForward, onBackward, onSeek }: Props =
-    $props();
+  let {
+    totalSteps,
+    cursor,
+    isPlaying,
+    message,
+    onPlay,
+    onStop,
+    onForward,
+    onBackward,
+    onSeek
+  }: Props = $props();
+
+  const hasData = $derived(totalSteps > 0);
 
   function handleInput(event: Event & { currentTarget: HTMLInputElement }) {
     event.stopPropagation();
@@ -25,21 +37,24 @@
 
 <div class="playback-controls" use:draggable={{ handle: '.drag-grip' }}>
   <Icon name="gripHorizontal" class="drag-grip" />
+  {#if message}
+    <p class="playback-controls__message" role="status">{message}</p>
+  {/if}
   <div class="loader-wrapper" class:disabled={!hasData}>
-    <span>0</span>
+    <span>{cursor}</span>
     <input
       type="range"
       class="loader"
       min="0"
-      max={nrOfSteps - 1}
+      max={totalSteps}
       step="1"
       aria-label="Timeline"
       oninput={handleInput}
-      value={currentStep}
+      value={cursor}
     />
-    <span>{nrOfSteps}</span>
+    <span>{totalSteps}</span>
   </div>
-  <Controls {hasData} {onPlay} {onStop} {onForward} {onBackward} />
+  <Controls {hasData} {isPlaying} {onPlay} {onStop} {onForward} {onBackward} />
 </div>
 
 <style lang="scss">
@@ -70,6 +85,13 @@
       height: 25px;
       z-index: 11;
     }
+  }
+
+  .playback-controls__message {
+    margin: 18px 0 0;
+    text-align: center;
+    color: $color-neutral70;
+    font-size: $font-size-body2;
   }
 
   .loader-wrapper {

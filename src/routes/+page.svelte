@@ -1,43 +1,55 @@
 <script lang="ts">
-  import { onDestroy, onMount } from 'svelte';
+  import { onMount } from 'svelte';
   import Navbar from '../components/Navbar.svelte';
   import Legend from '../components/legend/Legend.svelte';
   import PlaybackControls from '../components/loader/PlaybackControls.svelte';
-  import Painter from '../painter/Painter';
-  import { currentStep, steps } from '../store';
+  import { Painter, type BoardState } from '../board/Painter';
+  import type { HeuristicSpec } from '../core/heuristics';
 
+  let boardElement: HTMLDivElement;
   let painter: Painter | undefined;
 
-  const hasData = $derived($steps.length > 0);
-  const nrOfSteps = $derived($steps.length);
+  let board = $state<BoardState>({
+    totalSteps: 0,
+    cursor: 0,
+    isPlaying: false,
+    status: 'idle',
+    message: null,
+    outcome: null,
+    currentStep: null
+  });
 
   onMount(() => {
-    painter = new Painter();
-    painter.bindEventHandlers();
-    painter.loadWorker();
+    const instance = new Painter(boardElement);
+    painter = instance;
+    const unsubscribe = instance.subscribe((state) => (board = state));
+
+    return () => {
+      unsubscribe();
+      instance.destroy();
+      painter = undefined;
+    };
   });
 
-  onDestroy(() => {
-    painter?.unbindEventHandlers();
-    painter?.algorithmWorker?.terminate();
-  });
+  const setHeuristic = (spec: HeuristicSpec) => painter?.setHeuristic(spec);
 </script>
 
 <main class="root-container">
   <Navbar />
   <div class="home">
-    <Legend onResetGrid={() => painter?.resetGrid()} />
+    <Legend onResetGrid={() => painter?.resetGrid()} onHeuristicChange={setHeuristic} />
     <PlaybackControls
-      {hasData}
-      {nrOfSteps}
-      currentStep={$currentStep}
-      onPlay={() => painter?.startVisualizingSteps()}
-      onStop={() => painter?.stopPlaying()}
+      totalSteps={board.totalSteps}
+      cursor={board.cursor}
+      isPlaying={board.isPlaying}
+      message={board.message}
+      onPlay={() => painter?.solve()}
+      onStop={() => painter?.pause()}
       onBackward={() => painter?.skipBackward()}
       onForward={() => painter?.skipForward()}
-      onSeek={(step) => painter?.seekTo(step)}
+      onSeek={(cursor) => painter?.seek(cursor)}
     />
-    <div id="root"></div>
+    <div id="root" bind:this={boardElement}></div>
   </div>
 </main>
 
