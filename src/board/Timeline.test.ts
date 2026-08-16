@@ -8,7 +8,7 @@ const step = (x: number, kind: StepKind = 'visit'): Step => ({
   cell: cell(x, 0),
   g: x,
   h: 0,
-  f: x,
+  priority: x,
   parent: null,
   note: `step ${x}`
 });

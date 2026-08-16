@@ -1,4 +1,5 @@
-import { cell, type Cell } from '../core/cell';
+import { DEFAULT_ALGORITHM, type AlgorithmId } from '../core/algorithms';
+import { cell, cellId, type Cell, type CellId } from '../core/cell';
 import { Grid } from '../core/Grid';
 import { DEFAULT_HEURISTIC, type HeuristicSpec } from '../core/heuristics';
 import type { SearchOutcome, Step, StepKind } from '../core/protocol';
@@ -13,12 +14,28 @@ const SKIP_SIZE = 10;
 
 export type BoardStatus = 'idle' | 'solving' | 'solved' | 'unreachable' | 'failed';
 
+/** Where a popup should sit, in viewport coordinates. */
+export type AnchorRect = {
+  readonly left: number;
+  readonly top: number;
+  readonly width: number;
+  readonly height: number;
+};
+
+/** What the algorithm thought about one cell, up to where the playhead is. */
+export type CellInspection = {
+  readonly cell: Cell;
+  readonly anchor: AnchorRect;
+  readonly steps: readonly Step[];
+};
+
 export type BoardState = TimelineState & {
   readonly status: BoardStatus;
   readonly message: string | null;
   readonly outcome: SearchOutcome | null;
   /** The step under the playhead, i.e. what the algorithm just did. */
   readonly currentStep: Step | null;
+  readonly inspection: CellInspection | null;
 };
 
 export type BoardListener = (state: BoardState) => void;
@@ -51,11 +68,16 @@ export class Painter implements BoardEditor {
 
   private cells: HTMLTableCellElement[][] = [];
   private highlighted: HTMLTableCellElement | null = null;
+  private algorithm: AlgorithmId = DEFAULT_ALGORITHM;
   private heuristic: HeuristicSpec = DEFAULT_HEURISTIC;
   private status: BoardStatus = 'idle';
   private message: string | null = null;
   private outcome: SearchOutcome | null = null;
   private autoPlay = false;
+  /** Indices into the timeline, per cell, so a hover can answer "what did the
+   *  algorithm think here?" without scanning the whole history. */
+  private stepsByCell = new Map<CellId, number[]>();
+  private inspected: { cell: Cell; anchor: AnchorRect } | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -109,8 +131,24 @@ export class Painter implements BoardEditor {
       status: this.status,
       message: this.message,
       outcome: this.outcome,
-      currentStep: this.timeline.stepAtCursor
+      currentStep: this.timeline.stepAtCursor,
+      inspection: this.buildInspection()
     };
+  }
+
+  /** Only the steps the playhead has actually reached: hovering a cell must
+   *  reveal what the algorithm has done so far, not spoil what comes next. */
+  private buildInspection(): CellInspection | null {
+    if (!this.inspected) return null;
+    const indices = this.stepsByCell.get(cellId(this.inspected.cell)) ?? [];
+    const { cursor } = this.timeline.state;
+    const steps = indices
+      .filter((index) => index < cursor)
+      .map((index) => this.timeline.stepAt(index))
+      .filter((step): step is Step => step !== null);
+
+    if (steps.length === 0) return null;
+    return { cell: this.inspected.cell, anchor: this.inspected.anchor, steps };
   }
 
   subscribe(listener: BoardListener): () => void {
@@ -134,7 +172,7 @@ export class Painter implements BoardEditor {
     this.resetVisualization();
     this.autoPlay = true;
     this.setStatus('solving');
-    this.worker.solve(this.grid.serialize(), this.heuristic);
+    this.worker.solve(this.grid.serialize(), this.algorithm, this.heuristic);
   }
 
   play(): void {
@@ -159,6 +197,12 @@ export class Painter implements BoardEditor {
   skipBackward(): void {
     this.pause();
     this.timeline.stepBy(-SKIP_SIZE);
+  }
+
+  setAlgorithm(id: AlgorithmId): void {
+    if (id === this.algorithm) return;
+    this.algorithm = id;
+    this.resetVisualization();
   }
 
   setHeuristic(spec: HeuristicSpec): void {
@@ -219,9 +263,35 @@ export class Painter implements BoardEditor {
     this.element(c)?.classList.add('cell--end');
   }
 
+  inspect(c: Cell | null): void {
+    // Nothing to explain until a search has produced something.
+    if (this.stepsByCell.size === 0) c = null;
+    if (c === null) {
+      if (this.inspected === null) return;
+      this.inspected = null;
+      this.publish();
+      return;
+    }
+    if (this.inspected && cellId(this.inspected.cell) === cellId(c)) return;
+
+    const element = this.element(c);
+    if (!element) return;
+    const { left, top, width, height } = element.getBoundingClientRect();
+    this.inspected = { cell: c, anchor: { left, top, width, height } };
+    this.publish();
+  }
+
   // -- worker ----------------------------------------------------------------
 
   private receiveSteps(steps: readonly Step[]): void {
+    let index = this.timeline.state.totalSteps;
+    for (const step of steps) {
+      const id = cellId(step.cell);
+      const existing = this.stepsByCell.get(id);
+      if (existing) existing.push(index);
+      else this.stepsByCell.set(id, [index]);
+      index++;
+    }
     this.timeline.append(steps);
     // Start playing as soon as there is something to show, and pick playback
     // back up if it drained the batches received so far while more were still
@@ -255,6 +325,8 @@ export class Painter implements BoardEditor {
     this.autoPlay = false;
     this.timeline.clear();
     this.clearHighlight();
+    this.stepsByCell.clear();
+    this.inspected = null;
     this.outcome = null;
     for (const row of this.cells) {
       for (const element of row) element.classList.remove(...TRANSIENT_CLASSES);

@@ -9,6 +9,8 @@ export type BoardEditor = {
   setWall(c: Cell, present: boolean): void;
   moveStart(c: Cell): void;
   moveEnd(c: Cell): void;
+  /** The cell the pointer is resting on, or null when it leaves the board. */
+  inspect(c: Cell | null): void;
 };
 
 type Stroke =
@@ -33,6 +35,7 @@ export class PointerController {
   bind(): void {
     this.container.addEventListener('pointerdown', this.onPointerDown);
     this.container.addEventListener('pointermove', this.onPointerMove);
+    this.container.addEventListener('pointerleave', this.onPointerLeave);
     window.addEventListener('pointerup', this.onPointerUp);
     window.addEventListener('pointercancel', this.onPointerUp);
   }
@@ -40,6 +43,7 @@ export class PointerController {
   unbind(): void {
     this.container.removeEventListener('pointerdown', this.onPointerDown);
     this.container.removeEventListener('pointermove', this.onPointerMove);
+    this.container.removeEventListener('pointerleave', this.onPointerLeave);
     window.removeEventListener('pointerup', this.onPointerUp);
     window.removeEventListener('pointercancel', this.onPointerUp);
   }
@@ -50,6 +54,7 @@ export class PointerController {
     if (!target) return;
 
     event.preventDefault();
+    this.editor.inspect(null);
     if (this.editor.isStart(target)) {
       this.stroke = { mode: 'move-start' };
     } else if (this.editor.isEnd(target)) {
@@ -61,9 +66,18 @@ export class PointerController {
   };
 
   private readonly onPointerMove = (event: PointerEvent): void => {
-    if (this.stroke.mode === 'none') return;
     const target = this.editor.cellAt(event.target);
+    if (this.stroke.mode === 'none') {
+      // Only report a resting pointer. Mid-stroke the user is editing the
+      // board, not reading it.
+      this.editor.inspect(target);
+      return;
+    }
     if (target) this.apply(target);
+  };
+
+  private readonly onPointerLeave = (): void => {
+    this.editor.inspect(null);
   };
 
   private readonly onPointerUp = (): void => {

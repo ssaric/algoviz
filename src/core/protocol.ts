@@ -1,3 +1,4 @@
+import type { AlgorithmId } from './algorithms';
 import type { Cell } from './cell';
 import type { SerializedGrid } from './Grid';
 import type { HeuristicSpec } from './heuristics';
@@ -26,10 +27,11 @@ export type Step = {
   readonly cell: Cell;
   /** Cost of the cheapest known route from the start to this cell. */
   readonly g: number;
-  /** Heuristic estimate from this cell to the goal. */
+  /** Heuristic estimate from this cell to the goal; 0 if unused. */
   readonly h: number;
-  /** Priority the search ordered this cell by. */
-  readonly f: number;
+  /** Score the algorithm ordered this cell by. Its meaning is the algorithm's
+   *  affinity: g + h for A*, g for Dijkstra, h for greedy, order for BFS. */
+  readonly priority: number;
   readonly parent: Cell | null;
   readonly note: string;
 };
@@ -50,6 +52,7 @@ export type WorkerRequest = {
   readonly kind: 'solve';
   readonly runId: number;
   readonly grid: SerializedGrid;
+  readonly algorithm: AlgorithmId;
   readonly heuristic: HeuristicSpec;
 };
 

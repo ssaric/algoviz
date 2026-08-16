@@ -44,6 +44,10 @@ export class Timeline {
     return this._cursor > 0 ? (this.steps[this._cursor - 1] ?? null) : null;
   }
 
+  stepAt(index: number): Step | null {
+    return this.steps[index] ?? null;
+  }
+
   private get stepsPerFrame(): number {
     const frames = TARGET_PLAYBACK_SECONDS * FRAMES_PER_SECOND;
     return Math.max(1, Math.ceil(this.steps.length / frames));

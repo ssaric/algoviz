@@ -1,3 +1,4 @@
+import { ALGORITHMS } from '../core/algorithms';
 import { Grid } from '../core/Grid';
 import { createHeuristic } from '../core/heuristics';
 import {
@@ -24,7 +25,10 @@ function run(request: WorkerRequest): void {
     walls: request.grid.walls
   });
 
-  const steps = search(grid, createHeuristic(request.heuristic));
+  const algorithm = ALGORITHMS[request.algorithm];
+  if (!algorithm) throw new Error(`Unknown algorithm "${request.algorithm}"`);
+
+  const steps = search(grid, algorithm, createHeuristic(request.heuristic));
   let batch: Step[] = [];
 
   const flush = (): void => {

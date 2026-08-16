@@ -1,13 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { Grid } from './Grid';
 import { cell, cellsEqual, type Cell } from './cell';
+import { ALGORITHMS, type AlgorithmId } from './algorithms';
 import { createHeuristic, type HeuristicSpec } from './heuristics';
 import type { SearchOutcome, Step } from './protocol';
 import { search } from './search';
 
-function run(grid: Grid, spec: HeuristicSpec = { kind: 'manhattan' }) {
+function run(
+  grid: Grid,
+  spec: HeuristicSpec = { kind: 'manhattan' },
+  algorithm: AlgorithmId = 'astar'
+) {
   const steps: Step[] = [];
-  const iterator = search(grid, createHeuristic(spec));
+  const iterator = search(grid, ALGORITHMS[algorithm], createHeuristic(spec));
   let next = iterator.next();
   while (!next.done) {
     steps.push(next.value);
@@ -90,8 +95,8 @@ describe('step stream', () => {
     expect(steps.length).toBeGreaterThan(0);
     for (const step of steps) {
       expect(step.note.length).toBeGreaterThan(0);
-      expect(Number.isFinite(step.f)).toBe(true);
-      expect(step.f).toBeCloseTo(step.g + step.h);
+      expect(Number.isFinite(step.priority)).toBe(true);
+      expect(step.priority).toBeCloseTo(step.g + step.h);
     }
   });
 

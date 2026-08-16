@@ -3,11 +3,15 @@
   import Navbar from '../components/Navbar.svelte';
   import Legend from '../components/legend/Legend.svelte';
   import PlaybackControls from '../components/loader/PlaybackControls.svelte';
+  import BoardTooltip from '../components/BoardTooltip.svelte';
   import { Painter, type BoardState } from '../board/Painter';
+  import { DEFAULT_ALGORITHM, type AlgorithmId } from '../core/algorithms';
   import type { HeuristicSpec } from '../core/heuristics';
 
   let boardElement: HTMLDivElement;
   let painter: Painter | undefined;
+
+  let algorithm = $state<AlgorithmId>(DEFAULT_ALGORITHM);
 
   let board = $state<BoardState>({
     totalSteps: 0,
@@ -16,7 +20,8 @@
     status: 'idle',
     message: null,
     outcome: null,
-    currentStep: null
+    currentStep: null,
+    inspection: null
   });
 
   onMount(() => {
@@ -32,12 +37,23 @@
   });
 
   const setHeuristic = (spec: HeuristicSpec) => painter?.setHeuristic(spec);
+
+  function setAlgorithm(id: AlgorithmId) {
+    algorithm = id;
+    painter?.setAlgorithm(id);
+  }
 </script>
 
 <main class="root-container">
   <Navbar />
   <div class="home">
-    <Legend onResetGrid={() => painter?.resetGrid()} onHeuristicChange={setHeuristic} />
+    <Legend
+      {algorithm}
+      outcome={board.outcome}
+      onAlgorithmChange={setAlgorithm}
+      onHeuristicChange={setHeuristic}
+      onResetGrid={() => painter?.resetGrid()}
+    />
     <PlaybackControls
       totalSteps={board.totalSteps}
       cursor={board.cursor}
@@ -50,6 +66,9 @@
       onSeek={(cursor) => painter?.seek(cursor)}
     />
     <div id="root" bind:this={boardElement}></div>
+    {#if board.inspection}
+      <BoardTooltip inspection={board.inspection} />
+    {/if}
   </div>
 </main>
 

@@ -1,3 +1,4 @@
+import type { AlgorithmId } from '../core/algorithms';
 import type { SerializedGrid } from '../core/Grid';
 import type { HeuristicSpec } from '../core/heuristics';
 import type { SearchOutcome, Step, WorkerRequest, WorkerResponse } from '../core/protocol';
@@ -24,11 +25,11 @@ export class WorkerClient {
   constructor(private readonly handlers: WorkerClientHandlers) {}
 
   /** Starts a search and returns its run id. Any run in flight is abandoned. */
-  solve(grid: SerializedGrid, heuristic: HeuristicSpec): number {
+  solve(grid: SerializedGrid, algorithm: AlgorithmId, heuristic: HeuristicSpec): number {
     const runId = this.nextRunId++;
     this.activeRunId = runId;
 
-    const request: WorkerRequest = { kind: 'solve', runId, grid, heuristic };
+    const request: WorkerRequest = { kind: 'solve', runId, grid, algorithm, heuristic };
     this.ensureWorker().postMessage(request);
     return runId;
   }
