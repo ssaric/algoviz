@@ -296,11 +296,15 @@ test.describe('single-step and live figures', () => {
 });
 
 test.describe('the board narrates its current step', () => {
-  test('names the step and explains it once the search is running', async ({ page }) => {
-    await settled(page);
+  test('stays quiet during playback and explains the step once paused', async ({ page }) => {
     const narration = page.locator('.panel__narration').first();
-    // The badge is one of the known step-kind labels, not the placeholder.
-    await expect(narration).not.toContainText('Press play');
+    // Still running: a calm placeholder, not a flicker of per-step text.
+    await expect(narration).toContainText('Playing');
+
+    // Paused (seeking always pauses first): the actual step and why.
+    await settled(page);
+    await page.getByRole('slider', { name: 'Timeline' }).fill('5');
+    await expect(narration).not.toContainText('Playing');
     await expect(narration).toContainText(/Cell \(\d+, \d+\):/);
   });
 

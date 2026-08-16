@@ -8,10 +8,15 @@
     painter: Painter | undefined;
     /** Length of a genuinely shortest path, for judging the result. */
     optimal: number | null;
+    /** Whether the shared clock driving this board is currently running. Not
+     *  derived from `state` -- a lesson's boards are seeked by an outside
+     *  runner rather than playing their own timeline, so each individual
+     *  board's own playing flag never turns on. */
+    isPlaying: boolean;
     element: HTMLDivElement | undefined;
   };
 
-  let { label, state, painter, optimal, element = $bindable() }: Props = $props();
+  let { label, state, painter, optimal, isPlaying, element = $bindable() }: Props = $props();
 
   // Reads state.cursor explicitly so this recomputes as the timeline moves --
   // painter itself never changes identity, so calling its method alone would
@@ -58,7 +63,11 @@
   <div
     class="panel__narration bg-canvas mb-3 flex h-16 shrink-0 flex-col justify-center gap-1 overflow-hidden rounded-xl px-3"
   >
-    {#if step}
+    {#if isPlaying}
+      <p class="text-ink-subtle text-xs italic">
+        Playing &mdash; pause or step to see what {label} is thinking.
+      </p>
+    {:else if step}
       <span
         class="w-fit rounded-md px-2 py-0.5 text-[11px] font-semibold tracking-wide uppercase {STEP_KINDS[
           step.kind

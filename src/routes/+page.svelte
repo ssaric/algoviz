@@ -158,6 +158,7 @@
                 state={runnerState.boards[i]}
                 painter={runner?.painters[i]}
                 {optimal}
+                isPlaying={runnerState.isPlaying}
                 bind:element={boardEls[i]}
               />
             {/each}
