@@ -295,6 +295,27 @@ test.describe('single-step and live figures', () => {
   });
 });
 
+test.describe('the board narrates its current step', () => {
+  test('names the step and explains it once the search is running', async ({ page }) => {
+    await settled(page);
+    const narration = page.locator('.panel__narration').first();
+    // The badge is one of the known step-kind labels, not the placeholder.
+    await expect(narration).not.toContainText('Press play');
+    await expect(narration).toContainText(/Cell \(\d+, \d+\):/);
+  });
+
+  test('the two boards narrate their own algorithm independently', async ({ page }) => {
+    await settled(page);
+    // Early into the run, not at the end -- Manhattan and Euclidean settle on
+    // the same final path length here, so their last "on the path" narration
+    // reads identically. Mid-run is where their differing exploration order
+    // actually shows up.
+    await page.getByRole('slider', { name: 'Timeline' }).fill('5');
+    const [left, right] = await page.locator('.panel__narration').all();
+    expect(await left.innerText()).not.toBe(await right.innerText());
+  });
+});
+
 test.describe('the queue ties the board and the frontier panel together', () => {
   /** The row's cell coordinate, from its `.tabular-nums` span -- not just any
    *  `span`, since the top row's leading `▸` marker is one too. */

@@ -4,20 +4,13 @@
   import { heuristicTex, HEURISTIC_LABELS } from '../core/heuristics';
   import type { Step, StepKind } from '../core/protocol';
   import Formula from './Formula.svelte';
+  import { STEP_KINDS as KINDS } from './stepKinds';
 
   type Props = {
     inspection: CellInspection;
   };
 
   let { inspection }: Props = $props();
-
-  const KINDS: Record<StepKind, { label: string; tone: string }> = {
-    visit: { label: 'Expanded', tone: 'bg-brand text-white' },
-    discover: { label: 'Discovered', tone: 'bg-frontier text-brand' },
-    reopen: { label: 'Re-routed', tone: 'bg-sunken text-ink-muted' },
-    skip: { label: 'Skipped', tone: 'bg-sunken text-ink-muted' },
-    path: { label: 'On the path', tone: 'bg-path text-white' }
-  };
 
   /** Only these three kinds leave a colour on the board -- a reopen or a skip
    *  changes the numbers but not the cell's paint, so "why is it this colour"
