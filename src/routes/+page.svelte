@@ -5,6 +5,8 @@
   import Navbar from '../components/Navbar.svelte';
   import BoardPanel from '../components/learn/BoardPanel.svelte';
   import BoardTooltip from '../components/BoardTooltip.svelte';
+  import PullArrow from '../components/PullArrow.svelte';
+  import RichText from '../components/RichText.svelte';
   import Controls from '../components/loader/Controls.svelte';
   import { LessonRunner, type RunnerState } from '../board/LessonRunner';
   import { Grid } from '../core/Grid';
@@ -97,7 +99,9 @@
     <article class="min-w-0 flex-1 overflow-y-auto px-8 pt-7 pb-16">
       <header class="mb-6">
         <h1 class="text-ink m-0 text-3xl font-semibold tracking-tight">{lesson.title}</h1>
-        <p class="text-ink-muted mt-2 max-w-[70ch] text-sm leading-relaxed">{lesson.watchFor}</p>
+        <p class="text-ink-muted mt-2 max-w-[70ch] text-sm leading-relaxed">
+          <RichText text={lesson.watchFor} />
+        </p>
       </header>
 
       <div class="grid grid-cols-2 gap-5">
@@ -150,13 +154,16 @@
 
       <div class="mt-8 max-w-[68ch]">
         {#each lesson.body as paragraph, index (index)}
-          <p class="text-ink-muted mb-4 text-[15px] leading-[1.7]">{paragraph}</p>
+          <p class="text-ink-muted mb-4 text-[15px] leading-[1.7]">
+            <RichText text={paragraph} />
+          </p>
         {/each}
       </div>
     </article>
   </div>
 
   {#if inspection}
+    <PullArrow {inspection} />
     <BoardTooltip {inspection} />
   {/if}
 </main>

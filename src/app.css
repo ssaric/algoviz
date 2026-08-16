@@ -30,6 +30,12 @@
   --color-frontier: #65b294;
   --color-path: #c6755f;
   --color-path-soft: #f7ece8;
+  /* The heuristic vector, deliberately outside the board's palette so it
+     never reads as another kind of cell. */
+  --color-vector: #e11d48;
+  --color-vector-strong: #9f1239;
+  --color-vector-weak: #fb7185;
+
   --color-danger: #b0322a;
   --color-danger-soft: #f8ebea;
 

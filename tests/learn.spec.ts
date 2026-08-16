@@ -79,3 +79,53 @@ test('links through to the sandbox', async ({ page }) => {
   await expect(page).toHaveURL(/\/sandbox/);
   await expect(page.getByLabel('Algorithm')).toBeVisible();
 });
+
+test('the popup names the heuristic and renders its maths', async ({ page }) => {
+  await settled(page);
+
+  await page.locator('.panel').nth(1).locator('td.cell--visited').nth(20).hover();
+
+  const thoughts = page.locator('.thoughts');
+  await expect(thoughts).toBeVisible();
+  // Which run produced this, spelled out.
+  await expect(thoughts).toContainText('A*');
+  await expect(thoughts).toContainText('Euclidean');
+  // Rule and arithmetic, both typeset.
+  expect(await thoughts.locator('.katex').count()).toBeGreaterThanOrEqual(4);
+  await expect(thoughts).toContainText('how far it still looks', { ignoreCase: true });
+});
+
+test('the popup says when each event happened', async ({ page }) => {
+  await settled(page);
+
+  await page.locator('.panel').first().locator('td.cell--path').nth(5).hover();
+
+  await expect(page.locator('.thoughts')).toContainText(/step \d+ of \d+/);
+});
+
+test('a heuristic vector points from the hovered cell towards the goal', async ({ page }) => {
+  await settled(page);
+
+  await expect(page.locator('.pull-arrow')).toHaveCount(0);
+  await page.locator('.panel').first().locator('td.cell--visited').nth(10).hover();
+
+  await expect(page.locator('.pull-arrow')).toHaveCount(1);
+  // Manhattan is exact, so a step buys exactly what it costs.
+  await expect(page.locator('.thoughts')).toContainText('drops h by 1');
+  await expect(page.locator('.thoughts')).toContainText('Exactly what the step costs');
+});
+
+test('a search with no heuristic says so instead of showing one', async ({ page }) => {
+  await page.goto('/?lesson=same-search-three-names');
+  await settled(page);
+
+  await page.locator('.panel').first().locator('td.cell--visited').nth(10).hover();
+
+  await expect(page.locator('.thoughts')).toContainText('No heuristic');
+  await expect(page.locator('.pull-arrow')).toHaveCount(0);
+});
+
+test('lesson prose typesets its maths', async ({ page }) => {
+  await expect(page.locator('article .katex').first()).toBeVisible();
+  expect(await page.locator('article .katex').count()).toBeGreaterThan(5);
+});

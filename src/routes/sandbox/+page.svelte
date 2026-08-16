@@ -4,6 +4,7 @@
   import Legend from '../../components/legend/Legend.svelte';
   import PlaybackControls from '../../components/loader/PlaybackControls.svelte';
   import BoardTooltip from '../../components/BoardTooltip.svelte';
+  import PullArrow from '../../components/PullArrow.svelte';
   import { Painter, type BoardState } from '../../board/Painter';
   import { DEFAULT_ALGORITHM, type AlgorithmId } from '../../core/algorithms';
   import type { HeuristicSpec } from '../../core/heuristics';
@@ -76,6 +77,7 @@
   </div>
 
   {#if board.inspection}
+    <PullArrow inspection={board.inspection} />
     <BoardTooltip inspection={board.inspection} />
   {/if}
 </main>

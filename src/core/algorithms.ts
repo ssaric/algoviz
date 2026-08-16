@@ -26,6 +26,9 @@ export type Algorithm = {
   readonly affinity: string;
   /** The arithmetic behind one cell's score. */
   readonly score: (node: FrontierNode) => string;
+  /** The priority rule as LaTeX, and the same rule with numbers filled in. */
+  readonly scoreTex: string;
+  readonly scoreTexFor: (node: FrontierNode) => string;
 };
 
 const round = (n: number): string => (Number.isInteger(n) ? `${n}` : n.toFixed(2));
@@ -39,7 +42,9 @@ export const ALGORITHMS: Record<AlgorithmId, Algorithm> = {
     usesHeuristic: true,
     priority: ({ g, h }) => g + h,
     affinity: 'it has the best f = g + h score on the frontier',
-    score: ({ g, h }) => `f = ${round(g)} + ${round(h)} = ${round(g + h)}`
+    score: ({ g, h }) => `f = ${round(g)} + ${round(h)} = ${round(g + h)}`,
+    scoreTex: 'f = g + h',
+    scoreTexFor: ({ g, h }) => `f = ${round(g)} + ${round(h)} = ${round(g + h)}`
   },
   dijkstra: {
     id: 'dijkstra',
@@ -49,7 +54,9 @@ export const ALGORITHMS: Record<AlgorithmId, Algorithm> = {
     usesHeuristic: false,
     priority: ({ g }) => g,
     affinity: 'it is the cheapest cell reached so far, and where the goal sits is not considered',
-    score: ({ g }) => `g = ${round(g)}`
+    score: ({ g }) => `g = ${round(g)}`,
+    scoreTex: 'f = g \\quad (h \\text{ is unused})',
+    scoreTexFor: ({ g }) => `f = g = ${round(g)}`
   },
   greedy: {
     id: 'greedy',
@@ -59,7 +66,9 @@ export const ALGORITHMS: Record<AlgorithmId, Algorithm> = {
     usesHeuristic: true,
     priority: ({ h }) => h,
     affinity: 'it looks closest to the goal, and the distance already travelled is ignored',
-    score: ({ h }) => `h = ${round(h)}`
+    score: ({ h }) => `h = ${round(h)}`,
+    scoreTex: 'f = h \\quad (g \\text{ is ignored})',
+    scoreTexFor: ({ h }) => `f = h = ${round(h)}`
   },
   bfs: {
     id: 'bfs',
@@ -69,7 +78,9 @@ export const ALGORITHMS: Record<AlgorithmId, Algorithm> = {
     usesHeuristic: false,
     priority: ({ order }) => order,
     affinity: 'it has waited on the frontier longest, and every move costs the same',
-    score: ({ order }) => `${ordinal(order + 1)} cell discovered`
+    score: ({ order }) => `${ordinal(order + 1)} cell discovered`,
+    scoreTex: 'f = \\text{discovery order}',
+    scoreTexFor: ({ order }) => `f = ${order + 1}`
   }
 };
 

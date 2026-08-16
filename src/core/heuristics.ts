@@ -1,6 +1,6 @@
 // Number-only build: heuristics evaluate plain numeric deltas, so the full
 // mathjs bundle (matrices, units, complex numbers) would be dead weight.
-import { evaluate } from 'mathjs/number';
+import { ConstantNode, evaluate, parse } from 'mathjs/number';
 import type { Cell } from './cell';
 
 export type HeuristicSpec =
@@ -102,3 +102,131 @@ export const FORMULA_EXAMPLES: { readonly formula: string; readonly label: strin
   { formula: 'max(abs(x), abs(y))', label: 'Chebyshev' },
   { formula: '0', label: 'Zero — turns A* into Dijkstra' }
 ];
+
+/**
+ * A heuristic written out twice: once as its definition, once with this cell's
+ * numbers already substituted in. Rendered as LaTeX in the cell inspector, so
+ * the reader can see the rule and the arithmetic side by side.
+ */
+export type TexExplanation = {
+  readonly definition: string;
+  readonly substituted: string;
+};
+
+const num = (n: number): string => (Number.isInteger(n) ? `${n}` : n.toFixed(2));
+
+/** Wraps negatives in parentheses so exponents read correctly. */
+const term = (n: number): string => (n < 0 ? `\\left(${num(n)}\\right)` : num(n));
+
+/**
+ * dx and dy are signed offsets from the cell to the goal -- the same values a
+ * custom formula sees as x and y.
+ */
+export function heuristicTex(
+  spec: HeuristicSpec,
+  dx: number,
+  dy: number,
+  value: number
+): TexExplanation {
+  switch (spec.kind) {
+    case 'manhattan':
+      return {
+        definition: 'h = \\lvert \\Delta x \\rvert + \\lvert \\Delta y \\rvert',
+        substituted: `h = \\lvert ${num(dx)} \\rvert + \\lvert ${num(dy)} \\rvert = ${num(value)}`
+      };
+    case 'euclidean':
+      return {
+        definition: 'h = \\sqrt{\\Delta x^{2} + \\Delta y^{2}}',
+        substituted: `h = \\sqrt{${term(dx)}^{2} + ${term(dy)}^{2}} = ${num(value)}`
+      };
+    case 'euclidean-squared':
+      return {
+        definition: 'h = \\Delta x^{2} + \\Delta y^{2}',
+        substituted: `h = ${term(dx)}^{2} + ${term(dy)}^{2} = ${num(value)}`
+      };
+    case 'custom':
+      return {
+        definition: `h = ${formulaTex(spec.formula)}`,
+        substituted: `h = ${formulaTex(spec.formula, { x: dx, y: dy })} = ${num(value)}`
+      };
+  }
+}
+
+/**
+ * Renders a mathjs expression as LaTeX, optionally with its variables already
+ * replaced by numbers. Falls back to the raw text when the formula does not
+ * parse, which the editor already reports separately.
+ */
+export function formulaTex(formula: string, scope?: { x: number; y: number }): string {
+  try {
+    const parsed = parse(formula);
+    if (!scope) return parsed.toTex();
+    return parsed
+      .transform((node) => {
+        // MathNode does not surface the symbol fields, so narrow on the tag.
+        const symbol = node as { type?: string; name?: string };
+        if (symbol.type !== 'SymbolNode') return node;
+        if (symbol.name !== 'x' && symbol.name !== 'y') return node;
+        return new ConstantNode(symbol.name === 'x' ? scope.x : scope.y);
+      })
+      .toTex();
+  } catch {
+    return `\\text{${formula.replace(/[{}\\]/g, '')}}`;
+  }
+}
+
+export type PullDirection = {
+  readonly name: 'up' | 'down' | 'left' | 'right';
+  /** How h changes taking this step: negative means it moves closer. */
+  readonly deltaH: number;
+};
+
+/**
+ * How hard the heuristic leans on a cell.
+ *
+ * Not the value of h -- that is just distance, and it is largest where the
+ * search has barely started. What steers the search is the *gradient*: how much
+ * h falls for one step, measured against the 1 that the step costs.
+ *
+ * `ratio` is that comparison, and it is the whole story about fanning out. At 1
+ * a step toward the goal pays for itself exactly and f stays flat, so A* drives
+ * straight at the goal. Below 1 the step costs more than it appears to buy, f
+ * creeps up, and rival directions stay competitive -- the search spreads. Above
+ * 1 the heuristic overpays, which is fast and is also how the shortest-path
+ * guarantee is lost.
+ */
+export type HeuristicPull = {
+  /** Direction of the goal in screen terms: 0 is right, 90 is down. */
+  readonly angleDeg: number;
+  /** The largest drop in h available from a single step. */
+  readonly best: number;
+  readonly ratio: number;
+  readonly directions: readonly PullDirection[];
+};
+
+export function heuristicPull(spec: HeuristicSpec, from: Cell, goal: Cell): HeuristicPull {
+  const h = createHeuristic(spec);
+  const here = h(from, goal);
+
+  const directions: PullDirection[] = (
+    [
+      ['up', 0, -1],
+      ['down', 0, 1],
+      ['left', -1, 0],
+      ['right', 1, 0]
+    ] as const
+  ).map(([name, ox, oy]) => ({
+    name,
+    deltaH: h({ x: from.x + ox, y: from.y + oy }, goal) - here
+  }));
+
+  const best = Math.max(0, ...directions.map((d) => -d.deltaH));
+
+  return {
+    angleDeg: (Math.atan2(goal.y - from.y, goal.x - from.x) * 180) / Math.PI,
+    best,
+    // Every move on this grid costs exactly 1, so the drop is already the ratio.
+    ratio: best,
+    directions
+  };
+}

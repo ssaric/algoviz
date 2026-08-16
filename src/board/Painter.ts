@@ -1,7 +1,12 @@
-import { DEFAULT_ALGORITHM, type AlgorithmId } from '../core/algorithms';
+import { ALGORITHMS, DEFAULT_ALGORITHM, type AlgorithmId } from '../core/algorithms';
 import { cell, cellId, type Cell, type CellId } from '../core/cell';
 import { Grid, type SerializedGrid } from '../core/Grid';
-import { DEFAULT_HEURISTIC, type HeuristicSpec } from '../core/heuristics';
+import {
+  DEFAULT_HEURISTIC,
+  heuristicPull,
+  type HeuristicPull,
+  type HeuristicSpec
+} from '../core/heuristics';
 import type { SearchOutcome, Step, StepKind } from '../core/protocol';
 import { PointerController, type BoardEditor } from './PointerController';
 import { Timeline, type Direction, type TimelineState } from './Timeline';
@@ -37,11 +42,25 @@ export type AnchorRect = {
   readonly height: number;
 };
 
+/** One thing the search did to a cell, and when in the run it happened. */
+export type InspectedEvent = {
+  /** Position in the timeline, so "when" is answerable, not just "what". */
+  readonly index: number;
+  readonly step: Step;
+};
+
 /** What the algorithm thought about one cell, up to where the playhead is. */
 export type CellInspection = {
   readonly cell: Cell;
   readonly anchor: AnchorRect;
-  readonly steps: readonly Step[];
+  readonly algorithm: AlgorithmId;
+  readonly heuristic: HeuristicSpec;
+  /** Signed offset from this cell to the goal: the inputs a heuristic sees. */
+  readonly delta: { readonly dx: number; readonly dy: number };
+  readonly totalSteps: number;
+  /** How hard the heuristic leans on this cell; null when there is none. */
+  readonly pull: HeuristicPull | null;
+  readonly events: readonly InspectedEvent[];
 };
 
 export type BoardState = TimelineState & {
@@ -191,15 +210,28 @@ export class Painter implements BoardEditor {
    *  reveal what the algorithm has done so far, not spoil what comes next. */
   private buildInspection(): CellInspection | null {
     if (!this.inspected) return null;
-    const indices = this.stepsByCell.get(cellId(this.inspected.cell)) ?? [];
-    const { cursor } = this.timeline.state;
-    const steps = indices
-      .filter((index) => index < cursor)
-      .map((index) => this.timeline.stepAt(index))
-      .filter((step): step is Step => step !== null);
+    const { cell: target, anchor } = this.inspected;
+    const indices = this.stepsByCell.get(cellId(target)) ?? [];
+    const { cursor, totalSteps } = this.timeline.state;
 
-    if (steps.length === 0) return null;
-    return { cell: this.inspected.cell, anchor: this.inspected.anchor, steps };
+    const events = indices
+      .filter((index) => index < cursor)
+      .map((index) => ({ index, step: this.timeline.stepAt(index) }))
+      .filter((event): event is InspectedEvent => event.step !== null);
+
+    if (events.length === 0) return null;
+    return {
+      cell: target,
+      anchor,
+      algorithm: this.algorithm,
+      heuristic: this.heuristic,
+      delta: { dx: target.x - this.grid.end.x, dy: target.y - this.grid.end.y },
+      totalSteps,
+      pull: ALGORITHMS[this.algorithm].usesHeuristic
+        ? heuristicPull(this.heuristic, target, this.grid.end)
+        : null,
+      events
+    };
   }
 
   subscribe(listener: BoardListener): () => void {
