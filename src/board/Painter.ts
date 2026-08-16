@@ -1,6 +1,6 @@
 import { DEFAULT_ALGORITHM, type AlgorithmId } from '../core/algorithms';
 import { cell, cellId, type Cell, type CellId } from '../core/cell';
-import { Grid } from '../core/Grid';
+import { Grid, type SerializedGrid } from '../core/Grid';
 import { DEFAULT_HEURISTIC, type HeuristicSpec } from '../core/heuristics';
 import type { SearchOutcome, Step, StepKind } from '../core/protocol';
 import { PointerController, type BoardEditor } from './PointerController';
@@ -9,8 +9,23 @@ import { WorkerClient } from './WorkerClient';
 
 export const CELL_SIZE = 20;
 
+/** Preset boards are fixed size, so their cells shrink to fit the panel. */
+const MIN_CELL_SIZE = 7;
+
 /** How far the skip-forward / skip-back buttons jump. */
 const SKIP_SIZE = 10;
+
+export type PainterOptions = {
+  /** A fixed board. When omitted the grid is sized from the container, which
+   *  is what the sandbox wants; a lesson needs the exact layout it authored. */
+  readonly board?: SerializedGrid;
+  /** Whether the pointer may edit the board. Hover inspection stays on either
+   *  way -- reading a preset board is the entire point of one. */
+  readonly editable?: boolean;
+  /** Whether the board starts playing itself as steps arrive. Off when an
+   *  outside clock drives several boards in step. */
+  readonly autoPlay?: boolean;
+};
 
 export type BoardStatus = 'idle' | 'solving' | 'solved' | 'unreachable' | 'failed';
 
@@ -66,6 +81,11 @@ export class Painter implements BoardEditor {
   private readonly resizeObserver: ResizeObserver;
   private readonly listeners = new Set<BoardListener>();
 
+  private readonly editable: boolean;
+  private readonly autoPlayWanted: boolean;
+  private readonly fixedBoard: SerializedGrid | null;
+  private cellSize = CELL_SIZE;
+  private table: HTMLTableElement | null = null;
   private cells: HTMLTableCellElement[][] = [];
   private highlighted: HTMLTableCellElement | null = null;
   private algorithm: AlgorithmId = DEFAULT_ALGORITHM;
@@ -79,14 +99,20 @@ export class Painter implements BoardEditor {
   private stepsByCell = new Map<CellId, number[]>();
   private inspected: { cell: Cell; anchor: AnchorRect } | null = null;
 
-  constructor(container: HTMLElement) {
+  constructor(container: HTMLElement, options: PainterOptions = {}) {
     this.container = container;
+    this.editable = options.editable ?? true;
+    this.autoPlayWanted = options.autoPlay ?? true;
+    this.fixedBoard = options.board ?? null;
 
     const { width, height } = container.getBoundingClientRect();
-    this.grid = new Grid({
-      columns: Math.floor(width / CELL_SIZE),
-      rows: Math.floor(height / CELL_SIZE)
-    });
+    this.grid = this.fixedBoard
+      ? new Grid({ ...this.fixedBoard, walls: [...this.fixedBoard.walls] })
+      : new Grid({
+          columns: Math.floor(width / CELL_SIZE),
+          rows: Math.floor(height / CELL_SIZE)
+        });
+    this.fitCellSize(width, height);
 
     this.timeline = new Timeline(this.drawStep);
     this.timeline.subscribe(() => this.publish());
@@ -98,22 +124,47 @@ export class Painter implements BoardEditor {
       onFailed: (message) => this.setStatus('failed', message)
     });
 
-    this.pointer = new PointerController(container, this);
+    this.pointer = new PointerController(container, this, this.editable);
 
     this.renderBoard();
     this.pointer.bind();
 
     this.resizeObserver = new ResizeObserver(([entry]) => {
       if (!entry) return;
-      const columns = Math.floor(entry.contentRect.width / CELL_SIZE);
-      const rows = Math.floor(entry.contentRect.height / CELL_SIZE);
+      const { width: w, height: h } = entry.contentRect;
+
+      if (this.fixedBoard) {
+        // The layout is fixed; only the scale of it follows the panel.
+        if (this.fitCellSize(w, h)) this.applyCellSize();
+        return;
+      }
       // Cells the timeline refers to may no longer exist after a reflow.
-      if (this.grid.resize(columns, rows)) {
+      if (this.grid.resize(Math.floor(w / CELL_SIZE), Math.floor(h / CELL_SIZE))) {
         this.resetVisualization();
         this.renderBoard();
       }
     });
     this.resizeObserver.observe(container);
+  }
+
+  /** Returns whether the scale changed. */
+  private fitCellSize(width: number, height: number): boolean {
+    if (!this.fixedBoard) return false;
+    const fitted = Math.max(
+      MIN_CELL_SIZE,
+      Math.min(
+        CELL_SIZE,
+        Math.floor(width / this.grid.columns),
+        Math.floor(height / this.grid.rows)
+      )
+    );
+    if (fitted === this.cellSize) return false;
+    this.cellSize = fitted;
+    return true;
+  }
+
+  private applyCellSize(): void {
+    this.table?.style.setProperty('--cell-size', `${this.cellSize}px`);
   }
 
   destroy(): void {
@@ -170,7 +221,7 @@ export class Painter implements BoardEditor {
       return;
     }
     this.resetVisualization();
-    this.autoPlay = true;
+    this.autoPlay = this.autoPlayWanted;
     this.setStatus('solving');
     this.worker.solve(this.grid.serialize(), this.algorithm, this.heuristic);
   }
@@ -369,7 +420,8 @@ export class Painter implements BoardEditor {
 
   private renderBoard(): void {
     const table = document.createElement('table');
-    table.className = 'table';
+    table.className = this.editable ? 'table' : 'table table--static';
+    table.style.setProperty('--cell-size', `${this.cellSize}px`);
     const body = document.createElement('tbody');
     this.cells = [];
 
@@ -389,6 +441,7 @@ export class Painter implements BoardEditor {
     }
 
     table.appendChild(body);
+    this.table = table;
     this.container.replaceChildren(table);
     this.renderStatics();
   }

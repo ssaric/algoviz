@@ -1,11 +1,32 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
+  import { page } from '$app/state';
   import Icon from './Icon.svelte';
+
+  const links = [
+    { href: resolve('/'), label: 'Learn' },
+    { href: resolve('/sandbox'), label: 'Sandbox' }
+  ];
+
+  const current = $derived(page.url.pathname.replace(/\/$/, '') || '/');
 </script>
 
 <nav class="navbar">
   <div class="navbar__title-wrapper">
     <img alt="njanjo-logo" src="/logo.svg" class="navbar-button" />
     <h6 class="navbar__title">Algoviz</h6>
+    <div class="navbar__nav">
+      {#each links as link (link.href)}
+        <a
+          href={link.href}
+          class="navbar__nav-link"
+          class:navbar__nav-link--active={current === link.href}
+          aria-current={current === link.href ? 'page' : undefined}
+        >
+          {link.label}
+        </a>
+      {/each}
+    </div>
   </div>
   <div class="navbar__links-wrapper">
     <a
@@ -48,6 +69,31 @@
 
   .navbar__title-wrapper {
     display: flex;
+    align-items: center;
+  }
+
+  .navbar__nav {
+    display: flex;
+    gap: 4px;
+    margin-left: 28px;
+  }
+
+  .navbar__nav-link {
+    padding: 6px 14px;
+    border-radius: 999px;
+    color: $color-neutral20;
+    text-decoration: none;
+    font-size: $font-size-body2;
+
+    &:hover {
+      color: $color-neutral5;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    &--active {
+      color: $color-neutral70;
+      background: $color-neutral5;
+    }
   }
 
   .navbar__links-wrapper {

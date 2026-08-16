@@ -29,7 +29,9 @@ export class PointerController {
 
   constructor(
     private readonly container: HTMLElement,
-    private readonly editor: BoardEditor
+    private readonly editor: BoardEditor,
+    /** Preset boards are read-only, but still hover to explain themselves. */
+    private readonly editable = true
   ) {}
 
   bind(): void {
@@ -49,7 +51,7 @@ export class PointerController {
   }
 
   private readonly onPointerDown = (event: PointerEvent): void => {
-    if (event.button !== 0) return;
+    if (!this.editable || event.button !== 0) return;
     const target = this.editor.cellAt(event.target);
     if (!target) return;
 

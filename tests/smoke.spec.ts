@@ -9,7 +9,7 @@ const solve = async (page: Page) => {
 };
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/sandbox');
   // Painter builds the board on mount, sized from the viewport.
   await expect(page.locator('td.cell').first()).toBeVisible();
 });

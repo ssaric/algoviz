@@ -1,8 +1,8 @@
 @use './theme' as *;
 
 .cell {
-  height: 20px;
-  width: 20px;
+  height: var(--cell-size, 20px);
+  width: var(--cell-size, 20px);
   cursor: pointer;
   border: 1px solid $color-neutral10;
   transition: background-color 0.01s;
@@ -87,12 +87,17 @@
 }
 
 .table {
+  --cell-size: 20px;
   border-spacing: 0;
   border-collapse: unset;
-  width: 100%;
-  height: calc(100% - 240px);
   user-select: none;
-  td:not(.cell--start):not(.cell--end):hover.cell:after {
+
+  // A preset board is there to be read, not drawn on.
+  &.table--static .cell {
+    cursor: default;
+  }
+
+  &:not(.table--static) td:not(.cell--start):not(.cell--end):hover.cell:after {
     content: '';
     height: 14px;
     width: 14px;
