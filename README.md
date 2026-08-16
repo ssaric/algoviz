@@ -4,10 +4,13 @@
 
 A project focusing on visualzing A* pathfinding algorithm. Available at https://algoviz.njanjo.com.
 
-**Learn** walks through six lessons, each running one board under two strategies
-side by side on a shared clock, with the measured numbers and a write-up of why
-they come out that way. **Sandbox** is the free-draw tool: draw walls, drag the
-start and end markers, then watch a search run.
+**Learn** walks through nine lessons. The first two introduce a live view of the
+actual priority queue on one board, before there is a second strategy to compare
+it against; the rest run two strategies side by side on a shared clock, or, for
+the closing lesson, put all five on one scoreboard at once. Every lesson pairs
+the visuals with the measured numbers and a write-up of why they come out that
+way. **Sandbox** is the free-draw tool: draw walls, drag the start and end
+markers, then watch a search run.
 
 Every move is recorded as a described step, so the timeline scrubs in both
 directions and hovering any cell shows what the algorithm was thinking when it

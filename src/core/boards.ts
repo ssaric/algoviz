@@ -11,6 +11,16 @@ export const OPEN_DIAGONAL: SerializedGrid = openBoard(33, 19, cell(2, 16), cell
 export const OPEN_STRAIGHT: SerializedGrid = openBoard(33, 19, cell(2, 9), cell(30, 9));
 
 /**
+ * Small and open, for the two lessons that introduce the frontier itself.
+ *
+ * Kept deliberately compact: a first look at "what is on the frontier right
+ * now" needs to stay legible one step at a time, which a 260-cell board with
+ * hundreds of steps does not. No walls, so nothing distracts from the one
+ * thing changing between the two lessons that share it -- the algorithm.
+ */
+export const FRONTIER_DEMO: SerializedGrid = openBoard(13, 8, cell(1, 6), cell(11, 1));
+
+/**
  * A corridor that hugs the goal's row while snaking up and down, plus an open
  * bypass above it.
  *

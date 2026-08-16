@@ -7,6 +7,7 @@ import {
   type HeuristicPull,
   type HeuristicSpec
 } from '../core/heuristics';
+import { frontierAt as reconstructFrontier, type FrontierEntry } from '../core/frontier';
 import type { SearchOutcome, Step, StepKind } from '../core/protocol';
 import { PointerController, type BoardEditor } from './PointerController';
 import { Timeline, type Direction, type TimelineState } from './Timeline';
@@ -232,6 +233,18 @@ export class Painter implements BoardEditor {
         : null,
       events
     };
+  }
+
+  /**
+   * The priority queue's contents as of a given point in the timeline.
+   *
+   * Deliberately not part of `BoardState`: it replays the full history up to
+   * `cursor`, which is trivial for a lesson-sized board but would recompute
+   * needlessly on every published state for boards nobody is asking about it
+   * for -- Sandbox included, which can be arbitrarily large.
+   */
+  frontierAt(cursor: number): readonly FrontierEntry[] {
+    return reconstructFrontier(this.timeline.knownSteps, cursor);
   }
 
   subscribe(listener: BoardListener): () => void {

@@ -30,7 +30,10 @@ const FRAMES_PER_SECOND = 60;
  * after the other has stopped, not politely rescaled to finish alongside it.
  */
 export class LessonRunner {
-  private readonly painters: Painter[];
+  /** The underlying Painters, for views that need more than published state --
+   *  the frontier panel calls back into one directly to reconstruct the queue
+   *  at the current cursor. */
+  readonly painters: readonly Painter[];
   private readonly boardStates: BoardState[];
   private readonly unsubscribes: (() => void)[] = [];
   private readonly listeners = new Set<RunnerListener>();

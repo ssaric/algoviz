@@ -33,6 +33,8 @@ const lesson = (id: string): Lesson => {
 
 const both = (l: Lesson) => [run(l.board, l.variants[0]), run(l.board, l.variants[1])] as const;
 
+const runAll = (l: Lesson) => l.variants.map((variant) => run(l.board, variant));
+
 const visitOrder = (steps: Step[]) =>
   steps.filter((s) => s.kind === 'visit').map((s) => cellId(s.cell));
 
@@ -42,7 +44,17 @@ describe('every lesson is well formed', () => {
     expect(l.hook).toBeTruthy();
     expect(l.watchFor).toBeTruthy();
     expect(l.body.length).toBeGreaterThanOrEqual(3);
-    expect(l.variants[0].label).not.toBe(l.variants[1].label);
+
+    const labels = l.variants.map((v) => v.label);
+    expect(new Set(labels).size).toBe(labels.length);
+  });
+
+  it('gives every lesson a variant count that matches its layout', () => {
+    for (const l of LESSONS) {
+      if (l.layout === 'frontier') expect(l.variants).toHaveLength(1);
+      else if (l.layout === 'compare') expect(l.variants).toHaveLength(2);
+      else expect(l.variants.length).toBeGreaterThanOrEqual(2);
+    }
   });
 
   it('has unique ids', () => {
@@ -55,11 +67,12 @@ describe('every lesson is well formed', () => {
     expect(findLesson(LESSONS[2].id)).toBe(LESSONS[2]);
   });
 
-  it.each(LESSONS.map((l) => [l.id, l] as const))('%s: both sides reach the goal', (_id, l) => {
-    const [a, b] = both(l);
-    expect(a.outcome.found).toBe(true);
-    expect(b.outcome.found).toBe(true);
-  });
+  it.each(LESSONS.map((l) => [l.id, l] as const))(
+    '%s: every variant reaches the goal',
+    (_id, l) => {
+      for (const { outcome } of runAll(l)) expect(outcome.found).toBe(true);
+    }
+  );
 });
 
 /*
@@ -179,5 +192,74 @@ describe('same-search-three-names', () => {
     });
     expect(visitOrder(zero.steps)).toEqual(visitOrder(dijkstra.steps));
     expect(zero.outcome.stats).toEqual(dijkstra.outcome.stats);
+  });
+});
+
+describe('meet-the-frontier', () => {
+  const l = lesson('meet-the-frontier');
+  const [dijkstra] = runAll(l);
+
+  it('expands cells in non-decreasing order of cost from the start', () => {
+    const visits = dijkstra.steps.filter((s) => s.kind === 'visit');
+    for (let i = 1; i < visits.length; i++) {
+      expect(visits[i].g).toBeGreaterThanOrEqual(visits[i - 1].g);
+    }
+  });
+
+  it('never assigns a heuristic value: this run has none', () => {
+    expect(dijkstra.steps.every((s) => s.h === 0)).toBe(true);
+  });
+});
+
+describe('adding-a-heuristic', () => {
+  const frontierLesson = lesson('meet-the-frontier');
+  const heuristicLesson = lesson('adding-a-heuristic');
+  const [dijkstra] = runAll(frontierLesson);
+  const [astar] = runAll(heuristicLesson);
+
+  it('expands no more of the same board than the plain frontier lesson did', () => {
+    // Same board as "meet the frontier" -- the only variable that changed is
+    // whether the score includes h at all.
+    expect(heuristicLesson.board).toEqual(frontierLesson.board);
+    expect(astar.outcome.stats.visited).toBeLessThanOrEqual(dijkstra.outcome.stats.visited);
+  });
+
+  it('still finds a shortest path', () => {
+    const optimal = shortestPathLength(gridFor(heuristicLesson.board));
+    expect(astar.outcome.stats.pathLength).toBe(optimal);
+  });
+
+  it('records a nonzero heuristic once it has been discovered', () => {
+    const discovered = astar.steps.filter((s) => s.kind === 'discover');
+    expect(discovered.some((s) => s.h > 0)).toBe(true);
+  });
+});
+
+describe('speed-vs-correctness', () => {
+  const l = lesson('speed-vs-correctness');
+  const runs = runAll(l);
+  const optimal = shortestPathLength(gridFor(l.board)) as number;
+  const byLabel = Object.fromEntries(l.variants.map((v, i) => [v.label, runs[i]]));
+
+  it('the two overestimating/heuristic-only strategies land on a longer path', () => {
+    expect(byLabel['A* · Euclidean squared'].outcome.stats.pathLength).toBeGreaterThan(optimal);
+    expect(byLabel['Greedy best-first'].outcome.stats.pathLength).toBeGreaterThan(optimal);
+  });
+
+  it('the three admissible strategies land on the shortest path', () => {
+    for (const label of ['A* · Manhattan', 'A* · Euclidean', 'Dijkstra']) {
+      expect(byLabel[label].outcome.stats.pathLength).toBe(optimal);
+    }
+  });
+
+  it('the wrong answers are not the slow ones -- that is the entire point of the chart', () => {
+    const dijkstraVisited = byLabel.Dijkstra.outcome.stats.visited;
+    expect(byLabel['A* · Euclidean squared'].outcome.stats.visited).toBeLessThan(dijkstraVisited);
+    expect(byLabel['Greedy best-first'].outcome.stats.visited).toBeLessThan(dijkstraVisited);
+  });
+
+  it('speed genuinely varies across the five, not just correctness', () => {
+    const visited = runs.map((r) => r.outcome.stats.visited);
+    expect(new Set(visited).size).toBeGreaterThan(1);
   });
 });

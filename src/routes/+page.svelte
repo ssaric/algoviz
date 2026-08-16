@@ -4,6 +4,8 @@
   import { page } from '$app/state';
   import Navbar from '../components/Navbar.svelte';
   import BoardPanel from '../components/learn/BoardPanel.svelte';
+  import FrontierPanel from '../components/learn/FrontierPanel.svelte';
+  import ScoreboardPanel from '../components/learn/ScoreboardPanel.svelte';
   import BoardTooltip from '../components/BoardTooltip.svelte';
   import PullArrow from '../components/PullArrow.svelte';
   import RichText from '../components/RichText.svelte';
@@ -13,8 +15,7 @@
   import { findLesson, LESSONS } from '../core/lessons';
   import { shortestPathLength } from '../core/reference';
 
-  let left = $state<HTMLDivElement | undefined>();
-  let right = $state<HTMLDivElement | undefined>();
+  let boardEls = $state<(HTMLDivElement | undefined)[]>([]);
   let runner = $state<LessonRunner | undefined>();
   let runnerState = $state<RunnerState>({
     totalSteps: 0,
@@ -25,7 +26,8 @@
 
   const lesson = $derived(findLesson(page.url.searchParams.get('lesson')));
 
-  // Whichever board the pointer is resting on; only one can be hovered.
+  // Whichever board the pointer is resting on; only one can be hovered. Stays
+  // empty for a scoreboard lesson, since it never creates a LessonRunner.
   const inspection = $derived(runnerState.boards.find((board) => board.inspection)?.inspection);
 
   const optimal = $derived(
@@ -34,9 +36,16 @@
 
   $effect(() => {
     const current = lesson;
-    if (!left || !right) return;
+    if (current.layout === 'scoreboard') return;
 
-    const instance = new LessonRunner([left, right], current.board, current.variants);
+    const containers = boardEls.slice(0, current.variants.length);
+    if (containers.length !== current.variants.length || containers.some((el) => !el)) return;
+
+    const instance = new LessonRunner(
+      containers as HTMLDivElement[],
+      current.board,
+      current.variants
+    );
     const unsubscribe = instance.subscribe((state) => (runnerState = state));
     runner = instance;
     instance.run();
@@ -104,53 +113,60 @@
         </p>
       </header>
 
-      <div class="grid grid-cols-2 gap-5">
-        <BoardPanel
-          label={lesson.variants[0].label}
-          state={runnerState.boards[0]}
-          {optimal}
-          bind:element={left}
-        />
-        <BoardPanel
-          label={lesson.variants[1].label}
-          state={runnerState.boards[1]}
-          {optimal}
-          bind:element={right}
-        />
-      </div>
-
-      <div class="border-line bg-surface shadow-card mt-4 rounded-2xl border px-5 py-3">
-        <input
-          type="range"
-          class="scrubber"
-          min="0"
-          max={runnerState.totalSteps}
-          step="1"
-          aria-label="Timeline"
-          value={runnerState.cursor}
-          oninput={(event) => runner?.seek(parseInt(event.currentTarget.value, 10))}
-        />
-        <div class="mt-1 flex items-center justify-between gap-4">
-          <span class="text-ink-subtle w-36 text-xs tabular-nums">
-            {runnerState.cursor} / {runnerState.totalSteps} steps
-          </span>
-          <Controls
-            hasData={runnerState.totalSteps > 0}
-            isPlaying={runnerState.isPlaying}
-            onPlay={() => runner?.play()}
-            onStop={() => runner?.pause()}
-            onForward={() => runner?.skip(25)}
-            onBackward={() => runner?.skip(-25)}
-          />
-          <button
-            type="button"
-            onclick={() => runner?.run()}
-            class="text-brand hover:text-brand-bright w-36 cursor-pointer text-right text-xs font-medium"
-          >
-            Run again
-          </button>
+      {#if lesson.layout === 'scoreboard'}
+        <ScoreboardPanel board={lesson.board} variants={lesson.variants} />
+      {:else}
+        <div
+          class="grid gap-5 {lesson.layout === 'frontier'
+            ? 'grid-cols-[1fr_320px]'
+            : 'grid-cols-2'}"
+        >
+          {#each lesson.variants as variant, i (variant.label)}
+            <BoardPanel
+              label={variant.label}
+              state={runnerState.boards[i]}
+              {optimal}
+              bind:element={boardEls[i]}
+            />
+          {/each}
+          {#if lesson.layout === 'frontier'}
+            <FrontierPanel painter={runner?.painters[0]} state={runnerState.boards[0]} />
+          {/if}
         </div>
-      </div>
+
+        <div class="border-line bg-surface shadow-card mt-4 rounded-2xl border px-5 py-3">
+          <input
+            type="range"
+            class="scrubber"
+            min="0"
+            max={runnerState.totalSteps}
+            step="1"
+            aria-label="Timeline"
+            value={runnerState.cursor}
+            oninput={(event) => runner?.seek(parseInt(event.currentTarget.value, 10))}
+          />
+          <div class="mt-1 flex items-center justify-between gap-4">
+            <span class="text-ink-subtle w-36 text-xs tabular-nums">
+              {runnerState.cursor} / {runnerState.totalSteps} steps
+            </span>
+            <Controls
+              hasData={runnerState.totalSteps > 0}
+              isPlaying={runnerState.isPlaying}
+              onPlay={() => runner?.play()}
+              onStop={() => runner?.pause()}
+              onForward={() => runner?.skip(25)}
+              onBackward={() => runner?.skip(-25)}
+            />
+            <button
+              type="button"
+              onclick={() => runner?.run()}
+              class="text-brand hover:text-brand-bright w-36 cursor-pointer text-right text-xs font-medium"
+            >
+              Run again
+            </button>
+          </div>
+        </div>
+      {/if}
 
       <div class="mt-8 max-w-[68ch]">
         {#each lesson.body as paragraph, index (index)}

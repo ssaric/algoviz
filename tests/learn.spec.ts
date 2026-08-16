@@ -6,12 +6,16 @@ const settled = async (page: Page) => {
   await expect(page.locator('.panel__verdict')).toHaveCount(2, { timeout: 30000 });
 };
 
+// The suite below covers "compare" lessons (two boards, one clock), which is
+// still most of them. It pins to a specific one rather than relying on "the
+// default lesson", since the default is now a "frontier" lesson with a single
+// board -- covered in its own block further down.
 test.beforeEach(async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?lesson=exact-vs-optimistic');
   await expect(page.locator('td.cell').first()).toBeVisible();
 });
 
-test('opens on the first lesson with two boards running', async ({ page }) => {
+test('a compare lesson runs two boards on one clock', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1 })).toContainText('exact heuristic');
   await expect(boards(page)).toHaveCount(2);
   await settled(page);
@@ -128,4 +132,91 @@ test('a search with no heuristic says so instead of showing one', async ({ page 
 test('lesson prose typesets its maths', async ({ page }) => {
   await expect(page.locator('article .katex').first()).toBeVisible();
   expect(await page.locator('article .katex').count()).toBeGreaterThan(5);
+});
+
+test.describe('the frontier lessons', () => {
+  test('the default lesson is the frontier intro, with one board and a live queue', async ({
+    page
+  }) => {
+    await page.goto('/');
+    await expect(page.locator('td.cell').first()).toBeVisible();
+
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Meet the frontier');
+    await expect(boards(page)).toHaveCount(1);
+    await expect(page.locator('.frontier-panel')).toBeVisible();
+  });
+
+  test('the frontier panel lists cells in priority order and highlights the next pick', async ({
+    page
+  }) => {
+    await page.goto('/?lesson=meet-the-frontier');
+
+    const panel = page.locator('.frontier-panel');
+    await expect(panel).toContainText('waiting');
+
+    // Let the run advance a bit so there is more than one candidate to rank.
+    await page.waitForTimeout(400);
+
+    const rows = panel.locator('.frontier-panel__row');
+    const count = await rows.count();
+    expect(count).toBeGreaterThan(0);
+
+    // The top row is visually distinguished as "next".
+    await expect(rows.first()).toHaveClass(/bg-brand-soft/);
+  });
+
+  test('adding a heuristic changes what the frontier ranks first, on the same board', async ({
+    page
+  }) => {
+    await page.goto('/?lesson=adding-a-heuristic');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Adding a heuristic');
+
+    await expect(boards(page)).toHaveCount(1);
+    await expect(page.locator('.frontier-panel')).toBeVisible();
+    // KaTeX renders operators without literal spaces in the flattened text.
+    await expect(page.locator('article')).toContainText('f=g+h');
+  });
+
+  test('a frontier lesson can still be hovered for the cell inspector', async ({ page }) => {
+    await page.goto('/?lesson=meet-the-frontier');
+
+    // Wait for the run to finish before reading `max` off the scrubber, or it
+    // is read while still 0 and the fill below does nothing.
+    await expect(page.locator('.panel__verdict')).toHaveCount(1, { timeout: 30000 });
+    const scrubber = page.getByRole('slider', { name: 'Timeline' });
+    await scrubber.fill((await scrubber.getAttribute('max')) ?? '0');
+
+    await page.locator('.panel').first().locator('td.cell--visited').first().hover();
+    await expect(page.locator('.thoughts')).toBeVisible();
+  });
+});
+
+test.describe('the speed-vs-correctness scoreboard', () => {
+  test('has no live board or timeline, just the two charts', async ({ page }) => {
+    await page.goto('/?lesson=speed-vs-correctness');
+
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('all at once');
+    await expect(page.locator('td.cell')).toHaveCount(0);
+    await expect(page.getByRole('slider', { name: 'Timeline' })).toHaveCount(0);
+  });
+
+  test('shows five strategies with both a speed and a correctness figure each', async ({
+    page
+  }) => {
+    await page.goto('/?lesson=speed-vs-correctness');
+
+    await expect(page.getByText('Cells expanded')).toBeVisible();
+    await expect(page.getByText('Path length vs. shortest possible')).toBeVisible();
+    // exact: true, or the substring also matches the row's wrapping element,
+    // whose combined text is the label plus the value beside it.
+    await expect(page.getByText('A* · Manhattan', { exact: true })).toHaveCount(2);
+    await expect(page.getByText('Greedy best-first', { exact: true })).toHaveCount(2);
+  });
+
+  test('marks the strategies that got the wrong answer', async ({ page }) => {
+    await page.goto('/?lesson=speed-vs-correctness');
+
+    await expect(page.getByText('optimal').first()).toBeVisible();
+    await expect(page.getByText(/\+\d+ cells$/).first()).toBeVisible();
+  });
 });

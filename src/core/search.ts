@@ -164,3 +164,26 @@ export function* search(
 
   return { found: false, stats: { visited, discovered, pathLength: 0 } };
 }
+
+/**
+ * Runs a search to completion and returns every step alongside the outcome.
+ *
+ * For playback the generator is driven incrementally by the worker; this is
+ * for the cases that only want the final answer -- a reference solve, or a
+ * one-shot comparison across several configurations -- without duplicating
+ * the drain loop at every call site.
+ */
+export function runToCompletion(
+  grid: Grid,
+  algorithm: Algorithm,
+  heuristic: HeuristicFn
+): { steps: Step[]; outcome: SearchOutcome } {
+  const steps: Step[] = [];
+  const iterator = search(grid, algorithm, heuristic);
+  let next = iterator.next();
+  while (!next.done) {
+    steps.push(next.value);
+    next = iterator.next();
+  }
+  return { steps, outcome: next.value };
+}

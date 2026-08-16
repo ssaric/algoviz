@@ -48,6 +48,13 @@ export class Timeline {
     return this.steps[index] ?? null;
   }
 
+  /** Every step received so far, not just the ones the cursor has reached.
+   *  For reconstructing derived views (the frontier) at an arbitrary cursor
+   *  without re-deriving "how much do we actually know" separately. */
+  get knownSteps(): readonly Step[] {
+    return this.steps;
+  }
+
   private get stepsPerFrame(): number {
     const frames = TARGET_PLAYBACK_SECONDS * FRAMES_PER_SECOND;
     return Math.max(1, Math.ceil(this.steps.length / frames));
