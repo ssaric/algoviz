@@ -1,19 +1,18 @@
-import Grid from "./Grid";
+import Grid from './Grid';
 import {
-  AlgorithmStep,
   AlgorithmWorkerStepType,
   CELL_SIZE,
-  PlaybackDirection, GridPaintStroke, MessageType
-} from "../constants/types";
-import MouseHandlers from "./MouseHandlers";
-import {get, writable, Writable} from "svelte/store";
-import {currentStep, heuristics, interval, removeInterval, steps} from "../store";
-import { clamp } from ".";
+  PlaybackDirection,
+  MessageType,
+  type AlgorithmStep
+} from '../constants/types';
+import MouseHandlers from './MouseHandlers';
+import { get } from 'svelte/store';
+import { currentStep, heuristics, interval, removeInterval, steps } from '../store';
+import { clamp } from '.';
 
-const TABLE_ID = "table";
+const TABLE_ID = 'table';
 const STEP_SIZE = 10;
-
-
 
 class Painter {
   public grid: Grid;
@@ -22,7 +21,7 @@ class Painter {
   private mouseHandlers = new MouseHandlers(this);
 
   constructor() {
-    const root = document.getElementById("root") as HTMLDivElement;
+    const root = document.getElementById('root') as HTMLDivElement;
     this.container = root;
     const rootBbox = root.getBoundingClientRect();
     const viewportWidth = rootBbox.width;
@@ -31,17 +30,19 @@ class Painter {
     const initialRows = Math.floor(viewportHeight / CELL_SIZE);
     this.grid = new Grid({
       columns: initialColumns,
-      rows: initialRows,
+      rows: initialRows
     });
     this.renderGrid();
     this.updateCellNumberListener();
     this.renderStarAndEndNodes();
     heuristics.subscribe(() => this.resetVisualization());
   }
-  public async loadWorker () {
-    const AlgorithmWorker = await import('../worker/AlgorithmMincerWorker?worker');
-    this.algorithmWorker = new AlgorithmWorker.default();
-    this.algorithmWorker.onmessage = (e:  MessageEvent<any>) => {
+  public loadWorker() {
+    this.algorithmWorker = new Worker(
+      new URL('../worker/AlgorithmMincerWorker.ts', import.meta.url),
+      { type: 'module' }
+    );
+    this.algorithmWorker.onmessage = (e: MessageEvent) => {
       const data = e.data[1];
       switch (data.type) {
         case AlgorithmWorkerStepType.START:
@@ -51,10 +52,9 @@ class Painter {
           break;
         default:
           this.addVisualizationStep(data);
-
       }
     };
-  };
+  }
 
   public bindEventHandlers() {
     this.mouseHandlers.bind();
@@ -64,19 +64,19 @@ class Painter {
     this.mouseHandlers.unbind();
   }
 
-
   private startProcessingData = () => {
-    this.algorithmWorker?.postMessage([MessageType.GRID_DATA, {
-      columns: this.grid.columns,
-      rows: this.grid.rows,
-      walls: this.grid.wallsAsArray,
-      start: this.grid.startAsArray,
-      end: this.grid.endAsArray,
-      heuristics: get(heuristics),
-    }]);
+    this.algorithmWorker?.postMessage([
+      MessageType.GRID_DATA,
+      {
+        columns: this.grid.columns,
+        rows: this.grid.rows,
+        walls: this.grid.wallsAsArray,
+        start: this.grid.startAsArray,
+        end: this.grid.endAsArray,
+        heuristics: get(heuristics)
+      }
+    ]);
   };
-
-
 
   public startVisualizingSteps = () => {
     const totalNumberOfSteps = get(steps).length;
@@ -111,22 +111,19 @@ class Painter {
     const existingTable = this.getTableElement();
     if (!existingTable) {
       const table = document.createElement(TABLE_ID);
-      table.id = "table";
-      table.className = "table";
+      table.id = 'table';
+      table.className = 'table';
       this.container.appendChild(table);
       return table;
     }
     return existingTable;
   }
 
-  createRowIfNotExist(
-    table: HTMLTableElement,
-    rowIndex: number
-  ): HTMLTableRowElement {
+  createRowIfNotExist(table: HTMLTableElement, rowIndex: number): HTMLTableRowElement {
     const existingRow = this.getRowElement(table, rowIndex);
     if (!existingRow) {
-      const tableRow = document.createElement("tr");
-      tableRow.setAttribute("rowIndex", `${rowIndex}`);
+      const tableRow = document.createElement('tr');
+      tableRow.setAttribute('rowIndex', `${rowIndex}`);
       table.appendChild(tableRow);
       return tableRow;
     }
@@ -140,10 +137,10 @@ class Painter {
   ): HTMLTableCellElement {
     const existingCell = this.getColumnElement(row, columnIndex, rowIndex);
     if (!existingCell) {
-      const tableCell = document.createElement("td");
-      tableCell.setAttribute("columnIndex", `${columnIndex}`);
-      tableCell.setAttribute("rowIndex", `${rowIndex}`);
-      tableCell.className = "cell";
+      const tableCell = document.createElement('td');
+      tableCell.setAttribute('columnIndex', `${columnIndex}`);
+      tableCell.setAttribute('rowIndex', `${rowIndex}`);
+      tableCell.className = 'cell';
       row.appendChild(tableCell);
       return tableCell;
     }
@@ -155,24 +152,17 @@ class Painter {
   }
 
   getCell(columnIndex: number, rowIndex: number): HTMLTableCellElement | null {
-    return document.querySelector(
-      `td[rowIndex="${rowIndex}"][columnIndex="${columnIndex}"]`
-    );
+    return document.querySelector(`td[rowIndex="${rowIndex}"][columnIndex="${columnIndex}"]`);
   }
 
-  getRowElement(
-    table: HTMLTableElement,
-    rowIndex: number
-  ): HTMLTableRowElement | null {
-    return table.querySelector(
-      `tr[rowIndex="${rowIndex}"]`
-    ) as HTMLTableRowElement | null;
+  getRowElement(table: HTMLTableElement, rowIndex: number): HTMLTableRowElement | null {
+    return table.querySelector(`tr[rowIndex="${rowIndex}"]`) as HTMLTableRowElement | null;
   }
 
   getColumnElement(
     row: HTMLTableRowElement,
     columnIndex: number,
-  rowIndex: number,
+    rowIndex: number
   ): HTMLTableCellElement | null {
     return row.querySelector(
       `td[rowIndex="${rowIndex}"][columnIndex="${columnIndex}"]`
@@ -180,11 +170,11 @@ class Painter {
   }
 
   getRenderedRows(table: HTMLTableElement): HTMLTableRowElement[] {
-    return [...table.querySelectorAll("tr")];
+    return [...table.querySelectorAll('tr')];
   }
 
   getRenderedColumns(table: HTMLTableRowElement): HTMLTableCellElement[] {
-    return [...table.querySelectorAll("td")];
+    return [...table.querySelectorAll('td')];
   }
 
   highlightElement(element: Element) {
@@ -222,7 +212,11 @@ class Painter {
     }
   }
 
-  createGridPaintMove(element: Element, type: AlgorithmWorkerStepType, direction: PlaybackDirection) {
+  createGridPaintMove(
+    element: Element,
+    type: AlgorithmWorkerStepType,
+    direction: PlaybackDirection
+  ) {
     switch (direction) {
       case PlaybackDirection.FORWARD:
         return this.stepForward(element, type);
@@ -241,68 +235,68 @@ class Painter {
   private queueBackwardsSteps(nrOfSteps = STEP_SIZE) {
     const start = get(currentStep);
     for (let i = start; i > start + nrOfSteps; i--) {
-      setTimeout(() => {
-        if (!get(steps)[i]) debugger;
-        get(steps)[i](PlaybackDirection.BACKWARD);
-      }, 0);
+      setTimeout(() => get(steps)[i]?.(PlaybackDirection.BACKWARD), 0);
     }
   }
 
   public skipBackward = () => {
-    const nrOfSteps = clamp(-STEP_SIZE, -get(currentStep), 0)
+    const nrOfSteps = clamp(-STEP_SIZE, -get(currentStep), 0);
     this.queueBackwardsSteps(nrOfSteps);
-    currentStep.update(value => value  + nrOfSteps);
+    currentStep.update((value) => value + nrOfSteps);
   };
 
   public skipForward = () => {
-    const nrOfSteps = clamp(STEP_SIZE, 0, (get(steps).length - 1) - get(currentStep))
+    const nrOfSteps = clamp(STEP_SIZE, 0, get(steps).length - 1 - get(currentStep));
     this.queueForwardSteps(nrOfSteps);
-    currentStep.update(value => value  + nrOfSteps);
+    currentStep.update((value) => value + nrOfSteps);
   };
 
-  onManualLoaderChange = (e: CustomEvent) => {
+  seekTo = (value: number) => {
     removeInterval();
-    const value = parseInt(e.detail.target.value, 10);
     const nrOfSteps = value - get(currentStep);
     const direction = nrOfSteps > 0 ? PlaybackDirection.FORWARD : PlaybackDirection.BACKWARD;
-    if (direction === PlaybackDirection.FORWARD) this.queueForwardSteps(nrOfSteps)
+    if (direction === PlaybackDirection.FORWARD) this.queueForwardSteps(nrOfSteps);
     else if (direction === PlaybackDirection.BACKWARD) this.queueBackwardsSteps(nrOfSteps);
     currentStep.set(value);
   };
 
-  public stopPlaying  (){
+  public stopPlaying() {
     const _interval = get(interval);
     if (_interval === null) return;
     clearInterval(_interval);
     interval.set(null);
-  };
+  }
 
   public startPlaying() {
-    interval.set(window.setInterval(() => {
-      if (get(currentStep) >= get(steps).length - 1) {
-        removeInterval();
-        return;
-      }
-      const stepToExecute = get(steps)[get(currentStep)];
-      currentStep.update(value => value + 1);
-      stepToExecute(PlaybackDirection.FORWARD);
-    }, 20));
+    interval.set(
+      window.setInterval(() => {
+        if (get(currentStep) >= get(steps).length - 1) {
+          removeInterval();
+          return;
+        }
+        const stepToExecute = get(steps)[get(currentStep)];
+        currentStep.update((value) => value + 1);
+        stepToExecute(PlaybackDirection.FORWARD);
+      }, 20)
+    );
   }
 
   public addVisualizationStep(step: AlgorithmStep) {
-      const { location, type } = step;
-      if (!location) return;
-      const element = this.getCell(location[0], location[1]);
-      if (!element) return;
-      steps.update(s => [...s, direction => this.createGridPaintMove(element, type, direction)]);
-      if (!get(interval)) this.startVisualizingSteps();
+    const { location, type } = step;
+    if (!location) return;
+    const element = this.getCell(location[0], location[1]);
+    if (!element) return;
+    steps.update((s) => [...s, (direction) => this.createGridPaintMove(element, type, direction)]);
+    if (!get(interval)) this.startVisualizingSteps();
   }
 
   public resetVisualization() {
     steps.set([]);
     currentStep.set(0);
-    const cells = this.container.querySelectorAll('td.cell--visited, td.cell--discovered, td.cell--path');
-    [...cells].forEach(e => {
+    const cells = this.container.querySelectorAll(
+      'td.cell--visited, td.cell--discovered, td.cell--path'
+    );
+    [...cells].forEach((e) => {
       e.classList.remove('cell--visited');
       e.classList.remove('cell--discovered');
       e.classList.remove('cell--path');
@@ -310,20 +304,20 @@ class Painter {
   }
 
   public resetGrid = () => {
-   this.resetVisualization();
-   this.grid.reset();
+    this.resetVisualization();
+    this.grid.reset();
     const cells = this.container.querySelectorAll('td.cell--wall');
-    [...cells].forEach(e => {
+    [...cells].forEach((e) => {
       e.classList.remove('cell--wall');
     });
-  }
+  };
 
   adjustStartCell(
     targetElement: HTMLTableCellElement,
     columnIndex: number,
     rowIndex: number
   ): void {
-    if (!targetElement.classList.contains("cell--start")) return;
+    if (!targetElement.classList.contains('cell--start')) return;
     const newLocation = this.grid.nearestFreeCell(columnIndex, rowIndex);
     if (!newLocation) return;
     const [newColumnIndex, newRowIndex] = newLocation;
@@ -332,13 +326,8 @@ class Painter {
     this.renderStartAtCell(newStartCell);
   }
 
-
-  adjustEndCell(
-    targetElement: HTMLTableCellElement,
-    columnIndex: number,
-    rowIndex: number
-  ): void {
-    if (!targetElement.classList.contains("cell--end")) return;
+  adjustEndCell(targetElement: HTMLTableCellElement, columnIndex: number, rowIndex: number): void {
+    if (!targetElement.classList.contains('cell--end')) return;
     const newLocation = this.grid.nearestFreeCell(columnIndex, rowIndex);
     if (!newLocation) return;
     const [newColumnIndex, newRowIndex] = newLocation;
@@ -351,67 +340,55 @@ class Painter {
     if (get(steps).length > 0) {
       this.resetVisualization();
     }
-    const columnIndex = parseInt(targetElement.getAttribute("columnIndex") as string);
-    const rowIndex = parseInt(targetElement.getAttribute("rowIndex") as string);
+    const columnIndex = parseInt(targetElement.getAttribute('columnIndex') as string);
+    const rowIndex = parseInt(targetElement.getAttribute('rowIndex') as string);
     this.adjustStartCell(targetElement, columnIndex, rowIndex);
     this.adjustEndCell(targetElement, columnIndex, rowIndex);
     this.grid.addWall(columnIndex, rowIndex);
-    targetElement.classList.add("cell--wall");
+    targetElement.classList.add('cell--wall');
   }
 
   renderStartAtCell(targetElement: HTMLTableCellElement) {
     if (!this.grid.start) return;
-    const startCell = this.getCell(
-      this.grid.start.coordinates.x,
-      this.grid.start.coordinates.y
-    );
-    startCell?.classList.remove("cell--start");
-    const columnIndex = parseInt(targetElement.getAttribute("columnIndex") as string);
-    const rowIndex = parseInt(targetElement.getAttribute("rowIndex") as string);
+    const startCell = this.getCell(this.grid.start.coordinates.x, this.grid.start.coordinates.y);
+    startCell?.classList.remove('cell--start');
+    const columnIndex = parseInt(targetElement.getAttribute('columnIndex') as string);
+    const rowIndex = parseInt(targetElement.getAttribute('rowIndex') as string);
     this.grid.setStart(columnIndex, rowIndex);
-    targetElement.classList.add("cell--start");
+    targetElement.classList.add('cell--start');
     if (get(steps).length > 0) this.resetVisualization();
   }
 
   renderEndAtCell(targetElement: HTMLTableCellElement) {
     if (!this.grid.end) return;
-    const endCell = this.getCell(
-      this.grid.end.coordinates.x,
-      this.grid.end.coordinates.y
-    );
-    endCell?.classList.remove("cell--end");
-    const columnIndex = parseInt(targetElement.getAttribute("columnIndex") as string);
-    const rowIndex = parseInt(targetElement.getAttribute("rowIndex") as string);
+    const endCell = this.getCell(this.grid.end.coordinates.x, this.grid.end.coordinates.y);
+    endCell?.classList.remove('cell--end');
+    const columnIndex = parseInt(targetElement.getAttribute('columnIndex') as string);
+    const rowIndex = parseInt(targetElement.getAttribute('rowIndex') as string);
     this.grid.setEnd(columnIndex, rowIndex);
-    targetElement.classList.add("cell--end");
+    targetElement.classList.add('cell--end');
     if (get(steps).length > 0) this.resetVisualization();
   }
 
   toggleWall(targetElement: HTMLTableCellElement) {
-    const columnIndex = parseInt(targetElement.getAttribute("columnIndex") as string);
-    const rowIndex = parseInt(targetElement.getAttribute("rowIndex") as string);
-    if (targetElement.classList.contains("cell--wall")) {
+    const columnIndex = parseInt(targetElement.getAttribute('columnIndex') as string);
+    const rowIndex = parseInt(targetElement.getAttribute('rowIndex') as string);
+    if (targetElement.classList.contains('cell--wall')) {
       this.grid.removeWall(columnIndex, rowIndex);
-      targetElement.classList.remove("cell--wall");
+      targetElement.classList.remove('cell--wall');
     } else {
       this.grid.addWall(columnIndex, rowIndex);
-      targetElement.classList.add("cell--wall");
+      targetElement.classList.add('cell--wall');
     }
   }
 
   renderStarAndEndNodes() {
     if (!this.grid.start) return;
-    const startCell = this.getCell(
-      this.grid.start.coordinates.x,
-      this.grid.start.coordinates.y
-    );
+    const startCell = this.getCell(this.grid.start.coordinates.x, this.grid.start.coordinates.y);
     if (!this.grid.end) return;
-    const endCell = this.getCell(
-      this.grid.end.coordinates.x,
-      this.grid.end.coordinates.y
-    );
-    startCell?.classList.add("cell--start");
-    endCell?.classList.add("cell--end");
+    const endCell = this.getCell(this.grid.end.coordinates.x, this.grid.end.coordinates.y);
+    startCell?.classList.add('cell--start');
+    endCell?.classList.add('cell--end');
   }
 
   removeCellsOutOfViewPort(table: HTMLTableElement) {

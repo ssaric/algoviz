@@ -1,34 +1,40 @@
-<style lang="scss" global>
-    @import '../../scss/theme';
-    .custom-heuristics {
-        display: flex;
-        flex-direction: column;
-    }
-    .custom-heuristics__text {
-      padding: 10px;
-    }
-</style>
 <script lang="ts">
-    import {createEventDispatcher, onMount} from 'svelte';
-    const dispatch = createEventDispatcher();
+  import { onMount } from 'svelte';
 
-    let formula = 'sqrt(x^2 + y^2)';
-    onMount(()=> {
-        dispatch('applyFormula', formula);
-    })
-    function apply() {
-        dispatch('applyFormula', formula);
-    }
+  type Props = {
+    onApplyFormula: (formula: string) => void;
+  };
 
+  let { onApplyFormula }: Props = $props();
+
+  let formula = $state('sqrt(x^2 + y^2)');
+
+  // Publish the default once on mount so "Custom" is never selected without a
+  // formula behind it. Typing must not re-apply, or every keystroke would
+  // restart the visualization.
+  onMount(() => onApplyFormula(formula));
 </script>
 
-
 <div class="custom-heuristics">
-   <span class="custom-heuristics__text">Input a custom heuristics formula using the variables
-            <code>x</code> and <code>y</code>
-            representing respective horizontal and vertical distances.
-            The formula will be parsed via <a target="_blank" href="https://mathjs.org/docs/expressions/parsing.html">math.js</a>
-        </span>
-    <input bind:value={formula} placeholder="formula"/>
-    <button on:click={apply}>Apply</button>
+  <span class="custom-heuristics__text">
+    Input a custom heuristics formula using the variables
+    <code>x</code> and <code>y</code>
+    representing respective horizontal and vertical distances. The formula will be parsed via
+    <a target="_blank" rel="noreferrer" href="https://mathjs.org/docs/expressions/parsing.html">
+      math.js
+    </a>
+  </span>
+  <input bind:value={formula} placeholder="formula" aria-label="Custom heuristic formula" />
+  <button type="button" onclick={() => onApplyFormula(formula)}>Apply</button>
 </div>
+
+<style lang="scss">
+  .custom-heuristics {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .custom-heuristics__text {
+    padding: 10px;
+  }
+</style>

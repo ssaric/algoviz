@@ -1,5 +1,3 @@
-@import './theme';
-@import './global';
-@import './button';
-@import './table';
-
+@use './global';
+@use './button';
+@use './table';

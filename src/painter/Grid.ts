@@ -1,7 +1,9 @@
-import GridNode, {GridCoordinates} from "./GridNode";
-import {GridConstructorData, Heuristics, HeuristicsData,} from "../constants/types";
-import {evaluate} from "mathjs";
-import MouseHandlers from "./MouseHandlers";
+import GridNode, { GridCoordinates } from './GridNode';
+import { Heuristics, type GridConstructorData, type HeuristicsData } from '../constants/types';
+// Number-only build: heuristics evaluate plain numeric deltas, so the full
+// mathjs bundle (matrices, units, complex numbers) would be dead weight in the
+// worker.
+import { evaluate } from 'mathjs/number';
 
 export interface HeuristicsFunction {
   (nodeA: GridCoordinates, nodeB: GridCoordinates): number;
@@ -14,15 +16,13 @@ function euclideanHeuristics(nodeA: GridCoordinates, nodeB: GridCoordinates) {
   return (nodeA.x - nodeB.x) ** 2 + (nodeA.y - nodeB.y) ** 2;
 }
 
-
-const customHeuristics =
-  (formula: string) => (nodeA: GridCoordinates, nodeB: GridCoordinates) => {
-    const scope = {
-      x: nodeA.x - nodeB.x,
-      y: nodeA.y - nodeB.y,
-    };
-    return evaluate(formula, scope);
+const customHeuristics = (formula: string) => (nodeA: GridCoordinates, nodeB: GridCoordinates) => {
+  const scope = {
+    x: nodeA.x - nodeB.x,
+    y: nodeA.y - nodeB.y
   };
+  return evaluate(formula, scope);
+};
 
 export function setHeuristicsFunction(heuristicsData: HeuristicsData) {
   switch (heuristicsData.type) {
@@ -55,9 +55,7 @@ class Grid {
     this.walls = new Map();
     this.visited = new Map();
     this.discovered = new Map();
-    walls?.forEach((w: GridCoordinates) =>
-      this.walls.set(w.id, new GridNode(w))
-    );
+    walls?.forEach((w: GridCoordinates) => this.walls.set(w.id, new GridNode(w)));
     if (start) {
       this.start = new GridNode(start);
     } else {
@@ -71,26 +69,23 @@ class Grid {
     }
   }
 
-  public get wallsAsArray(): Array<[number,number]> {
-    return [...this.walls.values()].map(w => w.toArray());
+  public get wallsAsArray(): Array<[number, number]> {
+    return [...this.walls.values()].map((w) => w.toArray());
   }
 
-  public get startAsArray(): [number,number] | undefined{
+  public get startAsArray(): [number, number] | undefined {
     return this.start?.toArray();
   }
 
-  public get endAsArray(): [number,number] | undefined {
+  public get endAsArray(): [number, number] | undefined {
     return this.end?.toArray();
   }
 
   public isGridValid(): boolean {
-    return this.walls?.size !== 0 && this.start !== null && this.end !== null
+    return this.walls?.size !== 0 && this.start !== null && this.end !== null;
   }
 
-  public nearestFreeCell(
-    columnIndex: number,
-    rowIndex: number
-  ): [number, number] | null {
+  public nearestFreeCell(columnIndex: number, rowIndex: number): [number, number] | null {
     const visited = new Set<string>();
     const startNode = new GridNode(new GridCoordinates(columnIndex, rowIndex));
     visited.add(startNode.id);
@@ -116,9 +111,7 @@ class Grid {
   }
 
   public removeWall(columnIndex: number, rowIndex: number) {
-    this.walls.delete(
-      [columnIndex, rowIndex].toString()
-    );
+    this.walls.delete([columnIndex, rowIndex].toString());
   }
 
   public setStart(columnIndex: number, rowIndex: number) {
@@ -128,7 +121,6 @@ class Grid {
   public setEnd(columnIndex: number, rowIndex: number) {
     this.end = new GridNode(new GridCoordinates(columnIndex, rowIndex));
   }
-
 
   public updateColumns(newColumns: number) {
     this.columns = newColumns;
@@ -170,11 +162,11 @@ class Grid {
     this.discovered.set(node.id, node);
   }
 
-  isEnd(node: GridNode  | GridCoordinates): boolean {
+  isEnd(node: GridNode | GridCoordinates): boolean {
     return !!this.end && node.equals(this.end);
   }
 
-  isStart(node: GridNode  | GridCoordinates): boolean {
+  isStart(node: GridNode | GridCoordinates): boolean {
     return !!this.start && node.equals(this.start);
   }
 
@@ -182,7 +174,7 @@ class Grid {
     return this.visited.has(gridLocation.id);
   }
 
-  isWall(gridNode: GridNode  | GridCoordinates): boolean {
+  isWall(gridNode: GridNode | GridCoordinates): boolean {
     return this.walls.has(gridNode.id);
   }
 
@@ -192,7 +184,7 @@ class Grid {
   }
 
   /** Can you put a wall, start or end node in this cell **/
-  public isCellFree(location: GridNode  | GridCoordinates): boolean {
+  public isCellFree(location: GridNode | GridCoordinates): boolean {
     return (
       this.isWithinGridBounds(location) &&
       !this.isWall(location) &&
@@ -201,7 +193,7 @@ class Grid {
     );
   }
 
-  isWithinGridBounds(location: GridNode  | GridCoordinates) {
+  isWithinGridBounds(location: GridNode | GridCoordinates) {
     return !(
       location.x < 0 ||
       location.x > this.columns - 1 ||
@@ -215,10 +207,7 @@ class Grid {
     testFunction: (location: GridCoordinates | GridNode) => boolean
   ): Map<string, GridNode> {
     const up = new GridCoordinates(gridNode.x, gridNode.y - 1);
-    const bottom = new GridCoordinates(
-      gridNode.x,
-      gridNode.y + 1
-    );
+    const bottom = new GridCoordinates(gridNode.x, gridNode.y + 1);
     const right = new GridCoordinates(gridNode.x + 1, gridNode.y);
     const left = new GridCoordinates(gridNode.x - 1, gridNode.y);
     const nodes = new Map<string, GridNode>();
@@ -231,19 +220,11 @@ class Grid {
   }
 
   getCellNeighbours(gridNode: GridNode): Map<string, GridNode> {
-    return this.getNeighboursTemplate(
-      gridNode,
-      this.isWithinGridBounds.bind(this)
-    );
+    return this.getNeighboursTemplate(gridNode, this.isWithinGridBounds.bind(this));
   }
 
-  getCellFreeNeighbours(
-    gridNode: GridNode
-  ): Map<string, GridNode> {
-    return this.getNeighboursTemplate(
-      gridNode,
-      this.isCellFree.bind(this)
-    );
+  getCellFreeNeighbours(gridNode: GridNode): Map<string, GridNode> {
+    return this.getNeighboursTemplate(gridNode, this.isCellFree.bind(this));
   }
 
   public reset(): void {
@@ -251,10 +232,7 @@ class Grid {
   }
 
   public getWalkableNeighbours(gridNode: GridNode) {
-    return this.getNeighboursTemplate(
-      gridNode,
-      this.isCellWalkable.bind(this)
-    );
+    return this.getNeighboursTemplate(gridNode, this.isCellWalkable.bind(this));
   }
 }
 

@@ -1,104 +1,104 @@
+@use './theme' as *;
+
 .cell {
-    height: 20px;
-    width: 20px;
-    cursor: pointer;
-    border: 1px solid $color-neutral10;
-    transition: background-color 0.01s;
-    position: relative;
+  height: 20px;
+  width: 20px;
+  cursor: pointer;
+  border: 1px solid $color-neutral10;
+  transition: background-color 0.01s;
+  position: relative;
 }
 
-
 .cell--wall {
-    background-color: $color-neutral40;
+  background-color: $color-neutral40;
 }
 
 .cell--start {
-    cursor: grab;
-    background-size: 15px 15px;
-    background-repeat: no-repeat;
-    background-position: center;
-    background-image: url("/play-circle-solid.svg");
+  cursor: grab;
+  background-size: 15px 15px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-image: url('/play-circle-solid.svg');
 }
 
 .cell--end {
-    cursor: grab;
-    background-size: 15px 15px;
-    background-repeat: no-repeat;
-    background-position: center;
-    background-image: url("/dot-circle-solid.svg");
+  cursor: grab;
+  background-size: 15px 15px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-image: url('/dot-circle-solid.svg');
 }
 
 .cell--discovered {
-    background-color: $color-primary20;
+  background-color: $color-primary20;
 }
 
 .cell--visited {
-    background-color: $color-primary40;
+  background-color: $color-primary40;
 }
 
 .cell--path {
-    background-color: $color-secondary50;
+  background-color: $color-secondary50;
 }
 
 .cell--highlighted {
-    border: 2px solid blue;
+  border: 2px solid blue;
 }
 .cell--visited {
-    &.gradient-0 {
-        background-color: #0067E5;
-    }
+  &.gradient-0 {
+    background-color: #0067e5;
+  }
 
-    &.gradient-10 {
-        background-color: #0B6FDC;
-    }
+  &.gradient-10 {
+    background-color: #0b6fdc;
+  }
 
-    &.gradient-20 {
-        background-color: #1677D3;
-    }
+  &.gradient-20 {
+    background-color: #1677d3;
+  }
 
-    &.gradient-30 {
-        background-color: #2180CA;
-    }
+  &.gradient-30 {
+    background-color: #2180ca;
+  }
 
-    &.gradient-40 {
-        background-color: #2C88C1;
-    }
+  &.gradient-40 {
+    background-color: #2c88c1;
+  }
 
-    &.gradient-50 {
-        background-color: #3890B8;
-    }
+  &.gradient-50 {
+    background-color: #3890b8;
+  }
 
-    &.gradient-60 {
-        background-color: #4399AF;
-    }
+  &.gradient-60 {
+    background-color: #4399af;
+  }
 
-    &.gradient-70 {
-        background-color: #4EA1A6;
-    }
+  &.gradient-70 {
+    background-color: #4ea1a6;
+  }
 
-    &.gradient-80 {
-        background-color: #59A99D;
-    }
+  &.gradient-80 {
+    background-color: #59a99d;
+  }
 
-    &.gradient-90 {
-        background-color: #65B294;
-    }
+  &.gradient-90 {
+    background-color: #65b294;
+  }
 }
 
-
 .table {
-    border-spacing: 0;
-    border-collapse: unset;
-    width: 100%;
-    height: calc(100% - 240px);
-    user-select: none;
-    td:not(.cell--start):not(.cell--end):hover.cell:after {
-        content: "";
-        height: 14px;
-        width: 14px;
-        display: block;
-        background-size: 15px 15px;
-        background-repeat: no-repeat;
-        background-image: url("/square-full-solid.svg");
-    }
+  border-spacing: 0;
+  border-collapse: unset;
+  width: 100%;
+  height: calc(100% - 240px);
+  user-select: none;
+  td:not(.cell--start):not(.cell--end):hover.cell:after {
+    content: '';
+    height: 14px;
+    width: 14px;
+    display: block;
+    background-size: 15px 15px;
+    background-repeat: no-repeat;
+    background-image: url('/square-full-solid.svg');
+  }
 }

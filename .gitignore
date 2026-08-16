@@ -161,3 +161,8 @@ fabric.properties
 
 /build/
 /.svelte-kit/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/

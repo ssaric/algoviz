@@ -1,4 +1,4 @@
-import type { GridCoordinates } from "../painter/GridNode";
+import type { GridCoordinates } from '../painter/GridNode';
 
 export const CELL_SIZE = 20;
 
@@ -6,7 +6,7 @@ export enum MessageType {
   GRID_DATA,
   INFO_DATA,
   ALGORITHM_STEP,
-  SET_HEURISTICS,
+  SET_HEURISTICS
 }
 
 export enum AlgorithmWorkerStepType {
@@ -15,24 +15,24 @@ export enum AlgorithmWorkerStepType {
   INFO,
   MARK_PATH,
   VISIT,
-  DISCOVER,
+  DISCOVER
 }
 
 export enum FieldType {
   START,
   END,
-  WALL,
+  WALL
 }
 
 export enum MouseClick {
   LEFT,
   MIDDLE,
-  RIGHT,
+  RIGHT
 }
 
 export enum PlaybackDirection {
-  FORWARD = "forward",
-  BACKWARD = "backward",
+  FORWARD = 'forward',
+  BACKWARD = 'backward'
 }
 
 export type WorkerGridTransferData = {
@@ -61,11 +61,10 @@ export type GridData = {
 
 export type GridPaintStroke = (direction: PlaybackDirection) => void;
 
-
 export enum Heuristics {
-  EUCLIDEAN = "0",
-  MANHATTAN = "1",
-  CUSTOM = "2",
+  EUCLIDEAN = '0',
+  MANHATTAN = '1',
+  CUSTOM = '2'
 }
 
 export type AlgorithmStep = {
@@ -89,9 +88,11 @@ export type CellInfoMessage = {
   parent?: string;
 };
 
-export type HeuristicsData = {
-  type: Heuristics.EUCLIDEAN | Heuristics.MANHATTAN;
-} | {
-  type: Heuristics.CUSTOM;
-  formula: string;
-}
+export type HeuristicsData =
+  | {
+      type: Heuristics.EUCLIDEAN | Heuristics.MANHATTAN;
+    }
+  | {
+      type: Heuristics.CUSTOM;
+      formula: string;
+    };

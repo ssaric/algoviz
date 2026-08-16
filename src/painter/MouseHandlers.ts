@@ -1,5 +1,5 @@
-import { MouseClick } from "../constants/types";
-import type Painter from "./Painter";
+import { MouseClick } from '../constants/types';
+import type Painter from './Painter';
 
 class MouseHandlers {
   private painter: Painter;
@@ -17,24 +17,23 @@ class MouseHandlers {
     this.painter = painter;
   }
   public bind() {
-    this.painter.container.addEventListener("mousedown", this.mouseDownCallback);
-    this.painter.container.addEventListener("click", this.mouseclickCallback);
-    this.painter.container.addEventListener("mouseup", this.mouseUpCallback);
-    this.painter.container.addEventListener("mousemove", this.mouseMoveCallback);
+    this.painter.container.addEventListener('mousedown', this.mouseDownCallback);
+    this.painter.container.addEventListener('click', this.mouseclickCallback);
+    this.painter.container.addEventListener('mouseup', this.mouseUpCallback);
+    this.painter.container.addEventListener('mousemove', this.mouseMoveCallback);
   }
 
   public unbind() {
-    this.painter.container.removeEventListener("click", this.mouseclickCallback);
-    this.painter.container.removeEventListener("mousedown", this.mouseDownCallback);
-    this.painter.container.removeEventListener("mouseup", this.mouseUpCallback);
-    this.painter.container.removeEventListener("mousemove", this.mouseMoveCallback);
+    this.painter.container.removeEventListener('click', this.mouseclickCallback);
+    this.painter.container.removeEventListener('mousedown', this.mouseDownCallback);
+    this.painter.container.removeEventListener('mouseup', this.mouseUpCallback);
+    this.painter.container.removeEventListener('mousemove', this.mouseMoveCallback);
   }
 
   onMouseMove(e: MouseEvent) {
-    if (!this.dragSelect && !this.draggingStartCell && !this.draggingEndCell)
-      return;
+    if (!this.dragSelect && !this.draggingStartCell && !this.draggingEndCell) return;
     const target = e.target as HTMLElement;
-    if (!target.getAttribute("columnIndex")) return;
+    if (!target.getAttribute('columnIndex')) return;
     this.handleMovementEvent(e.target as HTMLTableCellElement);
   }
 
@@ -52,7 +51,7 @@ class MouseHandlers {
   onMouseClick(e: MouseEvent) {
     if (!e.target) return;
     if (!(e.target instanceof HTMLTableCellElement)) return;
-    if (!e.target.getAttribute("columnIndex")) return;
+    if (!e.target.getAttribute('columnIndex')) return;
     if (e.button !== MouseClick.LEFT) return;
     this.painter.toggleWall(e.target);
   }
@@ -60,17 +59,15 @@ class MouseHandlers {
   onMouseDown(e: MouseEvent) {
     if (!(e.target instanceof HTMLTableCellElement)) return;
     if (e.button !== undefined && e.button !== MouseClick.LEFT) return;
-    this.painter.container.addEventListener("mouseout", this.mouseOutCallback);
-    this.painter.container.addEventListener("touchcancel", this.mouseOutCallback);
-    this.painter.container.addEventListener("mouseup", this.mouseUpCallback);
-    if (e.target.classList.contains("cell--start"))
-      this.draggingStartCell = true;
-    else if (e.target.classList.contains("cell--end"))
-      this.draggingEndCell = true;
+    this.painter.container.addEventListener('mouseout', this.mouseOutCallback);
+    this.painter.container.addEventListener('touchcancel', this.mouseOutCallback);
+    this.painter.container.addEventListener('mouseup', this.mouseUpCallback);
+    if (e.target.classList.contains('cell--start')) this.draggingStartCell = true;
+    else if (e.target.classList.contains('cell--end')) this.draggingEndCell = true;
     else this.dragSelect = true;
   }
   onMouseUp() {
-    this.painter.container.removeEventListener("mouseout", this.mouseOutCallback);
+    this.painter.container.removeEventListener('mouseout', this.mouseOutCallback);
     this.dragSelect = false;
     this.draggingStartCell = false;
     this.draggingEndCell = false;

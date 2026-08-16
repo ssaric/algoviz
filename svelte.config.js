@@ -1,32 +1,18 @@
 import adapter from '@sveltejs/adapter-static';
-import preprocess from "svelte-preprocess";
-import tailwind from "tailwindcss";
-import autoprefixer from "autoprefixer";
-const dev = process.env.NODE_ENV === 'development';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-  // Consult https://github.com/sveltejs/svelte-preprocess
-  // for more information about preprocessors
-  preprocess: [
-    preprocess({
-      sourceMap: !dev,
-      postcss: {
-        plugins: [tailwind(), autoprefixer()],
-      },
-    }),
-  ],
+  preprocess: vitePreprocess(),
   kit: {
-    prerender: {
-      enabled: true
-    },
+    // The single route is prerendered to build/index.html; nginx serves it for
+    // unknown paths via try_files, so no separate SPA fallback is needed.
     adapter: adapter({
       pages: 'build',
       assets: 'build',
-      fallback: 'index.html',
-      trailingSlash: 'always',
-      precompress: true,
-    }),
-  },
+      precompress: true
+    })
+  }
 };
 
 export default config;

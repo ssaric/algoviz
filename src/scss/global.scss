@@ -1,7 +1,11 @@
+@use './theme' as *;
+
 body {
   background: $color-neutral70;
   position: fixed;
-  font-family: Source Sans Pro, sans-serif;
+  font-family:
+    Source Sans Pro,
+    sans-serif;
   top: 0;
   left: 0;
   padding: 0;
@@ -18,12 +22,32 @@ body {
   }
 }
 
-*, *:before, *:after {
+*,
+*:before,
+*:after {
   box-sizing: inherit;
 }
 
-.subtitle-1, .subtitle-2, .body-1, .body-2, .button, .caption,
-h1, h2, h3, h4, h5, h6 {
+// Shared by the playback panel and the transport buttons it renders,
+// so it cannot live in either component's scoped styles.
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.subtitle-1,
+.subtitle-2,
+.body-1,
+.body-2,
+.button,
+.caption,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   color: $color-neutral5;
   margin: 0;
 }
