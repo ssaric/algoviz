@@ -1,0 +1,190 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens.
+ *
+ * The board's colours are fixed by what they mean -- dark green is expanded,
+ * light green is on the frontier, terracotta is the chosen path -- so the
+ * chrome is built around them rather than the other way round: warm neutrals
+ * that let the greens read as the only saturated thing on the page.
+ */
+@theme {
+  --font-sans:
+    'Source Sans Pro', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Surfaces and text. */
+  --color-canvas: #f7f6f4;
+  --color-surface: #ffffff;
+  --color-sunken: #efedea;
+  --color-line: #e4e1dc;
+  --color-line-strong: #d3cfc8;
+  --color-ink: #1b1a18;
+  --color-ink-muted: #5f5a54;
+  --color-ink-subtle: #918b83;
+
+  /* Accents, taken from the board so the two halves agree. */
+  --color-brand: #185032;
+  --color-brand-bright: #3e906b;
+  --color-brand-soft: #e8f0eb;
+  --color-frontier: #65b294;
+  --color-path: #c6755f;
+  --color-path-soft: #f7ece8;
+  /* The heuristic vector, deliberately outside the board's palette so it
+     never reads as another kind of cell. */
+  --color-vector: #e11d48;
+  --color-vector-strong: #9f1239;
+  --color-vector-weak: #fb7185;
+
+  --color-danger: #b0322a;
+  --color-danger-soft: #f8ebea;
+
+  --radius-card: 14px;
+
+  --shadow-card: 0 1px 2px rgb(27 26 24 / 0.05), 0 8px 24px -12px rgb(27 26 24 / 0.18);
+  --shadow-float: 0 12px 32px -8px rgb(27 26 24 / 0.28);
+}
+
+@layer base {
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    touch-action: manipulation;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand-bright);
+    outline-offset: 2px;
+  }
+}
+
+/*
+ * The board is built by Painter with plain DOM APIs, so its styling cannot be
+ * scoped to a component and lives here. Deliberately unchanged: the cell
+ * colours carry meaning that the lessons refer to by name.
+ */
+@layer components {
+  /* Shared by both transports. Range pseudo-elements cannot be composed from
+     utilities without a wall of arbitrary variants, so they live here. */
+  .scrubber {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 22px;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .scrubber::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 999px;
+    background: var(--color-line-strong);
+  }
+
+  .scrubber::-moz-range-track {
+    height: 6px;
+    border-radius: 999px;
+    background: var(--color-line-strong);
+  }
+
+  .scrubber::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    margin-top: -5px;
+    height: 16px;
+    width: 16px;
+    border-radius: 999px;
+    background: var(--color-brand);
+    border: 2px solid var(--color-surface);
+    box-shadow: 0 1px 4px rgb(27 26 24 / 0.35);
+  }
+
+  .scrubber::-moz-range-thumb {
+    height: 16px;
+    width: 16px;
+    border: 2px solid var(--color-surface);
+    border-radius: 999px;
+    background: var(--color-brand);
+    box-shadow: 0 1px 4px rgb(27 26 24 / 0.35);
+  }
+
+  .scrubber:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .table {
+    --cell-size: 20px;
+    border-spacing: 0;
+    border-collapse: separate;
+    user-select: none;
+  }
+
+  .cell {
+    position: relative;
+    width: var(--cell-size);
+    height: var(--cell-size);
+    border: 1px solid #c5c7cb;
+    cursor: pointer;
+    transition: background-color 0.01s;
+  }
+
+  .cell--wall {
+    background-color: #5f6163;
+  }
+
+  .cell--discovered {
+    background-color: #65b294;
+  }
+
+  .cell--visited {
+    background-color: #185032;
+  }
+
+  .cell--path {
+    background-color: #c6755f;
+  }
+
+  .cell--highlighted {
+    border: 2px solid #2563eb;
+  }
+
+  .cell--start,
+  .cell--end {
+    cursor: grab;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 75% 75%;
+  }
+
+  .cell--start {
+    background-image: url('/play-circle-solid.svg');
+  }
+
+  .cell--end {
+    background-image: url('/dot-circle-solid.svg');
+  }
+
+  /* A preset board is there to be read, not drawn on. */
+  .table--static .cell {
+    cursor: default;
+  }
+
+  .table:not(.table--static) td.cell:not(.cell--start):not(.cell--end):hover::after {
+    content: '';
+    display: block;
+    height: 70%;
+    width: 70%;
+    margin: 15%;
+    background-color: #5f6163;
+    opacity: 0.35;
+  }
+}

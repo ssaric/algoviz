@@ -1,68 +1,49 @@
-<style lang="scss" global>
-    .controls__icon {
-        width: 35px;
-        height: 40px;
-        cursor: pointer;
-        font-size: 30px;
-    }
+<script lang="ts">
+  import Icon from '../Icon.svelte';
 
-    .controls {
-        width: 300px;
-        display: flex;
-        align-items: center;
-        height: 50px;
-        justify-content: space-between;
-        > div {
-            display: flex;
-            justify-content: center;
-        }
-    }
+  type Props = {
+    hasData: boolean;
+    isPlaying: boolean;
+    onPlay: () => void;
+    onStop: () => void;
+    onForward: () => void;
+    onBackward: () => void;
+  };
 
-</style>
+  let { hasData, isPlaying, onPlay, onStop, onForward, onBackward }: Props = $props();
 
-<script>
-    import {createEventDispatcher} from 'svelte';
-    import { faStepBackward } from '@fortawesome/free-solid-svg-icons/faStepBackward';
-    import { faPlay } from '@fortawesome/free-solid-svg-icons/faPlay';
-    import { faStop } from '@fortawesome/free-solid-svg-icons/faStop';
-    import { faStepForward } from '@fortawesome/free-solid-svg-icons/faStepForward';
-    import Icon from 'svelte-awesome';
-    import { interval } from "../../store.ts";
-
-    let isPlaying;
-    $: {
-          isPlaying = $interval !== null;
-    }
-
-    export let hasData;
-    const dispatch = createEventDispatcher();
-
-    function onSkipBackwardClick() {
-        dispatch('backwardClick');
-    }
-    function onPlayClick() {
-        dispatch('playClick');
-    }
-    function onStopClick() {
-        dispatch('stopClick');
-    }
-    function onSkipForwardClick() {
-        dispatch('forwardClick');
-    }
-
-
+  const ghost =
+    'flex size-10 items-center justify-center rounded-full text-ink-muted transition-colors ' +
+    'hover:bg-sunken hover:text-ink disabled:pointer-events-none disabled:opacity-35';
 </script>
-<div class="controls">
-    <div on:click={onSkipBackwardClick} class:disabled={!hasData}>
-        <Icon class="controls__icon" data={faStepBackward}/>
-    </div>
-    <div on:click={onPlayClick}>
-        <Icon class="controls__icon" data={faPlay}/>
-    </div>
-    <div on:click={onStopClick} class:disabled={!isPlaying}>
-        <Icon class="controls__icon" data={faStop}/>
-    </div>
-    <div on:click={onSkipForwardClick} class:disabled={!hasData}>
-        <Icon class="controls__icon" data={faStepForward}/>
-    </div>
+
+<div class="flex items-center gap-1">
+  <button
+    type="button"
+    onclick={onBackward}
+    disabled={!hasData}
+    aria-label="Step backward"
+    class={ghost}
+  >
+    <Icon name="stepBackward" class="size-4" />
+  </button>
+
+  <button
+    type="button"
+    onclick={isPlaying ? onStop : onPlay}
+    aria-label={isPlaying ? 'Stop' : 'Play'}
+    class="bg-brand hover:bg-brand-bright flex size-12 items-center justify-center rounded-full text-white shadow-sm transition-colors"
+  >
+    <Icon name={isPlaying ? 'stop' : 'play'} class="size-5" />
+  </button>
+
+  <button
+    type="button"
+    onclick={onForward}
+    disabled={!hasData}
+    aria-label="Step forward"
+    class={ghost}
+  >
+    <Icon name="stepForward" class="size-4" />
+  </button>
 </div>

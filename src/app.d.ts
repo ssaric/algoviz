@@ -1,12 +1,12 @@
-// See https://kit.svelte.dev/docs/types#app
-// for information about these interfaces
-// and what to do when importing types
-declare namespace App {
-	// interface Locals {}
-	// interface Platform {}
-	// interface PrivateEnv {}
-	// interface PublicEnv {}
+// See https://svelte.dev/docs/kit/types#app.d.ts
+declare global {
+  namespace App {
+    // interface Error {}
+    // interface Locals {}
+    // interface PageData {}
+    // interface PageState {}
+    // interface Platform {}
+  }
 }
-declare module '@fortawesome/free-solid-svg-icons/index.es' {
-    export * from '@fortawesome/free-solid-svg-icons';
-}
+
+export {};

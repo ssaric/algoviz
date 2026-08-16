@@ -1,105 +1,58 @@
-<style lang="scss" global>
-    @import '../../scss/theme';
+<script lang="ts">
+  import AlgorithmPicker from '../controls/AlgorithmPicker.svelte';
+  import HeuristicsPicker from '../controls/HeuristicsPicker.svelte';
+  import Icon from '../Icon.svelte';
+  import { ALGORITHMS, type AlgorithmId } from '../../core/algorithms';
+  import type { HeuristicSpec } from '../../core/heuristics';
+  import type { SearchOutcome } from '../../core/protocol';
 
-    .legend {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        width: 100%;
-        padding: 20px;
-    }
+  type Props = {
+    algorithm: AlgorithmId;
+    outcome: SearchOutcome | null;
+    onAlgorithmChange: (id: AlgorithmId) => void;
+    onHeuristicChange: (spec: HeuristicSpec) => void;
+    onResetGrid: () => void;
+  };
 
-    .legend-wrapper {
-        display: flex;
-        align-items: center;
-        flex: 1;
-    }
+  let { algorithm, outcome, onAlgorithmChange, onHeuristicChange, onResetGrid }: Props = $props();
 
-    .legend-item {
-        margin-right: 25px;
-        display: flex;
-        align-items: center;
-        padding: 8px;
-        cursor: pointer;
-        border: 1px solid transparent;
-        user-select: none;
-    }
-
-    .legend-item--selected {
-        border: 1px solid $color-neutral60;
-    }
-
-    .legend-item__icon {
-        margin-right: 5px;
-        font-size: 25px;
-        height: 20px;
-        width: 20px;
-    }
-
-    .legend__start-button {
-        display: flex;
-        align-items: center;
-        font-size: 25px;
-        .legend-item__icon {
-            height: 40px;
-            width: 40px;
-        }
-    }
-    .visited-fields {
-        flex-direction: column;
-        display: flex;
-        justify-content: flex-end;
-        flex: 1;
-    }
-    .visited-field {
-        display: flex;
-        align-items: center;
-        margin-bottom: 8px;
-    }
-
-    .visited-field__icon {
-        height: 20px;
-        width: 20px;
-        border: 1px solid black;
-        margin-right: 8px;
-        flex-shrink: 0;
-    }
-    .visited-field__icon--visited {
-        background: $color-primary40;
-    }
-    .visited-field__icon--discovered {
-        background: $color-primary20;
-
-    }
-    .visited-field__icon--final-path {
-        background: $color-secondary50;
-
-    }
-
-
-</style>
-<script>
-    import HeuristicsPicker from '../heuristicsPicker/HeuristicsPicker.svelte';
-
+  const swatches = [
+    { color: 'bg-brand', label: 'Visited' },
+    { color: 'bg-frontier', label: 'Discovered' },
+    { color: 'bg-path', label: 'Final path' }
+  ];
 </script>
 
+<div class="flex w-full shrink-0 items-start gap-6 px-6 py-5">
+  <AlgorithmPicker value={algorithm} onChange={onAlgorithmChange} />
+  <HeuristicsPicker disabled={!ALGORITHMS[algorithm].usesHeuristic} onChange={onHeuristicChange} />
 
-<div class="legend">
-    <HeuristicsPicker on:resetGrid/>
-    <div class="legend-wrapper">
-        <div class="visited-fields">
-            <div class="visited-field">
-                <div class="visited-field__icon visited-field__icon--visited" />
-                <span class="visited-field__text">Visited</span>
-            </div>
-            <div class="visited-field">
-                <div class="visited-field__icon visited-field__icon--discovered" />
-                <span class="visited-field__text">Discovered</span>
-            </div>
-            <div class="visited-field">
-                <div class="visited-field__icon visited-field__icon--final-path" />
-                <span class="visited-field__text">Final path</span>
-            </div>
+  <button
+    type="button"
+    onclick={onResetGrid}
+    class="border-line text-ink-muted hover:border-danger hover:text-danger hover:bg-danger-soft mt-6 flex h-11 shrink-0 items-center gap-2 rounded-xl border px-4 text-sm font-medium transition-colors"
+  >
+    <Icon name="times" class="size-3.5" />
+    <span>Reset grid</span>
+  </button>
+
+  <div class="ml-auto flex flex-col items-end gap-2">
+    <div class="flex gap-4">
+      {#each swatches as swatch (swatch.label)}
+        <div class="flex items-center gap-2">
+          <span class="border-line-strong size-3.5 rounded border {swatch.color}"></span>
+          <span class="text-ink-muted text-xs">{swatch.label}</span>
         </div>
+      {/each}
     </div>
+
+    {#if outcome}
+      <p data-testid="stats" class="text-ink-subtle text-xs tabular-nums">
+        {outcome.stats.visited} expanded &middot; {outcome.stats.discovered} discovered
+        {#if outcome.found}
+          &middot; path of {outcome.stats.pathLength}
+        {/if}
+      </p>
+    {/if}
+  </div>
 </div>

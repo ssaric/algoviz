@@ -1,7 +1,54 @@
 [![Publish Docker](https://github.com/ssaric/algoviz/actions/workflows/publish.yml/badge.svg)](https://github.com/ssaric/algoviz/actions/workflows/publish.yml)
 
 # Algoviz
+
 A project focusing on visualzing A* pathfinding algorithm. Available at https://algoviz.njanjo.com.
+
+**Learn** walks through six lessons, each running one board under two strategies
+side by side on a shared clock, with the measured numbers and a write-up of why
+they come out that way. **Sandbox** is the free-draw tool: draw walls, drag the
+start and end markers, then watch a search run.
+
+Every move is recorded as a described step, so the timeline scrubs in both
+directions and hovering any cell shows what the algorithm was thinking when it
+got there.
+
+Four searches are included. They share one best-first loop and differ only in
+what they are drawn to:
+
+| Algorithm         | Picks the cell with the lowest       | Shortest path?          |
+| ----------------- | ------------------------------------ | ----------------------- |
+| A*                | `g + h`                              | yes                     |
+| Dijkstra          | `g` — cost so far, goal ignored      | yes                     |
+| Greedy best-first | `h` — estimate to goal, cost ignored | no                      |
+| Breadth-first     | discovery order                      | yes, with uniform costs |
+
+Movement is four-way, so the true remaining distance is always the Manhattan
+one. Euclidean underestimates it and makes A* fan out; Euclidean squared
+overestimates and makes A* charge at the goal while giving up the shortest-path
+guarantee. Both are selectable, alongside a custom mathjs formula.
+
+## Development
+
+Requires Node 24. The project uses npm; there is no yarn lockfile any more.
+Styling is Tailwind 4; the board's own CSS lives in `src/app.css` because
+Painter builds it with plain DOM APIs and cannot use scoped styles.
+
+```sh
+npm install
+npm run dev         # dev server
+npm run build       # static build into build/
+npm run preview     # serve the production build on :4173
+```
+
+Checks, all of which must pass:
+
+```sh
+npm run lint        # prettier --check + eslint
+npm run check       # svelte-check / typescript
+npm test            # vitest unit tests
+npm run test:e2e    # playwright (needs: npx playwright install chromium)
+```
 
 ## Roadmap
 
@@ -11,6 +58,8 @@ A project focusing on visualzing A* pathfinding algorithm. Available at https://
 
 - [x] Typescript ready
 
-- [ ] Algorithm "thoughts" (algorithm should display in each field what was it trying to do)
+- [x] Algorithm "thoughts" (hover any cell to see what the algorithm did there and why)
 
-- [ ] Side-by-side maps to compare different heuristics
+- [x] Multiple algorithms with different affinities
+
+- [x] Side-by-side maps to compare different heuristics
