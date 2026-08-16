@@ -2,15 +2,19 @@
   import type { BoardState, Painter } from '../../board/Painter';
   import { ALGORITHMS, type AlgorithmId } from '../../core/algorithms';
   import type { FrontierEntry } from '../../core/frontier';
+  import type { StepKind } from '../../core/protocol';
   import Formula from '../Formula.svelte';
 
   type Props = {
     painter: Painter | undefined;
     state: BoardState | undefined;
     algorithm: AlgorithmId;
+    /** Whether the shared clock driving this board is currently running --
+     *  see BoardPanel for why this can't be read off `state` itself. */
+    isPlaying: boolean;
   };
 
-  let { painter, state, algorithm }: Props = $props();
+  let { painter, state, algorithm, isPlaying }: Props = $props();
 
   /** Past this many rows the list becomes noise; the rest just needs a count. */
   const MAX_ROWS = 6;
@@ -19,11 +23,9 @@
   // timeline moves -- painter itself never changes identity, so calling its
   // method alone would not be reactive.
   const entries = $derived(painter && state ? painter.frontierAt(state.cursor) : []);
-  const visible = $derived(entries.slice(0, MAX_ROWS));
   const overflow = $derived(Math.max(0, entries.length - MAX_ROWS));
 
   const algo = $derived(ALGORITHMS[algorithm]);
-  const top = $derived(visible[0]);
 
   // Whichever cell is currently hovered on the board, so that row can carry
   // the same outline as the board's own highlight -- hovering a cell and
@@ -31,6 +33,48 @@
   const highlighted = $derived(state?.inspection?.cell ?? null);
   const isHighlighted = (entry: FrontierEntry) =>
     highlighted !== null && entry.cell.x === highlighted.x && entry.cell.y === highlighted.y;
+
+  // Only these two step kinds change what's on the frontier -- a discover
+  // adds a row, a reopen re-scores one already there. Tying the step just
+  // taken to the row it produced is what makes "why is this cell on the
+  // list" legible without a hover: the same colour the board just painted it
+  // shows up as a ring around its row. Gated on pause for the same reason the
+  // narration above the board is: during playback this would flicker through
+  // several rows a second, which reads as noise rather than an explanation.
+  const FRONTIER_CHANGING_KINDS: readonly StepKind[] = ['discover', 'reopen'];
+  const RING_COLOR: Partial<Record<StepKind, string>> = {
+    discover: 'var(--color-frontier)',
+    reopen: 'var(--color-ink-muted)'
+  };
+  const justChanged = $derived(
+    !isPlaying && state?.currentStep && FRONTIER_CHANGING_KINDS.includes(state.currentStep.kind)
+      ? state.currentStep
+      : null
+  );
+  const isJustChanged = (entry: FrontierEntry): boolean =>
+    justChanged !== null &&
+    entry.cell.x === justChanged.cell.x &&
+    entry.cell.y === justChanged.cell.y;
+  const ringFor = (entry: FrontierEntry): string => {
+    if (isHighlighted(entry)) return 'inset 0 0 0 2px var(--color-playhead)';
+    if (justChanged && isJustChanged(entry))
+      return `inset 0 0 0 2px ${RING_COLOR[justChanged.kind]}`;
+    return 'none';
+  };
+
+  // A cell that was just discovered or re-ranked usually lands nowhere near
+  // the top -- it's new or barely competitive, so the row explaining that is
+  // exactly the one "top N by rank" would cut off. Swap it into the last slot
+  // rather than let it disappear behind "+N more waiting" the moment it's
+  // most relevant. Row count stays fixed either way, so this can't reintroduce
+  // the height jump fixed earlier.
+  const visible = $derived.by(() => {
+    const top = entries.slice(0, MAX_ROWS);
+    if (!justChanged || top.some(isJustChanged)) return top;
+    const changedEntry = entries.find(isJustChanged);
+    return changedEntry ? [...top.slice(0, MAX_ROWS - 1), changedEntry] : top;
+  });
+  const top = $derived(entries[0]);
 
   // The frontier only ever needs the fields each algorithm's own score
   // function actually reads: g/h for A*, Dijkstra and greedy, and for
@@ -72,13 +116,22 @@
           0
             ? 'bg-brand-soft text-brand font-semibold'
             : 'text-ink-muted'}"
-          style:box-shadow={isHighlighted(entry) ? 'inset 0 0 0 2px var(--color-playhead)' : 'none'}
+          style:box-shadow={ringFor(entry)}
         >
-          <span class="flex shrink-0 items-center gap-1.5">
+          <span class="flex min-w-0 shrink-0 items-center gap-1.5">
             {#if index === 0}
               <span aria-hidden="true">&#9656;</span>
             {/if}
             <span class="tabular-nums">({entry.cell.x}, {entry.cell.y})</span>
+            {#if justChanged && isJustChanged(entry)}
+              <span
+                class="shrink-0 rounded px-1 py-0.5 text-[9px] font-semibold tracking-wide uppercase"
+                style:background={RING_COLOR[justChanged.kind]}
+                style:color="white"
+              >
+                {justChanged.kind === 'discover' ? 'new' : 'moved'}
+              </span>
+            {/if}
           </span>
           <span class="truncate text-right tabular-nums">{breakdown(entry)}</span>
         </li>

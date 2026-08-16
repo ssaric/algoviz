@@ -301,3 +301,8 @@ test('the stats line updates live during playback, not just at the end', async (
   expect(earlyExpanded).toBeGreaterThan(0);
   expect(earlyExpanded).toBeLessThan(finalExpanded);
 });
+
+test('shows which way x and y increase', async ({ page }) => {
+  await expect(page.getByText('x →')).toBeVisible();
+  await expect(page.getByText('y ↓')).toBeVisible();
+});

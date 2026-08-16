@@ -144,6 +144,12 @@ test('lesson prose typesets its maths', async ({ page }) => {
   expect(await page.locator('article .katex').count()).toBeGreaterThan(5);
 });
 
+test('each board shows which way x and y increase', async ({ page }) => {
+  await expect(boards(page).first().getByText('x →')).toBeVisible();
+  await expect(boards(page).first().getByText('y ↓')).toBeVisible();
+  await expect(boards(page).nth(1).getByText('x →')).toBeVisible();
+});
+
 test.describe('the frontier lessons', () => {
   test('the default lesson is the frontier intro, with one board and a live queue', async ({
     page
@@ -376,6 +382,39 @@ test.describe('the queue ties the board and the frontier panel together', () => 
     await expect(targetRow).toHaveAttribute('style', /box-shadow:\s*none/);
     await page.locator(`td[data-x="${x}"][data-y="${y}"]`).hover();
     await expect(targetRow).toHaveAttribute('style', /box-shadow:\s*inset/);
+  });
+
+  test('a step that just changed the frontier highlights its own row, even if it ranks low', async ({
+    page
+  }) => {
+    await page.goto('/?lesson=meet-the-frontier');
+    await expect(page.locator('td.cell').first()).toBeVisible();
+    // Rewind to the very start rather than reusing frozenFrontier's "wait for
+    // 2 rows" -- on a short run that count can just as easily be caught near
+    // the end, and stepping forward from there would only ever hit path
+    // steps. The first few steps of any search are reliably discovers.
+    await page.getByRole('button', { name: 'Stop' }).click();
+    await page.getByRole('slider', { name: 'Timeline' }).fill('0');
+
+    const narration = page.locator('.panel__narration').first();
+    const stepForward = page.getByRole('button', { name: 'Step forward one' });
+    let text = '';
+    for (let i = 0; i < 20; i++) {
+      await stepForward.click();
+      text = (await narration.innerText()).toUpperCase();
+      if (text.includes('DISCOVERED')) break;
+    }
+    expect(text).toContain('DISCOVERED');
+
+    const [, x, y] = text.match(/CELL \((\d+), (\d+)\)/) ?? [];
+    expect(x).toBeDefined();
+
+    // Newly discovered cells rarely rank at the top, so the row is only
+    // useful if it's actually on screen rather than folded into the overflow
+    // count -- not just correctly ringed.
+    const row = page.locator('.frontier-panel__row', { hasText: `(${x}, ${y})` });
+    await expect(row).toBeVisible();
+    await expect(row).toHaveAttribute('style', /box-shadow:\s*inset/);
   });
 });
 

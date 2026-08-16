@@ -83,10 +83,20 @@
     {/if}
   </div>
 
-  <div
-    bind:this={element}
-    class="bg-canvas border-line flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-xl border"
-  ></div>
+  <div class="relative flex min-h-0 flex-1">
+    <div
+      bind:this={element}
+      class="bg-canvas border-line flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-xl border"
+    ></div>
+    <!-- Which way each coordinate grows -- cell (x, y) is meaningless without
+         it, and it isn't something you can guess from looking at a grid. -->
+    <div
+      class="text-ink-subtle pointer-events-none absolute top-1.5 left-1.5 flex flex-col gap-0.5 text-[10px] leading-none font-medium"
+    >
+      <span>x &rarr;</span>
+      <span>y &darr;</span>
+    </div>
+  </div>
 
   <dl class="panel__stats mt-3 mb-0 flex shrink-0 gap-5 text-xs">
     {#each figures as figure (figure.label)}

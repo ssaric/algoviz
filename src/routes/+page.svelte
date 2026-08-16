@@ -167,6 +167,7 @@
                 painter={runner?.painters[0]}
                 state={runnerState.boards[0]}
                 algorithm={lesson.variants[0].algorithm}
+                isPlaying={runnerState.isPlaying}
               />
             {/if}
           </div>

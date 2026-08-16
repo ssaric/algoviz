@@ -63,7 +63,17 @@
       onResetGrid={() => painter?.resetGrid()}
     />
 
-    <div id="root" bind:this={boardElement} class="min-h-0 w-full flex-1"></div>
+    <div class="relative min-h-0 w-full flex-1">
+      <div id="root" bind:this={boardElement} class="h-full w-full"></div>
+      <!-- Which way each coordinate grows -- cell (x, y) is meaningless
+           without it, and it isn't something you can guess from the grid. -->
+      <div
+        class="text-ink-subtle pointer-events-none absolute top-1.5 left-1.5 flex flex-col gap-0.5 text-[10px] leading-none font-medium"
+      >
+        <span>x &rarr;</span>
+        <span>y &darr;</span>
+      </div>
+    </div>
 
     <PlaybackControls
       totalSteps={board.totalSteps}
