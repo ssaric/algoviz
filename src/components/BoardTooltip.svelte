@@ -8,15 +8,15 @@
 
   let { inspection }: Props = $props();
 
-  const KIND_LABELS: Record<StepKind, string> = {
-    visit: 'Expanded',
-    discover: 'Discovered',
-    reopen: 'Re-routed',
-    skip: 'Skipped',
-    path: 'On the path'
+  const KINDS: Record<StepKind, { label: string; tone: string }> = {
+    visit: { label: 'Expanded', tone: 'bg-brand text-white' },
+    discover: { label: 'Discovered', tone: 'bg-frontier text-brand' },
+    reopen: { label: 'Re-routed', tone: 'bg-sunken text-ink-muted' },
+    skip: { label: 'Skipped', tone: 'bg-sunken text-ink-muted' },
+    path: { label: 'On the path', tone: 'bg-path text-white' }
   };
 
-  const WIDTH = 320;
+  const WIDTH = 330;
   const GAP = 10;
 
   let viewportWidth = $state(1024);
@@ -44,126 +44,42 @@
 <svelte:window bind:innerWidth={viewportWidth} bind:innerHeight={viewportHeight} />
 
 <aside
-  class="thoughts"
+  class="thoughts border-line bg-surface/95 shadow-float pointer-events-none fixed z-20 max-h-[45vh] overflow-y-auto rounded-2xl border p-4 backdrop-blur"
   style:left="{left}px"
   style:top={below ? `${top}px` : 'auto'}
   style:bottom={below ? 'auto' : `${bottom}px`}
   style:width="{WIDTH}px"
 >
-  <header class="thoughts__header">
+  <header class="text-ink-subtle mb-3 text-xs font-semibold tracking-wider uppercase">
     Cell {inspection.cell.x}, {inspection.cell.y}
   </header>
-  <ol class="thoughts__list">
+
+  <ol class="m-0 flex list-none flex-col gap-3 p-0">
     {#each inspection.steps as step, index (index)}
-      <li class="thoughts__item">
-        <span class="thoughts__kind thoughts__kind--{step.kind}">{KIND_LABELS[step.kind]}</span>
-        <p class="thoughts__note">{step.note}</p>
-        <dl class="thoughts__costs">
-          <div>
-            <dt>g</dt>
-            <dd>{round(step.g)}</dd>
+      <li class="border-line border-t pt-3 first:border-t-0 first:pt-0">
+        <span
+          class="inline-block rounded-md px-2 py-0.5 text-[11px] font-semibold tracking-wide uppercase {KINDS[
+            step.kind
+          ].tone}"
+        >
+          {KINDS[step.kind].label}
+        </span>
+        <p class="text-ink mt-2 text-sm leading-relaxed">{step.note}</p>
+        <dl class="text-ink-subtle mt-2 flex gap-4 text-xs tabular-nums">
+          <div class="flex gap-1">
+            <dt class="font-semibold">g</dt>
+            <dd class="m-0">{round(step.g)}</dd>
           </div>
-          <div>
-            <dt>h</dt>
-            <dd>{round(step.h)}</dd>
+          <div class="flex gap-1">
+            <dt class="font-semibold">h</dt>
+            <dd class="m-0">{round(step.h)}</dd>
           </div>
-          <div>
-            <dt>score</dt>
-            <dd>{round(step.priority)}</dd>
+          <div class="flex gap-1">
+            <dt class="font-semibold">score</dt>
+            <dd class="m-0">{round(step.priority)}</dd>
           </div>
         </dl>
       </li>
     {/each}
   </ol>
 </aside>
-
-<style lang="scss">
-  @use '../scss/theme' as *;
-
-  .thoughts {
-    position: fixed;
-    z-index: 20;
-    background: $color-neutral70;
-    color: $color-neutral5;
-    border-radius: 8px;
-    padding: 12px 14px;
-    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-    pointer-events: none;
-    max-height: 45vh;
-    overflow-y: auto;
-  }
-
-  .thoughts__header {
-    font-size: $font-size-caption;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: $color-neutral20;
-    margin-bottom: 8px;
-  }
-
-  .thoughts__list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .thoughts__item {
-    border-top: 1px solid $color-neutral50;
-    padding-top: 8px;
-
-    &:first-child {
-      border-top: none;
-      padding-top: 0;
-    }
-  }
-
-  .thoughts__kind {
-    display: inline-block;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: 2px 6px;
-    border-radius: 4px;
-    background: $color-neutral50;
-
-    &--visit {
-      background: $color-primary40;
-    }
-    &--discover {
-      background: $color-primary30;
-    }
-    &--path {
-      background: $color-secondary50;
-    }
-  }
-
-  .thoughts__note {
-    margin: 6px 0 0;
-    font-size: $font-size-body2;
-    line-height: 1.45;
-  }
-
-  .thoughts__costs {
-    display: flex;
-    gap: 14px;
-    margin: 6px 0 0;
-    font-size: $font-size-caption;
-    color: $color-neutral20;
-
-    div {
-      display: flex;
-      gap: 4px;
-    }
-
-    dt {
-      font-weight: 600;
-    }
-
-    dd {
-      margin: 0;
-    }
-  }
-</style>

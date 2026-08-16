@@ -26,64 +26,33 @@
   }
 </script>
 
-<div class="picker" class:picker--disabled={disabled}>
-  <label class="picker__label" for="heuristic">Heuristic</label>
+<div class="flex w-72 flex-col" class:opacity-50={disabled}>
+  <label
+    for="heuristic"
+    class="text-ink-subtle mb-1.5 text-xs font-semibold tracking-wider uppercase"
+  >
+    Heuristic
+  </label>
   <select
     id="heuristic"
     value={kind}
     {disabled}
     onchange={(event) => selectKind(event.currentTarget.value as HeuristicKind)}
+    class="border-line bg-surface text-ink hover:border-line-strong h-11 cursor-pointer rounded-xl border px-3 text-sm font-medium shadow-sm transition-colors disabled:cursor-not-allowed"
   >
     {#each HEURISTIC_KINDS as choice (choice)}
       <option value={choice}>{HEURISTIC_LABELS[choice]}</option>
     {/each}
   </select>
+
   {#if disabled}
-    <p class="picker__blurb">This algorithm does not use a heuristic.</p>
+    <p class="text-ink-muted mt-2 text-xs leading-relaxed">
+      This algorithm does not use a heuristic.
+    </p>
   {:else}
-    <p class="picker__blurb">{HEURISTIC_BLURBS[kind]}</p>
+    <p class="text-ink-muted mt-2 text-xs leading-relaxed">{HEURISTIC_BLURBS[kind]}</p>
     {#if kind === 'custom'}
       <CustomHeuristicsPicker onApplyFormula={(formula) => onChange({ kind: 'custom', formula })} />
     {/if}
   {/if}
 </div>
-
-<style lang="scss">
-  @use '../../scss/theme' as *;
-
-  .picker {
-    display: flex;
-    flex-direction: column;
-    width: 300px;
-  }
-
-  .picker__label {
-    font-size: $font-size-caption;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: $color-neutral40;
-    margin-bottom: 4px;
-  }
-
-  select {
-    height: 42px;
-    padding: 0 12px;
-    border-radius: 8px;
-    border: 1px solid $color-neutral40;
-    background: $color-neutral5;
-    color: $color-neutral70;
-    cursor: pointer;
-  }
-
-  .picker--disabled select {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .picker__blurb {
-    margin: 8px 0 0;
-    font-size: $font-size-caption;
-    line-height: 1.4;
-    color: $color-neutral50;
-  }
-</style>

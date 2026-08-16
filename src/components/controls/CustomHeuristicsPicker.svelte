@@ -39,11 +39,9 @@
   const round = (n: number) => (Number.isInteger(n) ? `${n}` : n.toFixed(2));
 </script>
 
-<div class="formula">
-  <div class="formula__row">
+<div class="mt-3 flex flex-col">
+  <div class="flex gap-2">
     <input
-      class="formula__input"
-      class:formula__input--invalid={!check.ok}
       bind:value={formula}
       onkeydown={(event) => event.key === 'Enter' && apply()}
       spellcheck="false"
@@ -53,15 +51,24 @@
       aria-label="Custom heuristic formula"
       aria-invalid={!check.ok}
       aria-describedby="formula-feedback"
+      class="bg-surface text-ink h-10 min-w-0 flex-1 rounded-xl border px-3 font-mono text-sm shadow-sm {check.ok
+        ? 'border-line'
+        : 'border-danger'}"
     />
-    <button type="button" onclick={apply} disabled={!check.ok || !dirty}>Apply</button>
+    <button
+      type="button"
+      onclick={apply}
+      disabled={!check.ok || !dirty}
+      class="bg-brand hover:bg-brand-bright h-10 rounded-xl px-4 text-xs font-semibold tracking-wide text-white uppercase transition-colors disabled:cursor-default disabled:opacity-35"
+    >
+      Apply
+    </button>
   </div>
 
   <p
     id="formula-feedback"
-    class="formula__feedback"
-    class:formula__feedback--error={!check.ok}
     role="status"
+    class="mt-2 min-h-4 text-xs {check.ok ? 'text-ink-subtle' : 'text-danger'}"
   >
     {#if !check.ok}
       {check.error}
@@ -72,116 +79,28 @@
     {/if}
   </p>
 
-  <ul class="formula__examples">
+  <ul class="mt-2 flex list-none flex-wrap gap-1.5 p-0">
     {#each FORMULA_EXAMPLES as example (example.formula)}
       <li>
-        <button type="button" class="formula__chip" onclick={() => use(example.formula)}>
+        <button
+          type="button"
+          onclick={() => use(example.formula)}
+          class="border-line text-ink-muted hover:border-brand-bright hover:text-brand hover:bg-brand-soft rounded-full border px-2.5 py-1 text-xs transition-colors"
+        >
           {example.label}
         </button>
       </li>
     {/each}
   </ul>
 
-  <p class="formula__hint">
-    <code>x</code> and <code>y</code> are the horizontal and vertical distances to the goal. Parsed
-    by
-    <a target="_blank" rel="noreferrer" href="https://mathjs.org/docs/expressions/parsing.html">
-      math.js
-    </a>.
+  <p class="text-ink-subtle mt-2 text-xs leading-relaxed">
+    <code class="font-mono">x</code> and <code class="font-mono">y</code> are the horizontal and
+    vertical distances to the goal. Parsed by
+    <a
+      target="_blank"
+      rel="noreferrer"
+      href="https://mathjs.org/docs/expressions/parsing.html"
+      class="text-brand underline">math.js</a
+    >.
   </p>
 </div>
-
-<style lang="scss">
-  @use '../../scss/theme' as *;
-
-  .formula {
-    display: flex;
-    flex-direction: column;
-    margin-top: 8px;
-  }
-
-  .formula__row {
-    display: flex;
-    gap: 6px;
-  }
-
-  .formula__input {
-    flex: 1;
-    min-width: 0;
-    height: 34px;
-    padding: 0 10px;
-    border-radius: 6px;
-    border: 1px solid $color-neutral40;
-    background: $color-neutral5;
-    color: $color-neutral70;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: $font-size-body2;
-
-    &--invalid {
-      border-color: #c81e1e;
-    }
-  }
-
-  .formula__row button {
-    height: 34px;
-    padding: 0 12px;
-    border: none;
-    border-radius: 6px;
-    background: $color-primary40;
-    color: #ffffff;
-    font-size: $font-size-caption;
-    text-transform: uppercase;
-    cursor: pointer;
-
-    &:disabled {
-      opacity: 0.45;
-      cursor: default;
-    }
-  }
-
-  .formula__feedback {
-    margin: 6px 0 0;
-    font-size: $font-size-caption;
-    color: $color-neutral50;
-    min-height: 1.2em;
-
-    &--error {
-      color: #c81e1e;
-    }
-  }
-
-  .formula__examples {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    list-style: none;
-    margin: 8px 0 0;
-    padding: 0;
-  }
-
-  .formula__chip {
-    border: 1px solid $color-neutral40;
-    background: transparent;
-    color: $color-neutral50;
-    border-radius: 999px;
-    padding: 3px 10px;
-    font-size: $font-size-caption;
-    cursor: pointer;
-
-    &:hover {
-      border-color: $color-primary30;
-      color: $color-primary40;
-    }
-  }
-
-  .formula__hint {
-    margin: 8px 0 0;
-    font-size: $font-size-caption;
-    line-height: 1.4;
-    color: $color-neutral50;
-
-    code {
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    }
-  }
-</style>

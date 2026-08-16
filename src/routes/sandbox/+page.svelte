@@ -44,9 +44,14 @@
   }
 </script>
 
-<main class="root-container">
+<svelte:head>
+  <title>Algoviz — Sandbox</title>
+</svelte:head>
+
+<main class="bg-canvas flex h-full w-full flex-col">
   <Navbar />
-  <div class="home">
+
+  <div class="relative flex min-h-0 flex-1 flex-col items-center">
     <Legend
       {algorithm}
       outcome={board.outcome}
@@ -54,6 +59,9 @@
       onHeuristicChange={setHeuristic}
       onResetGrid={() => painter?.resetGrid()}
     />
+
+    <div id="root" bind:this={boardElement} class="min-h-0 w-full flex-1"></div>
+
     <PlaybackControls
       totalSteps={board.totalSteps}
       cursor={board.cursor}
@@ -65,34 +73,9 @@
       onForward={() => painter?.skipForward()}
       onSeek={(cursor) => painter?.seek(cursor)}
     />
-    <div id="root" bind:this={boardElement}></div>
-    {#if board.inspection}
-      <BoardTooltip inspection={board.inspection} />
-    {/if}
   </div>
+
+  {#if board.inspection}
+    <BoardTooltip inspection={board.inspection} />
+  {/if}
 </main>
-
-<style lang="scss">
-  @use '../../scss/theme' as *;
-
-  .root-container {
-    flex-grow: 0;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-  }
-
-  #root {
-    height: 100%;
-    width: 100%;
-  }
-
-  .home {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    flex-direction: column;
-    height: calc(100% - 60px);
-    background: $color-neutral5;
-  }
-</style>

@@ -4,8 +4,8 @@
   import { page } from '$app/state';
   import Navbar from '../components/Navbar.svelte';
   import BoardPanel from '../components/learn/BoardPanel.svelte';
-  import Controls from '../components/loader/Controls.svelte';
   import BoardTooltip from '../components/BoardTooltip.svelte';
+  import Controls from '../components/loader/Controls.svelte';
   import { LessonRunner, type RunnerState } from '../board/LessonRunner';
   import { Grid } from '../core/Grid';
   import { findLesson, LESSONS } from '../core/lessons';
@@ -57,26 +57,36 @@
   <title>Algoviz — {lesson.title}</title>
 </svelte:head>
 
-<main class="learn">
+<main class="bg-canvas flex h-full w-full flex-col">
   <Navbar />
 
-  <div class="learn__body">
-    <nav class="lessons" aria-label="Lessons">
-      <h2 class="lessons__heading">Lessons</h2>
-      <ol class="lessons__list">
+  <div class="flex min-h-0 flex-1 overflow-hidden">
+    <nav aria-label="Lessons" class="border-line w-72 shrink-0 overflow-y-auto border-r px-3 py-5">
+      <h2 class="text-ink-subtle mx-3 mb-3 text-xs font-semibold tracking-wider uppercase">
+        Lessons
+      </h2>
+      <ol class="m-0 list-none p-0">
         {#each LESSONS as item, index (item.id)}
+          {@const active = item.id === lesson.id}
           <li>
             <button
               type="button"
-              class="lessons__item"
-              class:lessons__item--active={item.id === lesson.id}
-              aria-current={item.id === lesson.id ? 'page' : undefined}
+              aria-current={active ? 'page' : undefined}
               onclick={() => select(item.id)}
+              class="mb-1 flex w-full cursor-pointer gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors {active
+                ? 'border-line bg-surface shadow-card'
+                : 'hover:bg-sunken border-transparent'}"
             >
-              <span class="lessons__number">{index + 1}</span>
-              <span class="lessons__text">
-                <span class="lessons__title">{item.title}</span>
-                <span class="lessons__hook">{item.hook}</span>
+              <span
+                class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md text-[11px] font-bold {active
+                  ? 'bg-brand text-white'
+                  : 'bg-sunken text-ink-subtle'}"
+              >
+                {index + 1}
+              </span>
+              <span class="flex min-w-0 flex-col gap-0.5">
+                <span class="text-ink text-sm leading-snug font-semibold">{item.title}</span>
+                <span class="text-ink-muted text-xs leading-snug">{item.hook}</span>
               </span>
             </button>
           </li>
@@ -84,13 +94,13 @@
       </ol>
     </nav>
 
-    <article class="lesson">
-      <header class="lesson__head">
-        <h1 class="lesson__title">{lesson.title}</h1>
-        <p class="lesson__watch">{lesson.watchFor}</p>
+    <article class="min-w-0 flex-1 overflow-y-auto px-8 pt-7 pb-16">
+      <header class="mb-6">
+        <h1 class="text-ink m-0 text-3xl font-semibold tracking-tight">{lesson.title}</h1>
+        <p class="text-ink-muted mt-2 max-w-[70ch] text-sm leading-relaxed">{lesson.watchFor}</p>
       </header>
 
-      <div class="lesson__boards">
+      <div class="grid grid-cols-2 gap-5">
         <BoardPanel
           label={lesson.variants[0].label}
           state={runnerState.boards[0]}
@@ -105,10 +115,10 @@
         />
       </div>
 
-      <div class="lesson__transport">
+      <div class="border-line bg-surface shadow-card mt-4 rounded-2xl border px-5 py-3">
         <input
           type="range"
-          class="lesson__scrubber"
+          class="scrubber"
           min="0"
           max={runnerState.totalSteps}
           step="1"
@@ -116,8 +126,8 @@
           value={runnerState.cursor}
           oninput={(event) => runner?.seek(parseInt(event.currentTarget.value, 10))}
         />
-        <div class="lesson__transport-row">
-          <span class="lesson__count">
+        <div class="mt-1 flex items-center justify-between gap-4">
+          <span class="text-ink-subtle w-36 text-xs tabular-nums">
             {runnerState.cursor} / {runnerState.totalSteps} steps
           </span>
           <Controls
@@ -128,15 +138,19 @@
             onForward={() => runner?.skip(25)}
             onBackward={() => runner?.skip(-25)}
           />
-          <button type="button" class="lesson__replay" onclick={() => runner?.run()}>
+          <button
+            type="button"
+            onclick={() => runner?.run()}
+            class="text-brand hover:text-brand-bright w-36 cursor-pointer text-right text-xs font-medium"
+          >
             Run again
           </button>
         </div>
       </div>
 
-      <div class="lesson__body">
+      <div class="mt-8 max-w-[68ch]">
         {#each lesson.body as paragraph, index (index)}
-          <p>{paragraph}</p>
+          <p class="text-ink-muted mb-4 text-[15px] leading-[1.7]">{paragraph}</p>
         {/each}
       </div>
     </article>
@@ -146,182 +160,3 @@
     <BoardTooltip {inspection} />
   {/if}
 </main>
-
-<style lang="scss">
-  @use '../scss/theme' as *;
-
-  .learn {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
-    background: $color-neutral5;
-  }
-
-  .learn__body {
-    display: flex;
-    flex: 1;
-    min-height: 0;
-    overflow: hidden;
-  }
-
-  .lessons {
-    width: 290px;
-    flex-shrink: 0;
-    overflow-y: auto;
-    padding: 20px 12px;
-    border-right: 1px solid $color-neutral10;
-    display: block;
-  }
-
-  .lessons__heading {
-    font-size: $font-size-caption;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: $color-neutral40;
-    margin: 0 0 10px 12px;
-  }
-
-  .lessons__list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: block;
-  }
-
-  .lessons__item {
-    display: flex;
-    gap: 10px;
-    width: 100%;
-    text-align: left;
-    background: transparent;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 12px;
-    cursor: pointer;
-
-    &:hover {
-      background: $color-neutral10;
-    }
-
-    &--active {
-      background: $color-neutral60;
-
-      .lessons__title,
-      .lessons__number {
-        color: $color-neutral5;
-      }
-
-      .lessons__hook {
-        color: $color-neutral20;
-      }
-    }
-  }
-
-  .lessons__number {
-    font-size: $font-size-caption;
-    font-weight: 700;
-    color: $color-neutral40;
-    width: 14px;
-    flex-shrink: 0;
-  }
-
-  .lessons__text {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-  }
-
-  .lessons__title {
-    font-size: $font-size-body2;
-    font-weight: 600;
-    color: $color-neutral70;
-  }
-
-  .lessons__hook {
-    font-size: $font-size-caption;
-    line-height: 1.35;
-    color: $color-neutral50;
-  }
-
-  .lesson {
-    flex: 1;
-    min-width: 0;
-    overflow-y: auto;
-    padding: 24px 32px 48px;
-    display: block;
-  }
-
-  .lesson__title {
-    font-size: 28px;
-    font-weight: 600;
-    color: $color-neutral70;
-    margin: 0;
-  }
-
-  .lesson__watch {
-    margin: 8px 0 20px;
-    max-width: 70ch;
-    color: $color-neutral50;
-    font-size: $font-size-body2;
-    line-height: 1.5;
-  }
-
-  .lesson__boards {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-  }
-
-  .lesson__transport {
-    margin-top: 14px;
-    display: block;
-  }
-
-  .lesson__scrubber {
-    width: 100%;
-  }
-
-  .lesson__transport-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    margin-top: 4px;
-  }
-
-  .lesson__count {
-    font-size: $font-size-caption;
-    color: $color-neutral50;
-    font-variant-numeric: tabular-nums;
-    width: 140px;
-  }
-
-  .lesson__replay {
-    width: 140px;
-    text-align: right;
-    background: none;
-    border: none;
-    color: $color-primary40;
-    font-size: $font-size-caption;
-    cursor: pointer;
-
-    &:hover {
-      text-decoration: underline;
-    }
-  }
-
-  .lesson__body {
-    margin-top: 28px;
-    max-width: 72ch;
-    display: block;
-
-    p {
-      margin: 0 0 16px;
-      line-height: 1.65;
-      color: $color-neutral60;
-      font-size: $font-size-body1;
-    }
-  }
-</style>

@@ -4,9 +4,14 @@
 
 A project focusing on visualzing A* pathfinding algorithm. Available at https://algoviz.njanjo.com.
 
-Draw walls, drag the start and end markers, then watch a search run. Every move
-is recorded as a described step, so the timeline scrubs in both directions and
-hovering any cell shows what the algorithm was thinking when it got there.
+**Learn** walks through six lessons, each running one board under two strategies
+side by side on a shared clock, with the measured numbers and a write-up of why
+they come out that way. **Sandbox** is the free-draw tool: draw walls, drag the
+start and end markers, then watch a search run.
+
+Every move is recorded as a described step, so the timeline scrubs in both
+directions and hovering any cell shows what the algorithm was thinking when it
+got there.
 
 Four searches are included. They share one best-first loop and differ only in
 what they are drawn to:
@@ -26,6 +31,8 @@ guarantee. Both are selectable, alongside a custom mathjs formula.
 ## Development
 
 Requires Node 24. The project uses npm; there is no yarn lockfile any more.
+Styling is Tailwind 4; the board's own CSS lives in `src/app.css` because
+Painter builds it with plain DOM APIs and cannot use scoped styles.
 
 ```sh
 npm install
@@ -55,4 +62,4 @@ npm run test:e2e    # playwright (needs: npx playwright install chromium)
 
 - [x] Multiple algorithms with different affinities
 
-- [ ] Side-by-side maps to compare different heuristics
+- [x] Side-by-side maps to compare different heuristics

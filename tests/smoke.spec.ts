@@ -15,7 +15,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('renders the board with a start and an end cell', async ({ page }) => {
-  await expect(page.getByRole('heading', { name: 'Algoviz' })).toBeVisible();
+  await expect(page.getByRole('navigation').getByText('Algoviz')).toBeVisible();
   expect(await page.locator('td.cell').count()).toBeGreaterThan(100);
   await expect(page.locator('td.cell--start')).toHaveCount(1);
   await expect(page.locator('td.cell--end')).toHaveCount(1);
@@ -168,7 +168,7 @@ test('the custom formula editor validates as you type', async ({ page }) => {
   await expect(apply).toBeDisabled();
 
   await input.fill('sqrt(x^2 +');
-  await expect(page.locator('.formula__feedback--error')).toBeVisible();
+  await expect(input).toHaveAttribute('aria-invalid', 'true');
   await expect(apply).toBeDisabled();
 
   await input.fill('abs(x) * 2 + abs(y)');

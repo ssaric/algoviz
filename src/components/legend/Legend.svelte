@@ -15,123 +15,44 @@
   };
 
   let { algorithm, outcome, onAlgorithmChange, onHeuristicChange, onResetGrid }: Props = $props();
+
+  const swatches = [
+    { color: 'bg-brand', label: 'Visited' },
+    { color: 'bg-frontier', label: 'Discovered' },
+    { color: 'bg-path', label: 'Final path' }
+  ];
 </script>
 
-<div class="legend">
+<div class="flex w-full shrink-0 items-start gap-6 px-6 py-5">
   <AlgorithmPicker value={algorithm} onChange={onAlgorithmChange} />
   <HeuristicsPicker disabled={!ALGORITHMS[algorithm].usesHeuristic} onChange={onHeuristicChange} />
 
-  <button type="button" class="reset-button" onclick={onResetGrid}>
-    <Icon name="times" />
-    <span>Reset Grid</span>
+  <button
+    type="button"
+    onclick={onResetGrid}
+    class="border-line text-ink-muted hover:border-danger hover:text-danger hover:bg-danger-soft mt-6 flex h-11 shrink-0 items-center gap-2 rounded-xl border px-4 text-sm font-medium transition-colors"
+  >
+    <Icon name="times" class="size-3.5" />
+    <span>Reset grid</span>
   </button>
 
-  <div class="legend-wrapper">
-    <div class="visited-fields">
-      <div class="visited-field">
-        <div class="visited-field__icon visited-field__icon--visited"></div>
-        <span class="visited-field__text">Visited</span>
-      </div>
-      <div class="visited-field">
-        <div class="visited-field__icon visited-field__icon--discovered"></div>
-        <span class="visited-field__text">Discovered</span>
-      </div>
-      <div class="visited-field">
-        <div class="visited-field__icon visited-field__icon--final-path"></div>
-        <span class="visited-field__text">Final path</span>
-      </div>
-      {#if outcome}
-        <p class="legend__stats" data-testid="stats">
-          {outcome.stats.visited} expanded &middot; {outcome.stats.discovered} discovered
-          {#if outcome.found}
-            &middot; path of {outcome.stats.pathLength}
-          {/if}
-        </p>
-      {/if}
+  <div class="ml-auto flex flex-col items-end gap-2">
+    <div class="flex gap-4">
+      {#each swatches as swatch (swatch.label)}
+        <div class="flex items-center gap-2">
+          <span class="border-line-strong size-3.5 rounded border {swatch.color}"></span>
+          <span class="text-ink-muted text-xs">{swatch.label}</span>
+        </div>
+      {/each}
     </div>
+
+    {#if outcome}
+      <p data-testid="stats" class="text-ink-subtle text-xs tabular-nums">
+        {outcome.stats.visited} expanded &middot; {outcome.stats.discovered} discovered
+        {#if outcome.found}
+          &middot; path of {outcome.stats.pathLength}
+        {/if}
+      </p>
+    {/if}
   </div>
 </div>
-
-<style lang="scss">
-  @use '../../scss/theme' as *;
-
-  .legend {
-    display: flex;
-    align-items: flex-start;
-    gap: 20px;
-    width: 100%;
-    padding: 20px;
-  }
-
-  .legend-wrapper {
-    display: flex;
-    align-items: center;
-    flex: 1;
-    justify-content: flex-end;
-  }
-
-  .reset-button {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    height: 42px;
-    padding: 0 14px;
-    border: none;
-    border-radius: 6px;
-    background: #c81e1e;
-    color: #ffffff;
-    font-size: $font-size-button;
-    cursor: pointer;
-    flex-shrink: 0;
-    // Line up with the selects, which sit under their own labels.
-    margin-top: 20px;
-
-    :global(svg) {
-      height: 14px;
-      width: 14px;
-    }
-
-    &:hover {
-      background: #9b1c1c;
-    }
-  }
-
-  .visited-fields {
-    flex-direction: column;
-    display: flex;
-    justify-content: flex-end;
-    flex: 0 0 auto;
-  }
-
-  .visited-field {
-    display: flex;
-    align-items: center;
-    margin-bottom: 8px;
-  }
-
-  .visited-field__icon {
-    height: 20px;
-    width: 20px;
-    border: 1px solid black;
-    margin-right: 8px;
-    flex-shrink: 0;
-  }
-
-  .visited-field__icon--visited {
-    background: $color-primary40;
-  }
-
-  .visited-field__icon--discovered {
-    background: $color-primary20;
-  }
-
-  .visited-field__icon--final-path {
-    background: $color-secondary50;
-  }
-
-  .legend__stats {
-    margin: 4px 0 0;
-    font-size: $font-size-caption;
-    color: $color-neutral50;
-  }
-</style>
