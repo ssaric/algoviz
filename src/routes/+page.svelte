@@ -2,6 +2,7 @@
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
+  import { _ } from 'svelte-i18n';
   import Navbar from '../components/Navbar.svelte';
   import BoardPanel from '../components/learn/BoardPanel.svelte';
   import FrontierPanel from '../components/learn/FrontierPanel.svelte';
@@ -81,9 +82,12 @@
   <Navbar />
 
   <div class="flex min-h-0 flex-1 overflow-hidden">
-    <nav aria-label="Lessons" class="border-line w-72 shrink-0 overflow-y-auto border-r px-3 py-5">
+    <nav
+      aria-label={$_('learn.lessonsNav')}
+      class="border-line w-72 shrink-0 overflow-y-auto border-r px-3 py-5"
+    >
       <h2 class="text-ink-subtle mx-3 mb-3 text-xs font-semibold tracking-wider uppercase">
-        Lessons
+        {$_('learn.lessonsNav')}
       </h2>
       <ol class="m-0 list-none p-0">
         {#each LESSONS as item, index (item.id)}
@@ -122,7 +126,7 @@
       <div class="mx-auto max-w-[70ch]">
         <header class="text-center">
           <p class="text-ink-subtle mb-3 text-xs font-semibold tracking-wider uppercase">
-            Lesson {lessonIndex + 1} of {LESSONS.length}
+            {$_('learn.lessonOf', { values: { index: lessonIndex + 1, total: LESSONS.length } })}
           </p>
           <h1 class="text-ink m-0 text-4xl font-semibold tracking-tight text-balance">
             {lesson.title}
@@ -179,13 +183,15 @@
               min="0"
               max={runnerState.totalSteps}
               step="1"
-              aria-label="Timeline"
+              aria-label={$_('controls.timeline')}
               value={runnerState.cursor}
               oninput={(event) => runner?.seek(parseInt(event.currentTarget.value, 10))}
             />
             <div class="mt-1 flex items-center justify-between gap-4">
               <span class="text-ink-subtle w-36 text-xs tabular-nums">
-                {runnerState.cursor} / {runnerState.totalSteps} steps
+                {$_('learn.cursorOfTotal', {
+                  values: { cursor: runnerState.cursor, total: runnerState.totalSteps }
+                })}
               </span>
               <Controls
                 hasData={runnerState.totalSteps > 0}
@@ -202,7 +208,7 @@
                 onclick={() => runner?.run()}
                 class="text-brand hover:text-brand-bright w-36 cursor-pointer text-right text-xs font-medium"
               >
-                Run again
+                {$_('learn.runAgain')}
               </button>
             </div>
           </div>
@@ -220,7 +226,10 @@
           </p>
         {/each}
 
-        <nav aria-label="Next lesson" class="border-line mt-14 flex gap-4 border-t pt-6">
+        <nav
+          aria-label={$_('learn.nextLessonNav')}
+          class="border-line mt-14 flex gap-4 border-t pt-6"
+        >
           {#if previous}
             <button
               type="button"
@@ -228,7 +237,7 @@
               class="hover:bg-sunken min-w-0 flex-1 cursor-pointer rounded-xl border border-transparent px-4 py-3 text-left"
             >
               <span class="text-ink-subtle block text-xs font-semibold tracking-wide uppercase">
-                &larr; Previous
+                {$_('learn.previous')}
               </span>
               <span class="text-ink mt-1 block truncate text-sm font-semibold">
                 {previous.title}
@@ -244,7 +253,7 @@
               class="hover:bg-sunken min-w-0 flex-1 cursor-pointer rounded-xl border border-transparent px-4 py-3 text-right"
             >
               <span class="text-ink-subtle block text-xs font-semibold tracking-wide uppercase">
-                Next &rarr;
+                {$_('learn.next')}
               </span>
               <span class="text-ink mt-1 block truncate text-sm font-semibold">{next.title}</span>
             </button>

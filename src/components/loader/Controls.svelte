@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { _ } from 'svelte-i18n';
   import Icon from '../Icon.svelte';
 
   type Props = {
@@ -38,7 +39,7 @@
     type="button"
     onclick={onSkipBackward}
     disabled={!hasData}
-    aria-label="Skip backward"
+    aria-label={$_('controls.skipBackward')}
     class={ghost}
   >
     <Icon name="stepBackward" class="size-4" />
@@ -48,7 +49,7 @@
     type="button"
     onclick={onStepBackward}
     disabled={!hasData}
-    aria-label="Step back one"
+    aria-label={$_('controls.stepBackward')}
     class={ghostSmall}
   >
     <Icon name="chevronLeft" class="size-3" />
@@ -57,7 +58,7 @@
   <button
     type="button"
     onclick={isPlaying ? onStop : onPlay}
-    aria-label={isPlaying ? 'Stop' : 'Play'}
+    aria-label={isPlaying ? $_('controls.stop') : $_('controls.play')}
     class="bg-brand hover:bg-brand-bright flex size-12 items-center justify-center rounded-full text-white shadow-sm transition-colors"
   >
     <Icon name={isPlaying ? 'stop' : 'play'} class="size-5" />
@@ -67,7 +68,7 @@
     type="button"
     onclick={onStepForward}
     disabled={!hasData}
-    aria-label="Step forward one"
+    aria-label={$_('controls.stepForward')}
     class={ghostSmall}
   >
     <Icon name="chevronRight" class="size-3" />
@@ -77,7 +78,7 @@
     type="button"
     onclick={onSkipForward}
     disabled={!hasData}
-    aria-label="Skip forward"
+    aria-label={$_('controls.skipForward')}
     class={ghost}
   >
     <Icon name="stepForward" class="size-4" />

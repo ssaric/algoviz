@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { _ } from 'svelte-i18n';
   import Navbar from '../../components/Navbar.svelte';
   import Legend from '../../components/legend/Legend.svelte';
   import PlaybackControls from '../../components/loader/PlaybackControls.svelte';
@@ -8,6 +9,7 @@
   import { Painter, type BoardState } from '../../board/Painter';
   import { DEFAULT_ALGORITHM, type AlgorithmId } from '../../core/algorithms';
   import type { HeuristicSpec } from '../../core/heuristics';
+  import { describeBoardMessage } from '../../i18n/describe';
 
   let boardElement: HTMLDivElement;
   let painter = $state<Painter | undefined>();
@@ -37,6 +39,8 @@
     };
   });
 
+  const message = $derived(board.message ? describeBoardMessage(board.message, $_) : null);
+
   const setHeuristic = (spec: HeuristicSpec) => painter?.setHeuristic(spec);
 
   function setAlgorithm(id: AlgorithmId) {
@@ -46,7 +50,7 @@
 </script>
 
 <svelte:head>
-  <title>Algoviz — Sandbox</title>
+  <title>Algoviz — {$_('nav.sandbox')}</title>
 </svelte:head>
 
 <main class="bg-canvas flex h-full w-full flex-col">
@@ -70,8 +74,8 @@
       <div
         class="text-ink-subtle pointer-events-none absolute top-1.5 left-1.5 flex flex-col gap-0.5 text-[10px] leading-none font-medium"
       >
-        <span>x &rarr;</span>
-        <span>y &darr;</span>
+        <span>{$_('board.axisX')}</span>
+        <span>{$_('board.axisY')}</span>
       </div>
     </div>
 
@@ -79,7 +83,7 @@
       totalSteps={board.totalSteps}
       cursor={board.cursor}
       isPlaying={board.isPlaying}
-      message={board.message}
+      {message}
       onPlay={() => painter?.solve()}
       onStop={() => painter?.pause()}
       onSkipBackward={() => painter?.skipBackward()}

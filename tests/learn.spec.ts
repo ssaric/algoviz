@@ -150,14 +150,28 @@ test('each board shows which way x and y increase', async ({ page }) => {
   await expect(boards(page).nth(1).getByText('x →')).toBeVisible();
 });
 
+test.describe('the problem-statement lesson', () => {
+  test('is first, and introduces g, h and f before the mechanics lessons', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('td.cell').first()).toBeVisible();
+
+    await expect(page.getByText('Lesson 1 of 10')).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Why bother');
+    const article = page.locator('article');
+    await expect(article).toContainText('g: how far');
+    await expect(article).toContainText('heuristic');
+    await expect(article).toContainText('f = g + h');
+  });
+});
+
 test.describe('the frontier lessons', () => {
-  test('the default lesson is the frontier intro, with one board and a live queue', async ({
+  test('the default lesson is the problem statement, with one board and a live queue', async ({
     page
   }) => {
     await page.goto('/');
     await expect(page.locator('td.cell').first()).toBeVisible();
 
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('Meet the frontier');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Why bother');
     await expect(boards(page)).toHaveCount(1);
     await expect(page.locator('.frontier-panel')).toBeVisible();
   });

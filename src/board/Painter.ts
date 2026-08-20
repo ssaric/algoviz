@@ -36,6 +36,15 @@ export type PainterOptions = {
 
 export type BoardStatus = 'idle' | 'solving' | 'solved' | 'unreachable' | 'failed';
 
+/** Translation-ready, not English -- board/ has no i18n available to it, so
+ *  the UI layer resolves these (see src/i18n/describe.ts). `detail` carries
+ *  an unexpected error's own message, which is diagnostic text rather than
+ *  content, and is shown as-is. */
+export type BoardMessage =
+  | { readonly key: 'board.needsStartAndEnd' }
+  | { readonly key: 'board.noPathExists' }
+  | { readonly key: 'board.error'; readonly detail: string };
+
 /** Where a popup should sit, in viewport coordinates. */
 export type AnchorRect = {
   readonly left: number;
@@ -72,7 +81,7 @@ export type CellInspection = {
 
 export type BoardState = TimelineState & {
   readonly status: BoardStatus;
-  readonly message: string | null;
+  readonly message: BoardMessage | null;
   readonly outcome: SearchOutcome | null;
   /** The step under the playhead, i.e. what the algorithm just did. */
   readonly currentStep: Step | null;
@@ -117,7 +126,7 @@ export class Painter implements BoardEditor {
   private algorithm: AlgorithmId = DEFAULT_ALGORITHM;
   private heuristic: HeuristicSpec = DEFAULT_HEURISTIC;
   private status: BoardStatus = 'idle';
-  private message: string | null = null;
+  private message: BoardMessage | null = null;
   private outcome: SearchOutcome | null = null;
   private autoPlay = false;
   /** Indices into the timeline, per cell, so a hover can answer "what did the
@@ -147,7 +156,7 @@ export class Painter implements BoardEditor {
       onStarted: () => this.setStatus('solving'),
       onSteps: (steps) => this.receiveSteps(steps),
       onFinished: (outcome) => this.finish(outcome),
-      onFailed: (message) => this.setStatus('failed', message)
+      onFailed: (message) => this.setStatus('failed', { key: 'board.error', detail: message })
     });
 
     this.pointer = new PointerController(container, this, this.editable);
@@ -282,7 +291,7 @@ export class Painter implements BoardEditor {
       return;
     }
     if (!this.grid.isSolvable) {
-      this.setStatus('failed', 'The board needs a start and an end cell.');
+      this.setStatus('failed', { key: 'board.needsStartAndEnd' });
       return;
     }
     this.resetVisualization();
@@ -425,11 +434,11 @@ export class Painter implements BoardEditor {
     this.outcome = outcome;
     this.setStatus(
       outcome.found ? 'solved' : 'unreachable',
-      outcome.found ? null : 'No path exists between the start and the end cell.'
+      outcome.found ? null : { key: 'board.noPathExists' }
     );
   }
 
-  private setStatus(status: BoardStatus, message: string | null = null): void {
+  private setStatus(status: BoardStatus, message: BoardMessage | null = null): void {
     this.status = status;
     this.message = message;
     this.publish();

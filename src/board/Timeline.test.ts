@@ -10,7 +10,7 @@ const step = (x: number, kind: StepKind = 'visit'): Step => ({
   h: 0,
   priority: x,
   parent: null,
-  note: `step ${x}`
+  note: { key: 'step.skip', existing: `${x}`, cost: `${x}` }
 });
 
 type Applied = { x: number; direction: Direction };

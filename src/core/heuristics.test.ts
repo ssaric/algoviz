@@ -5,7 +5,7 @@ import {
   createHeuristic,
   formulaTex,
   HEURISTIC_KINDS,
-  HEURISTIC_LABELS,
+  HEURISTIC_LABEL_KEYS,
   heuristicPull,
   heuristicTex
 } from './heuristics';
@@ -30,7 +30,7 @@ describe('built-in heuristics', () => {
   });
 
   it('labels every kind it offers', () => {
-    for (const kind of HEURISTIC_KINDS) expect(HEURISTIC_LABELS[kind]).toBeTruthy();
+    for (const kind of HEURISTIC_KINDS) expect(HEURISTIC_LABEL_KEYS[kind]).toBeTruthy();
   });
 });
 
@@ -40,7 +40,7 @@ describe('checking a custom formula', () => {
   });
 
   it('rejects an empty formula', () => {
-    expect(checkFormula('   ')).toEqual({ ok: false, error: 'Enter a formula.' });
+    expect(checkFormula('   ')).toEqual({ ok: false, errorKey: 'empty' });
   });
 
   it('rejects a formula that does not parse', () => {
@@ -54,7 +54,7 @@ describe('checking a custom formula', () => {
   it('rejects a formula that is not a number', () => {
     expect(checkFormula('"nope"')).toEqual({
       ok: false,
-      error: 'This does not work out to a number.'
+      errorKey: 'notANumber'
     });
   });
 });

@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { _ } from 'svelte-i18n';
   import type { BoardState, Painter } from '../../board/Painter';
+  import { describeStepNote } from '../../i18n/describe';
   import { STEP_KINDS } from '../stepKinds';
 
   type Props = {
@@ -34,9 +36,9 @@
   );
 
   const figures = $derived([
-    { label: 'expanded', value: stats?.visited },
-    { label: 'discovered', value: stats?.discovered },
-    { label: 'path', value: stats?.pathLength }
+    { labelKey: 'board.stats.expanded', value: stats?.visited },
+    { labelKey: 'board.stats.discovered', value: stats?.discovered },
+    { labelKey: 'board.stats.path', value: stats?.pathLength }
   ]);
 </script>
 
@@ -52,7 +54,9 @@
           ? 'bg-brand-soft text-brand'
           : 'bg-danger-soft text-danger'}"
       >
-        {overshoot === 0 ? 'shortest path' : `${overshoot} cells longer`}
+        {overshoot === 0
+          ? $_('board.verdict.shortestPath')
+          : $_('board.verdict.cellsLonger', { values: { count: overshoot } })}
       </span>
     {/if}
   </header>
@@ -65,7 +69,7 @@
   >
     {#if isPlaying}
       <p class="text-ink-subtle text-xs italic">
-        Playing &mdash; pause or step to see what {label} is thinking.
+        {$_('board.narration.playing', { values: { label } })}
       </p>
     {:else if step}
       <span
@@ -73,13 +77,17 @@
           step.kind
         ].tone}"
       >
-        {STEP_KINDS[step.kind].label}
+        {$_(STEP_KINDS[step.kind].labelKey)}
       </span>
       <p class="text-ink line-clamp-2 text-xs leading-snug">
-        Cell ({step.cell.x}, {step.cell.y}): {step.note}
+        {$_('board.narration.cell', {
+          values: { x: step.cell.x, y: step.cell.y, note: describeStepNote(step.note, $_) }
+        })}
       </p>
     {:else}
-      <p class="text-ink-subtle text-xs italic">Press play to watch {label} think.</p>
+      <p class="text-ink-subtle text-xs italic">
+        {$_('board.narration.notStarted', { values: { label } })}
+      </p>
     {/if}
   </div>
 
@@ -93,15 +101,15 @@
     <div
       class="text-ink-subtle pointer-events-none absolute top-1.5 left-1.5 flex flex-col gap-0.5 text-[10px] leading-none font-medium"
     >
-      <span>x &rarr;</span>
-      <span>y &darr;</span>
+      <span>{$_('board.axisX')}</span>
+      <span>{$_('board.axisY')}</span>
     </div>
   </div>
 
   <dl class="panel__stats mt-3 mb-0 flex shrink-0 gap-5 text-xs">
-    {#each figures as figure (figure.label)}
+    {#each figures as figure (figure.labelKey)}
       <div class="flex gap-1.5">
-        <dt class="text-ink-subtle">{figure.label}</dt>
+        <dt class="text-ink-subtle">{$_(figure.labelKey)}</dt>
         <dd class="text-ink m-0 font-semibold tabular-nums">{figure.value ?? 0}</dd>
       </div>
     {/each}

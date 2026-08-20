@@ -1,8 +1,9 @@
 <script lang="ts">
+  import { _ } from 'svelte-i18n';
   import {
-    HEURISTIC_BLURBS,
+    HEURISTIC_BLURB_KEYS,
     HEURISTIC_KINDS,
-    HEURISTIC_LABELS,
+    HEURISTIC_LABEL_KEYS,
     type HeuristicKind,
     type HeuristicSpec
   } from '../../core/heuristics';
@@ -31,7 +32,7 @@
     for="heuristic"
     class="text-ink-subtle mb-1.5 text-xs font-semibold tracking-wider uppercase"
   >
-    Heuristic
+    {$_('sandbox.heuristicLabel')}
   </label>
   <select
     id="heuristic"
@@ -41,16 +42,16 @@
     class="border-line bg-surface text-ink hover:border-line-strong h-11 cursor-pointer rounded-xl border px-3 text-sm font-medium shadow-sm transition-colors disabled:cursor-not-allowed"
   >
     {#each HEURISTIC_KINDS as choice (choice)}
-      <option value={choice}>{HEURISTIC_LABELS[choice]}</option>
+      <option value={choice}>{$_(HEURISTIC_LABEL_KEYS[choice])}</option>
     {/each}
   </select>
 
   {#if disabled}
     <p class="text-ink-muted mt-2 text-xs leading-relaxed">
-      This algorithm does not use a heuristic.
+      {$_('sandbox.heuristicUnused')}
     </p>
   {:else}
-    <p class="text-ink-muted mt-2 text-xs leading-relaxed">{HEURISTIC_BLURBS[kind]}</p>
+    <p class="text-ink-muted mt-2 text-xs leading-relaxed">{$_(HEURISTIC_BLURB_KEYS[kind])}</p>
     {#if kind === 'custom'}
       <CustomHeuristicsPicker onApplyFormula={(formula) => onChange({ kind: 'custom', formula })} />
     {/if}

@@ -19,7 +19,8 @@
   "dependencies": {
     "@neodrag/svelte": "^2.3.3",
     "katex": "^0.16.47",
-    "mathjs": "^15.2.0"
+    "mathjs": "^15.2.0",
+    "svelte-i18n": "^4.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -22,6 +22,26 @@ export type StepKind =
   /** Part of the final path, walked back from the goal. */
   | 'path';
 
+/**
+ * Why a step happened, as translation-ready data rather than baked-in
+ * English -- this crosses the worker boundary and core/ has no framework (and
+ * no i18n) available to it, so the actual sentence gets built in the UI
+ * layer from whichever locale is active. Numbers arrive pre-rounded to
+ * strings (see `round` in search.ts) since that formatting has nothing to do
+ * with language.
+ */
+export type StepNote =
+  | { readonly key: 'step.visit'; readonly affinityKey: string; readonly score: string }
+  | { readonly key: 'step.discover'; readonly g: string; readonly score: string }
+  | { readonly key: 'step.skip'; readonly existing: string; readonly cost: string }
+  | { readonly key: 'step.reopen'; readonly from: string; readonly to: string }
+  | {
+      readonly key: 'step.path';
+      readonly index: number;
+      readonly total: number;
+      readonly algorithmNameKey: string;
+    };
+
 export type Step = {
   readonly kind: StepKind;
   readonly cell: Cell;
@@ -33,7 +53,7 @@ export type Step = {
    *  affinity: g + h for A*, g for Dijkstra, h for greedy, order for BFS. */
   readonly priority: number;
   readonly parent: Cell | null;
-  readonly note: string;
+  readonly note: StepNote;
 };
 
 export type SearchStats = {

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { _ } from 'svelte-i18n';
   import AlgorithmPicker from '../controls/AlgorithmPicker.svelte';
   import HeuristicsPicker from '../controls/HeuristicsPicker.svelte';
   import Icon from '../Icon.svelte';
@@ -32,9 +33,9 @@
   const stats = $derived(painter ? painter.statsAt(cursor) : null);
 
   const swatches = [
-    { color: 'bg-brand', label: 'Visited' },
-    { color: 'bg-frontier', label: 'Discovered' },
-    { color: 'bg-path', label: 'Final path' }
+    { color: 'bg-brand', labelKey: 'sandbox.legend.visited' },
+    { color: 'bg-frontier', labelKey: 'sandbox.legend.discovered' },
+    { color: 'bg-path', labelKey: 'sandbox.legend.finalPath' }
   ];
 </script>
 
@@ -48,24 +49,26 @@
     class="border-line text-ink-muted hover:border-danger hover:text-danger hover:bg-danger-soft mt-6 flex h-11 shrink-0 items-center gap-2 rounded-xl border px-4 text-sm font-medium transition-colors"
   >
     <Icon name="times" class="size-3.5" />
-    <span>Reset grid</span>
+    <span>{$_('sandbox.resetGrid')}</span>
   </button>
 
   <div class="ml-auto flex flex-col items-end gap-2">
     <div class="flex gap-4">
-      {#each swatches as swatch (swatch.label)}
+      {#each swatches as swatch (swatch.labelKey)}
         <div class="flex items-center gap-2">
           <span class="border-line-strong size-3.5 rounded border {swatch.color}"></span>
-          <span class="text-ink-muted text-xs">{swatch.label}</span>
+          <span class="text-ink-muted text-xs">{$_(swatch.labelKey)}</span>
         </div>
       {/each}
     </div>
 
     {#if stats && stats.visited > 0}
       <p data-testid="stats" class="text-ink-subtle text-xs tabular-nums">
-        {stats.visited} expanded &middot; {stats.discovered} discovered
+        {$_('sandbox.statsLine', {
+          values: { expanded: stats.visited, discovered: stats.discovered }
+        })}
         {#if outcome?.found}
-          &middot; path of {outcome.stats.pathLength}
+          {$_('sandbox.pathOf', { values: { count: outcome.stats.pathLength } })}
         {/if}
       </p>
     {/if}

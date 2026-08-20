@@ -49,7 +49,7 @@ describe('every algorithm', () => {
     const { steps } = run(id, trap());
 
     expect(steps.length).toBeGreaterThan(0);
-    for (const step of steps) expect(step.note.length).toBeGreaterThan(0);
+    for (const step of steps) expect(step.note.key).toBeTruthy();
   });
 
   it.each(ALGORITHM_IDS)('%s expands each cell at most once', (id) => {

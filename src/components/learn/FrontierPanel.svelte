@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { _ } from 'svelte-i18n';
   import type { BoardState, Painter } from '../../board/Painter';
   import { ALGORITHMS, type AlgorithmId } from '../../core/algorithms';
   import type { FrontierEntry } from '../../core/frontier';
@@ -88,23 +89,28 @@
   class="frontier-panel border-line bg-surface shadow-card flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border p-4"
 >
   <header class="mb-1 flex shrink-0 items-baseline justify-between gap-3">
-    <h3 class="text-ink m-0 text-sm font-semibold">Frontier</h3>
-    <span class="text-ink-subtle text-xs tabular-nums">{entries.length} waiting</span>
+    <h3 class="text-ink m-0 text-sm font-semibold">{$_('frontierPanel.title')}</h3>
+    <span class="text-ink-subtle text-xs tabular-nums"
+      >{$_('frontierPanel.waitingCount', { values: { count: entries.length } })}</span
+    >
   </header>
   <p class="text-ink-subtle mb-3 flex shrink-0 items-center gap-1 text-xs">
-    Ranked by <Formula tex={algo.scoreTex} class="text-ink-muted" />, lowest first
+    {$_('frontierPanel.rankedByPrefix')}
+    <Formula tex={algo.scoreTex} class="text-ink-muted" />
+    {$_('frontierPanel.rankedBySuffix')}
   </p>
 
   {#if entries.length === 0}
     <p class="text-ink-subtle m-0 shrink-0 text-xs leading-relaxed">
-      Nothing on the frontier yet. Press play to start the search.
+      {$_('frontierPanel.empty')}
     </p>
   {:else}
     {#if top}
       <p
         class="bg-brand-soft text-brand mb-3 shrink-0 rounded-lg px-2.5 py-2 text-xs leading-relaxed"
       >
-        <strong>Next: ({top.cell.x}, {top.cell.y})</strong> &mdash; {algo.affinity}.
+        <strong>{$_('frontierPanel.next', { values: { x: top.cell.x, y: top.cell.y } })}</strong>
+        {$_('frontierPanel.affinitySuffix', { values: { affinity: $_(algo.affinityKey) } })}
         <span class="tabular-nums">{breakdown(top)}</span>
       </p>
     {/if}
@@ -129,7 +135,9 @@
                 style:background={RING_COLOR[justChanged.kind]}
                 style:color="white"
               >
-                {justChanged.kind === 'discover' ? 'new' : 'moved'}
+                {justChanged.kind === 'discover'
+                  ? $_('frontierPanel.badge.new')
+                  : $_('frontierPanel.badge.moved')}
               </span>
             {/if}
           </span>
@@ -137,7 +145,9 @@
         </li>
       {/each}
       {#if overflow > 0}
-        <li class="text-ink-subtle px-2 py-1 text-xs">+{overflow} more waiting</li>
+        <li class="text-ink-subtle px-2 py-1 text-xs">
+          {$_('frontierPanel.moreWaiting', { values: { count: overflow } })}
+        </li>
       {/if}
     </ol>
   {/if}

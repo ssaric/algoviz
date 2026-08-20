@@ -1,5 +1,6 @@
 <script lang="ts">
   import { draggable } from '@neodrag/svelte';
+  import { _ } from 'svelte-i18n';
   import Controls from './Controls.svelte';
   import Icon from '../Icon.svelte';
 
@@ -58,13 +59,13 @@
       min="0"
       max={totalSteps}
       step="1"
-      aria-label="Timeline"
+      aria-label={$_('controls.timeline')}
       oninput={handleInput}
       value={cursor}
     />
     <div class="text-ink-subtle flex justify-between text-xs tabular-nums">
       <span>{cursor}</span>
-      <span>{totalSteps} steps</span>
+      <span>{$_('controls.stepsCount', { values: { count: totalSteps } })}</span>
     </div>
   </div>
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { _ } from 'svelte-i18n';
   import { ALGORITHM_IDS, ALGORITHMS, type AlgorithmId } from '../../core/algorithms';
 
   type Props = {
@@ -14,7 +15,7 @@
     for="algorithm"
     class="text-ink-subtle mb-1.5 text-xs font-semibold tracking-wider uppercase"
   >
-    Algorithm
+    {$_('sandbox.algorithmLabel')}
   </label>
   <select
     id="algorithm"
@@ -23,8 +24,8 @@
     class="border-line bg-surface text-ink hover:border-line-strong h-11 cursor-pointer rounded-xl border px-3 text-sm font-medium shadow-sm transition-colors"
   >
     {#each ALGORITHM_IDS as id (id)}
-      <option value={id}>{ALGORITHMS[id].name}</option>
+      <option value={id}>{$_(ALGORITHMS[id].nameKey)}</option>
     {/each}
   </select>
-  <p class="text-ink-muted mt-2 text-xs leading-relaxed">{ALGORITHMS[value].blurb}</p>
+  <p class="text-ink-muted mt-2 text-xs leading-relaxed">{$_(ALGORITHMS[value].blurbKey)}</p>
 </div>

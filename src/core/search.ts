@@ -1,4 +1,4 @@
-import type { Algorithm } from './algorithms';
+import { type Algorithm, round } from './algorithms';
 import { cellId, cellsEqual, type Cell, type CellId } from './cell';
 import type { Grid } from './Grid';
 import type { HeuristicFn } from './heuristics';
@@ -12,8 +12,6 @@ type SearchNode = {
   priority: number;
   parent: SearchNode | null;
 };
-
-const round = (n: number): string => (Number.isInteger(n) ? `${n}` : n.toFixed(2));
 
 /**
  * Pull the most promising node off the frontier.
@@ -90,7 +88,11 @@ export function* search(
       h: current.h,
       priority: current.priority,
       parent: current.parent?.cell ?? null,
-      note: `Picked next because ${algorithm.affinity} — ${algorithm.score(current)}.`
+      note: {
+        key: 'step.visit',
+        affinityKey: algorithm.affinityKey,
+        score: algorithm.score(current)
+      }
     };
 
     if (cellsEqual(current.cell, end)) {
@@ -103,7 +105,12 @@ export function* search(
           h: node.h,
           priority: node.priority,
           parent: node.parent?.cell ?? null,
-          note: `Step ${index + 1} of ${path.length} on the path ${algorithm.name} settled on.`
+          note: {
+            key: 'step.path',
+            index: index + 1,
+            total: path.length,
+            algorithmNameKey: algorithm.nameKey
+          }
         };
       }
       return { found: true, stats: { visited, discovered, pathLength: path.length } };
@@ -124,7 +131,7 @@ export function* search(
           h: existing.h,
           priority: existing.priority,
           parent: existing.parent?.cell ?? null,
-          note: `Already reachable in ${round(existing.g)}; going through here would cost ${round(g)}. Keeping the cheaper route.`
+          note: { key: 'step.skip', existing: round(existing.g), cost: round(g) }
         };
         continue;
       }
@@ -141,7 +148,7 @@ export function* search(
           h: existing.h,
           priority: existing.priority,
           parent: current.cell,
-          note: `Better route found: cost drops from ${round(previousG)} to ${round(g)}. Re-parenting it.`
+          note: { key: 'step.reopen', from: round(previousG), to: round(g) }
         };
         continue;
       }
@@ -157,7 +164,7 @@ export function* search(
         h: node.h,
         priority: node.priority,
         parent: current.cell,
-        note: `New cell, ${round(g)} from the start — ${algorithm.score(node)}.`
+        note: { key: 'step.discover', g: round(g), score: algorithm.score(node) }
       };
     }
   }

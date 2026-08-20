@@ -1,11 +1,12 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
+  import { _ } from 'svelte-i18n';
   import Icon from './Icon.svelte';
 
   const links = [
-    { href: resolve('/'), label: 'Learn' },
-    { href: resolve('/sandbox'), label: 'Sandbox' }
+    { href: resolve('/'), labelKey: 'nav.learn' },
+    { href: resolve('/sandbox'), labelKey: 'nav.sandbox' }
   ];
 
   const current = $derived(page.url.pathname.replace(/\/$/, '') || '/');
@@ -31,7 +32,7 @@
             ? 'bg-surface text-ink shadow-sm'
             : 'text-ink-muted hover:text-ink'}"
         >
-          {link.label}
+          {$_(link.labelKey)}
         </a>
       {/each}
     </div>
@@ -43,6 +44,6 @@
     target="_blank"
     rel="noopener noreferrer"
   >
-    <Icon name="github" label="View source on GitHub" class="size-5" />
+    <Icon name="github" label={$_('nav.viewSource')} class="size-5" />
   </a>
 </nav>

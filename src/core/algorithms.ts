@@ -17,67 +17,67 @@ export type FrontierNode = {
  */
 export type Algorithm = {
   readonly id: AlgorithmId;
-  readonly name: string;
-  readonly blurb: string;
+  /** Message keys, not English -- core/ has no i18n available to it (it runs
+   *  in the worker), so the UI layer resolves these against the active
+   *  locale. See src/i18n/locales/en.json under "algorithm". */
+  readonly nameKey: string;
+  readonly blurbKey: string;
+  /** What makes a cell attractive to this algorithm, in its own terms. */
+  readonly affinityKey: string;
   /** Whether the heuristic picker means anything for this algorithm. */
   readonly usesHeuristic: boolean;
   readonly priority: (node: FrontierNode) => number;
-  /** What makes a cell attractive to this algorithm, in its own terms. */
-  readonly affinity: string;
-  /** The arithmetic behind one cell's score. */
+  /** The arithmetic behind one cell's score -- math notation, not prose, so
+   *  this stays plain text rather than a translation key. */
   readonly score: (node: FrontierNode) => string;
   /** The priority rule as LaTeX, and the same rule with numbers filled in. */
   readonly scoreTex: string;
   readonly scoreTexFor: (node: FrontierNode) => string;
 };
 
-const round = (n: number): string => (Number.isInteger(n) ? `${n}` : n.toFixed(2));
+export const round = (n: number): string => (Number.isInteger(n) ? `${n}` : n.toFixed(2));
 
 export const ALGORITHMS: Record<AlgorithmId, Algorithm> = {
   astar: {
     id: 'astar',
-    name: 'A*',
-    blurb:
-      'Balances distance travelled against distance remaining. Finds the shortest path while aiming at the goal.',
+    nameKey: 'algorithm.astar.name',
+    blurbKey: 'algorithm.astar.blurb',
+    affinityKey: 'algorithm.astar.affinity',
     usesHeuristic: true,
     priority: ({ g, h }) => g + h,
-    affinity: 'it has the best f = g + h score on the frontier',
     score: ({ g, h }) => `f = ${round(g)} + ${round(h)} = ${round(g + h)}`,
     scoreTex: 'f = g + h',
     scoreTexFor: ({ g, h }) => `f = ${round(g)} + ${round(h)} = ${round(g + h)}`
   },
   dijkstra: {
     id: 'dijkstra',
-    name: 'Dijkstra',
-    blurb:
-      'Always expands the cheapest cell reached so far, ignoring where the goal is. Finds the shortest path, but spreads out in every direction.',
+    nameKey: 'algorithm.dijkstra.name',
+    blurbKey: 'algorithm.dijkstra.blurb',
+    affinityKey: 'algorithm.dijkstra.affinity',
     usesHeuristic: false,
     priority: ({ g }) => g,
-    affinity: 'it is the cheapest cell reached so far, and where the goal sits is not considered',
     score: ({ g }) => `g = ${round(g)}`,
     scoreTex: 'f = g \\quad (h \\text{ is unused})',
     scoreTexFor: ({ g }) => `f = g = ${round(g)}`
   },
   greedy: {
     id: 'greedy',
-    name: 'Greedy best-first',
-    blurb:
-      'Always jumps to whatever looks closest to the goal, ignoring the distance already travelled. Fast, but the path it finds may not be the shortest.',
+    nameKey: 'algorithm.greedy.name',
+    blurbKey: 'algorithm.greedy.blurb',
+    affinityKey: 'algorithm.greedy.affinity',
     usesHeuristic: true,
     priority: ({ h }) => h,
-    affinity: 'it looks closest to the goal, and the distance already travelled is ignored',
     score: ({ h }) => `h = ${round(h)}`,
     scoreTex: 'f = h \\quad (g \\text{ is ignored})',
     scoreTexFor: ({ h }) => `f = h = ${round(h)}`
   },
   bfs: {
     id: 'bfs',
-    name: 'Breadth-first',
-    blurb:
-      'Expands cells in the order it found them, treating every move as equal. Explores in rings outwards from the start.',
+    nameKey: 'algorithm.bfs.name',
+    blurbKey: 'algorithm.bfs.blurb',
+    affinityKey: 'algorithm.bfs.affinity',
     usesHeuristic: false,
     priority: ({ order }) => order,
-    affinity: 'it has waited on the frontier longest, and every move costs the same',
     score: ({ order }) => `${ordinal(order + 1)} cell discovered`,
     scoreTex: 'f = \\text{discovery order}',
     scoreTexFor: ({ order }) => `f = ${order + 1}`

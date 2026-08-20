@@ -91,10 +91,10 @@ describe('step stream', () => {
   const grid = new Grid({ columns: 5, rows: 4, start: cell(0, 0), end: cell(4, 3) });
   const { steps } = run(grid);
 
-  it('describes every step in plain language', () => {
+  it('carries a translation-ready note for every step', () => {
     expect(steps.length).toBeGreaterThan(0);
     for (const step of steps) {
-      expect(step.note.length).toBeGreaterThan(0);
+      expect(step.note.key).toBeTruthy();
       expect(Number.isFinite(step.priority)).toBe(true);
       expect(step.priority).toBeCloseTo(step.g + step.h);
     }

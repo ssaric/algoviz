@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { _ } from 'svelte-i18n';
   import { ALGORITHMS, type AlgorithmId } from '../../core/algorithms';
   import { Grid, type SerializedGrid } from '../../core/Grid';
   import { createHeuristic, type HeuristicSpec } from '../../core/heuristics';
@@ -51,8 +52,8 @@
 
 <div class="grid gap-5 md:grid-cols-2">
   <section class="border-line bg-surface shadow-card rounded-2xl border p-5">
-    <h3 class="text-ink m-0 text-sm font-semibold">Cells expanded</h3>
-    <p class="text-ink-subtle mt-1 mb-4 text-xs">The speed axis. Lower is faster.</p>
+    <h3 class="text-ink m-0 text-sm font-semibold">{$_('scoreboard.cellsExpanded.title')}</h3>
+    <p class="text-ink-subtle mt-1 mb-4 text-xs">{$_('scoreboard.cellsExpanded.subtitle')}</p>
     <ol class="m-0 flex list-none flex-col gap-3 p-0">
       {#each rows as row (row.label)}
         <li>
@@ -72,9 +73,9 @@
   </section>
 
   <section class="border-line bg-surface shadow-card rounded-2xl border p-5">
-    <h3 class="text-ink m-0 text-sm font-semibold">Path length vs. shortest possible</h3>
+    <h3 class="text-ink m-0 text-sm font-semibold">{$_('scoreboard.pathLength.title')}</h3>
     <p class="text-ink-subtle mt-1 mb-4 text-xs">
-      The correctness axis. Zero means the shortest path; anything else is a wrong answer.
+      {$_('scoreboard.pathLength.subtitle')}
     </p>
     <ol class="m-0 flex list-none flex-col gap-3 p-0">
       {#each rows as row (row.label)}
@@ -86,7 +87,9 @@
                 ? 'text-brand'
                 : 'text-danger'}"
             >
-              {row.overshoot === 0 ? 'optimal' : `+${row.overshoot} cells`}
+              {row.overshoot === 0
+                ? $_('scoreboard.optimal')
+                : $_('scoreboard.extraCells', { values: { count: row.overshoot } })}
             </span>
           </div>
           <div class="bg-canvas h-3 w-full rounded-[2px]">

@@ -1,0 +1,191 @@
+{
+  "nav": {
+    "learn": "Learn",
+    "sandbox": "Sandbox",
+    "viewSource": "View source on GitHub"
+  },
+  "controls": {
+    "play": "Play",
+    "stop": "Stop",
+    "skipBackward": "Skip backward",
+    "skipForward": "Skip forward",
+    "stepBackward": "Step back one",
+    "stepForward": "Step forward one",
+    "timeline": "Timeline",
+    "stepsCount": "{count} steps"
+  },
+  "board": {
+    "axisX": "x →",
+    "axisY": "y ↓",
+    "stats": {
+      "expanded": "expanded",
+      "discovered": "discovered",
+      "path": "path"
+    },
+    "verdict": {
+      "shortestPath": "shortest path",
+      "cellsLonger": "{count} cells longer"
+    },
+    "narration": {
+      "playing": "Playing — pause or step to see what {label} is thinking.",
+      "notStarted": "Press play to watch {label} think.",
+      "cell": "Cell ({x}, {y}): {note}"
+    },
+    "needsStartAndEnd": "The board needs a start and an end cell.",
+    "noPathExists": "No path exists between the start and the end cell.",
+    "error": "Something went wrong: {detail}"
+  },
+  "stepKind": {
+    "visit": "Expanded",
+    "discover": "Discovered",
+    "reopen": "Re-routed",
+    "skip": "Skipped",
+    "path": "On the path"
+  },
+  "direction": {
+    "up": "up",
+    "down": "down",
+    "left": "left",
+    "right": "right"
+  },
+  "step": {
+    "visit": "Picked next because {affinity} — {score}.",
+    "discover": "New cell, {g} from the start — {score}.",
+    "skip": "Already reachable in {existing}; going through here would cost {cost}. Keeping the cheaper route.",
+    "reopen": "Better route found: cost drops from {from} to {to}. Re-parenting it.",
+    "path": "Step {index} of {total} on the path {algorithmName} settled on."
+  },
+  "algorithm": {
+    "astar": {
+      "name": "A*",
+      "blurb": "Balances how far you've come against how far you've got left. Finds the shortest path while still aiming at the goal.",
+      "affinity": "it has the best f = g + h score on the frontier"
+    },
+    "dijkstra": {
+      "name": "Dijkstra",
+      "blurb": "Always expands whatever's cheapest to reach, and couldn't care less where the goal is. Finds the shortest path, just spreads out everywhere to do it.",
+      "affinity": "it is the cheapest cell reached so far, and where the goal sits is not considered"
+    },
+    "greedy": {
+      "name": "Greedy best-first",
+      "blurb": "Always jumps toward whatever looks closest to the goal and ignores how far it's already walked. Fast, but the path it finds might not be the shortest.",
+      "affinity": "it looks closest to the goal, and the distance already travelled is ignored"
+    },
+    "bfs": {
+      "name": "Breadth-first",
+      "blurb": "Expands cells in the order it found them, treating every move as equal. Spreads out in neat rings from the start.",
+      "affinity": "it has waited on the frontier longest, and every move costs the same"
+    }
+  },
+  "heuristic": {
+    "manhattan": {
+      "label": "Manhattan",
+      "blurb": "Counts steps along the grid. That's the real remaining distance here, so A* walks almost straight to the goal."
+    },
+    "euclidean": {
+      "label": "Euclidean",
+      "blurb": "Straight-line distance. You can't actually move diagonally, so this underestimates every move — A* hedges and fans out a bit like Dijkstra. Still finds the shortest path though."
+    },
+    "euclideanSquared": {
+      "label": "Euclidean squared",
+      "blurb": "Straight-line distance, squared. A big overestimate, so A* charges straight at the goal and barely explores — but it gives up the shortest-path guarantee to do it."
+    },
+    "custom": {
+      "label": "Custom",
+      "blurb": "Your own formula over the x and y distances to the goal."
+    }
+  },
+  "frontierPanel": {
+    "title": "Frontier",
+    "waitingCount": "{count} waiting",
+    "rankedByPrefix": "Ranked by",
+    "rankedBySuffix": ", lowest first",
+    "empty": "Nothing on the frontier yet. Press play to start the search.",
+    "next": "Next: ({x}, {y})",
+    "affinitySuffix": "— {affinity}.",
+    "moreWaiting": "+{count} more waiting",
+    "badge": {
+      "new": "new",
+      "moved": "moved"
+    }
+  },
+  "tooltip": {
+    "cellHeader": "Cell {x}, {y}",
+    "checkingNext": "Checking this one next — it is at the top of the queue right now.",
+    "queuePosition": "Currently waiting at position {position} in the queue.",
+    "arrivedVia": "arrived via ({x}, {y}) ·",
+    "startOfSearch": "the start of the search ·",
+    "stepOf": "step {index} of {total}",
+    "trailHidden": "… and {count} earlier ·",
+    "trailLabel": "{kind} (step {step})",
+    "scoredBy": "Scored by",
+    "whereNext": "From here, where next",
+    "scoredByDistance": "Scored by how far it still looks:",
+    "pullSentence": {
+      "prefix": "The best step from here is",
+      "suffix": "— it drops h by"
+    },
+    "verdict": {
+      "overpays": "That's more than the move actually costs, so f keeps dropping — the search beelines for the goal. The catch: it might give up the shortest-path guarantee to do it.",
+      "exact": "Exactly what the step costs, so f stays flat here on the best route — barely any wandering.",
+      "underpays": "That's less than the move costs, so f creeps up by {amount} per move from here. Other directions stay in the running too, which is why the search fans out."
+    },
+    "noFavorite": "Every direction looks equally far from the goal right now, so the heuristic has no favorite.",
+    "noHeuristic": "No heuristic here — {algorithmName} doesn't estimate what's left, so nothing looks better than anything else. Every neighbour is equally worth trying."
+  },
+  "scoreboard": {
+    "cellsExpanded": {
+      "title": "Cells expanded",
+      "subtitle": "The speed axis. Lower is faster."
+    },
+    "pathLength": {
+      "title": "Path length vs. shortest possible",
+      "subtitle": "The correctness axis. Zero means the shortest path; anything else is a wrong answer."
+    },
+    "optimal": "optimal",
+    "extraCells": "+{count} cells"
+  },
+  "sandbox": {
+    "algorithmLabel": "Algorithm",
+    "heuristicLabel": "Heuristic",
+    "heuristicUnused": "This algorithm does not use a heuristic.",
+    "resetGrid": "Reset grid",
+    "statsLine": "{expanded} expanded · {discovered} discovered",
+    "pathOf": "· path of {count}",
+    "legend": {
+      "visited": "Visited",
+      "discovered": "Discovered",
+      "finalPath": "Final path"
+    },
+    "formula": {
+      "inputLabel": "Custom heuristic formula",
+      "apply": "Apply",
+      "sample": "With x = {x}, y = {y} this scores {score}",
+      "pressApply": "— press Apply",
+      "help": {
+        "and": "and",
+        "rest": "are the horizontal and vertical distances to the goal. Parsed by"
+      },
+      "error": {
+        "empty": "Enter a formula.",
+        "notANumber": "This does not work out to a number.",
+        "invalid": "Invalid formula."
+      },
+      "example": {
+        "manhattan": "Manhattan",
+        "euclidean": "Euclidean",
+        "chebyshev": "Chebyshev",
+        "zero": "Zero — turns A* into Dijkstra"
+      }
+    }
+  },
+  "learn": {
+    "lessonsNav": "Lessons",
+    "lessonOf": "Lesson {index} of {total}",
+    "cursorOfTotal": "{cursor} / {total} steps",
+    "runAgain": "Run again",
+    "nextLessonNav": "Next lesson",
+    "previous": "← Previous",
+    "next": "Next →"
+  }
+}

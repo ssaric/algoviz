@@ -24,11 +24,14 @@ export const HEURISTIC_KINDS: HeuristicKind[] = [
   'custom'
 ];
 
-export const HEURISTIC_LABELS: Record<HeuristicKind, string> = {
-  manhattan: 'Manhattan',
-  euclidean: 'Euclidean',
-  'euclidean-squared': 'Euclidean squared',
-  custom: 'Custom'
+/** Message keys, not English -- see src/i18n/locales/en.json under
+ *  "heuristic". core/ has no i18n available to it (it runs in the worker),
+ *  so the UI layer resolves these against the active locale. */
+export const HEURISTIC_LABEL_KEYS: Record<HeuristicKind, string> = {
+  manhattan: 'heuristic.manhattan.label',
+  euclidean: 'heuristic.euclidean.label',
+  'euclidean-squared': 'heuristic.euclideanSquared.label',
+  custom: 'heuristic.custom.label'
 };
 
 /**
@@ -37,14 +40,11 @@ export const HEURISTIC_LABELS: Record<HeuristicKind, string> = {
  * either an under- or an overestimate of it, and that is what decides how
  * widely the search fans out.
  */
-export const HEURISTIC_BLURBS: Record<HeuristicKind, string> = {
-  manhattan:
-    'Counts steps along the grid. Exactly the real remaining distance here, so A* walks almost straight to the goal.',
-  euclidean:
-    'Straight-line distance. Since you cannot move diagonally it underestimates every move, so A* hedges and fans out much like Dijkstra. Still finds the shortest path.',
-  'euclidean-squared':
-    'Straight-line distance squared. A wild overestimate, so A* charges at the goal and explores very little — but it gives up the guarantee of a shortest path.',
-  custom: 'Your own formula over the x and y distances to the goal.'
+export const HEURISTIC_BLURB_KEYS: Record<HeuristicKind, string> = {
+  manhattan: 'heuristic.manhattan.blurb',
+  euclidean: 'heuristic.euclidean.blurb',
+  'euclidean-squared': 'heuristic.euclideanSquared.blurb',
+  custom: 'heuristic.custom.blurb'
 };
 
 const manhattan: HeuristicFn = (from, to) => Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
@@ -79,28 +79,39 @@ export function createHeuristic(spec: HeuristicSpec): HeuristicFn {
 /** A worked example so the formula editor can show what a formula does. */
 export const SAMPLE_DELTA = { x: 3, y: 4 } as const;
 
+/** Message keys under "sandbox.formula.error" in en.json. `detail`, when
+ *  present, is the underlying parser's own message -- already just English
+ *  from a third-party library, so it is shown as-is rather than translated. */
+export type FormulaErrorKey = 'empty' | 'notANumber' | 'invalid';
+
 export type FormulaCheck =
-  { readonly ok: true; readonly sample: number } | { readonly ok: false; readonly error: string };
+  | { readonly ok: true; readonly sample: number }
+  | { readonly ok: false; readonly errorKey: FormulaErrorKey; readonly detail?: string };
 
 /** Validates a custom formula against a sample offset, without throwing. */
 export function checkFormula(formula: string): FormulaCheck {
-  if (formula.trim() === '') return { ok: false, error: 'Enter a formula.' };
+  if (formula.trim() === '') return { ok: false, errorKey: 'empty' };
   try {
     const value = evaluate(formula, { ...SAMPLE_DELTA });
     if (typeof value !== 'number' || !Number.isFinite(value)) {
-      return { ok: false, error: 'This does not work out to a number.' };
+      return { ok: false, errorKey: 'notANumber' };
     }
     return { ok: true, sample: value };
   } catch (error) {
-    return { ok: false, error: error instanceof Error ? error.message : 'Invalid formula.' };
+    return {
+      ok: false,
+      errorKey: 'invalid',
+      detail: error instanceof Error ? error.message : undefined
+    };
   }
 }
 
-export const FORMULA_EXAMPLES: { readonly formula: string; readonly label: string }[] = [
-  { formula: 'abs(x) + abs(y)', label: 'Manhattan' },
-  { formula: 'sqrt(x^2 + y^2)', label: 'Euclidean' },
-  { formula: 'max(abs(x), abs(y))', label: 'Chebyshev' },
-  { formula: '0', label: 'Zero — turns A* into Dijkstra' }
+/** Labels are message keys under "sandbox.formula.example" in en.json. */
+export const FORMULA_EXAMPLES: { readonly formula: string; readonly labelKey: string }[] = [
+  { formula: 'abs(x) + abs(y)', labelKey: 'sandbox.formula.example.manhattan' },
+  { formula: 'sqrt(x^2 + y^2)', labelKey: 'sandbox.formula.example.euclidean' },
+  { formula: 'max(abs(x), abs(y))', labelKey: 'sandbox.formula.example.chebyshev' },
+  { formula: '0', labelKey: 'sandbox.formula.example.zero' }
 ];
 
 /**
