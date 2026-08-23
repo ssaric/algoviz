@@ -4,10 +4,11 @@
   import { page } from '$app/state';
   import { _ } from 'svelte-i18n';
   import CodeBlock from '../components/CodeBlock.svelte';
+  import FormulaBlock from '../components/FormulaBlock.svelte';
   import Navbar from '../components/Navbar.svelte';
   import LessonFigure from '../components/LessonFigure.svelte';
   import RichText from '../components/RichText.svelte';
-  import { CODE_MARKER } from '../content/lessons.en';
+  import { CODE_MARKER, FORMULA_MARKER, type LessonFormula } from '../content/lessons.en';
   import { Grid } from '../core/Grid';
   import { findLesson, LESSONS } from '../core/lessons';
   import { shortestPathLength } from '../core/reference';
@@ -113,6 +114,9 @@
         {#each rest as paragraph, index (index)}
           {#if paragraph.startsWith(CODE_MARKER)}
             <CodeBlock code={paragraph.slice(CODE_MARKER.length)} />
+          {:else if paragraph.startsWith(FORMULA_MARKER)}
+            {@const parsed = JSON.parse(paragraph.slice(FORMULA_MARKER.length)) as LessonFormula}
+            <FormulaBlock tex={parsed.tex} caption={parsed.caption} />
           {:else}
             <p class="text-ink-muted mt-6 text-[17px] leading-[1.75]">
               <RichText text={paragraph} />

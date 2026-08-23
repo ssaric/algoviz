@@ -158,9 +158,9 @@ test.describe('the problem-statement lesson', () => {
     await expect(page.getByText('Lesson 1 of 10')).toBeVisible();
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Why bother');
     const article = page.locator('article');
-    await expect(article).toContainText('g: how far');
+    await expect(article).toContainText('g: exactly how far');
     await expect(article).toContainText('heuristic');
-    await expect(article).toContainText('f = g + h');
+    await expect(article).toContainText('f=g+h');
   });
 });
 
