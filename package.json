@@ -20,6 +20,7 @@
     "@neodrag/svelte": "^2.3.3",
     "katex": "^0.16.47",
     "mathjs": "^15.2.0",
+    "shiki": "^4.4.3",
     "svelte-i18n": "^4.0.1"
   },
   "devDependencies": {
