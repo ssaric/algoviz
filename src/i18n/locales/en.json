@@ -1,8 +1,12 @@
 {
   "nav": {
     "learn": "Learn",
+    "reference": "Reference",
     "sandbox": "Sandbox",
     "viewSource": "View source on GitHub"
+  },
+  "reference": {
+    "pagesNav": "Algorithms"
   },
   "controls": {
     "play": "Play",
@@ -27,7 +31,7 @@
       "cellsLonger": "{count} cells longer"
     },
     "narration": {
-      "playing": "Playing — pause or step to see what {label} is thinking.",
+      "playing": "Playing. Pause or step to see what {label} is thinking.",
       "notStarted": "Press play to watch {label} think.",
       "cell": "Cell ({x}, {y}): {note}"
     },
@@ -49,8 +53,8 @@
     "right": "right"
   },
   "step": {
-    "visit": "Picked next because {affinity} — {score}.",
-    "discover": "New cell, {g} from the start — {score}.",
+    "visit": "Picked next because {affinity}: {score}.",
+    "discover": "New cell, {g} from the start: {score}.",
     "skip": "Already reachable in {existing}; going through here would cost {cost}. Keeping the cheaper route.",
     "reopen": "Better route found: cost drops from {from} to {to}. Re-parenting it.",
     "path": "Step {index} of {total} on the path {algorithmName} settled on."
@@ -84,11 +88,11 @@
     },
     "euclidean": {
       "label": "Euclidean",
-      "blurb": "Straight-line distance. You can't actually move diagonally, so this underestimates every move — A* hedges and fans out a bit like Dijkstra. Still finds the shortest path though."
+      "blurb": "Straight-line distance. You can't actually move diagonally, so this underestimates every move. A* hedges and fans out a bit like Dijkstra, but still finds the shortest path."
     },
     "euclideanSquared": {
       "label": "Euclidean squared",
-      "blurb": "Straight-line distance, squared. A big overestimate, so A* charges straight at the goal and barely explores — but it gives up the shortest-path guarantee to do it."
+      "blurb": "Straight-line distance, squared. A big overestimate, so A* charges straight at the goal and barely explores, but it gives up the shortest-path guarantee to do it."
     },
     "custom": {
       "label": "Custom",
@@ -102,7 +106,7 @@
     "rankedBySuffix": ", lowest first",
     "empty": "Nothing on the frontier yet. Press play to start the search.",
     "next": "Next: ({x}, {y})",
-    "affinitySuffix": "— {affinity}.",
+    "affinitySuffix": "because {affinity}.",
     "moreWaiting": "+{count} more waiting",
     "badge": {
       "new": "new",
@@ -111,7 +115,7 @@
   },
   "tooltip": {
     "cellHeader": "Cell {x}, {y}",
-    "checkingNext": "Checking this one next — it is at the top of the queue right now.",
+    "checkingNext": "Checking this one next: it is at the top of the queue right now.",
     "queuePosition": "Currently waiting at position {position} in the queue.",
     "arrivedVia": "arrived via ({x}, {y}) ·",
     "startOfSearch": "the start of the search ·",
@@ -123,15 +127,15 @@
     "scoredByDistance": "Scored by how far it still looks:",
     "pullSentence": {
       "prefix": "The best step from here is",
-      "suffix": "— it drops h by"
+      "suffix": ", which drops h by"
     },
     "verdict": {
-      "overpays": "That's more than the move actually costs, so f keeps dropping — the search beelines for the goal. The catch: it might give up the shortest-path guarantee to do it.",
-      "exact": "Exactly what the step costs, so f stays flat here on the best route — barely any wandering.",
+      "overpays": "That's more than the move actually costs, so f keeps dropping, and the search beelines for the goal. The catch is that it might give up the shortest-path guarantee to do it.",
+      "exact": "Exactly what the step costs, so f stays flat here on the best route, with barely any wandering.",
       "underpays": "That's less than the move costs, so f creeps up by {amount} per move from here. Other directions stay in the running too, which is why the search fans out."
     },
     "noFavorite": "Every direction looks equally far from the goal right now, so the heuristic has no favorite.",
-    "noHeuristic": "No heuristic here — {algorithmName} doesn't estimate what's left, so nothing looks better than anything else. Every neighbour is equally worth trying."
+    "noHeuristic": "No heuristic here: {algorithmName} doesn't estimate what's left, so nothing looks better than anything else. Every neighbour is equally worth trying."
   },
   "scoreboard": {
     "cellsExpanded": {
@@ -161,7 +165,7 @@
       "inputLabel": "Custom heuristic formula",
       "apply": "Apply",
       "sample": "With x = {x}, y = {y} this scores {score}",
-      "pressApply": "— press Apply",
+      "pressApply": "(press Apply)",
       "help": {
         "and": "and",
         "rest": "are the horizontal and vertical distances to the goal. Parsed by"
@@ -175,7 +179,7 @@
         "manhattan": "Manhattan",
         "euclidean": "Euclidean",
         "chebyshev": "Chebyshev",
-        "zero": "Zero — turns A* into Dijkstra"
+        "zero": "Zero, turns A* into Dijkstra"
       }
     }
   },

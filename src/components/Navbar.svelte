@@ -6,6 +6,7 @@
 
   const links = [
     { href: resolve('/'), labelKey: 'nav.learn' },
+    { href: resolve('/reference'), labelKey: 'nav.reference' },
     { href: resolve('/sandbox'), labelKey: 'nav.sandbox' }
   ];
 

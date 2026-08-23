@@ -10,6 +10,16 @@ export const OPEN_DIAGONAL: SerializedGrid = openBoard(33, 19, cell(2, 16), cell
 /** Same board, start and goal on one row: here every heuristic agrees. */
 export const OPEN_STRAIGHT: SerializedGrid = openBoard(33, 19, cell(2, 9), cell(30, 9));
 
+/** OPEN_DIAGONAL's offset is 2:1 (28 across, 14 down) -- asymmetric, not the
+ *  true worst case for a straight-line heuristic. This one is a genuine
+ *  45-degree diagonal (21 across, 21 down) -- the one angle where Euclidean
+ *  underestimates the most -- deliberately matched to OPEN_DIAGONAL's exact
+ *  path length (43 cells) so the two are a fair comparison: same amount of
+ *  ground to cover, only the angle differs. A smaller true diagonal expands
+ *  fewer cells in absolute terms simply for being a shorter path, which would
+ *  make the comparison meaningless. */
+export const OPEN_DIAGONAL_45: SerializedGrid = openBoard(26, 26, cell(2, 23), cell(23, 2));
+
 /**
  * Small and open, for the two lessons that introduce the frontier itself.
  *

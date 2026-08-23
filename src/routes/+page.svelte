@@ -4,26 +4,11 @@
   import { page } from '$app/state';
   import { _ } from 'svelte-i18n';
   import Navbar from '../components/Navbar.svelte';
-  import BoardPanel from '../components/learn/BoardPanel.svelte';
-  import FrontierPanel from '../components/learn/FrontierPanel.svelte';
-  import ScoreboardPanel from '../components/learn/ScoreboardPanel.svelte';
-  import BoardTooltip from '../components/BoardTooltip.svelte';
-  import PullArrow from '../components/PullArrow.svelte';
+  import LessonFigure from '../components/LessonFigure.svelte';
   import RichText from '../components/RichText.svelte';
-  import Controls from '../components/loader/Controls.svelte';
-  import { LessonRunner, type RunnerState } from '../board/LessonRunner';
   import { Grid } from '../core/Grid';
   import { findLesson, LESSONS } from '../core/lessons';
   import { shortestPathLength } from '../core/reference';
-
-  let boardEls = $state<(HTMLDivElement | undefined)[]>([]);
-  let runner = $state<LessonRunner | undefined>();
-  let runnerState = $state<RunnerState>({
-    totalSteps: 0,
-    cursor: 0,
-    isPlaying: false,
-    boards: []
-  });
 
   const lesson = $derived(findLesson(page.url.searchParams.get('lesson')));
   const lessonIndex = $derived(LESSONS.findIndex((l) => l.id === lesson.id));
@@ -36,36 +21,9 @@
   const lede = $derived(lesson.body[0]);
   const rest = $derived(lesson.body.slice(1));
 
-  // Whichever board the pointer is resting on; only one can be hovered. Stays
-  // empty for a scoreboard lesson, since it never creates a LessonRunner.
-  const inspection = $derived(runnerState.boards.find((board) => board.inspection)?.inspection);
-
   const optimal = $derived(
     shortestPathLength(new Grid({ ...lesson.board, walls: [...lesson.board.walls] }))
   );
-
-  $effect(() => {
-    const current = lesson;
-    if (current.layout === 'scoreboard') return;
-
-    const containers = boardEls.slice(0, current.variants.length);
-    if (containers.length !== current.variants.length || containers.some((el) => !el)) return;
-
-    const instance = new LessonRunner(
-      containers as HTMLDivElement[],
-      current.board,
-      current.variants
-    );
-    const unsubscribe = instance.subscribe((state) => (runnerState = state));
-    runner = instance;
-    instance.run();
-
-    return () => {
-      unsubscribe();
-      instance.destroy();
-      runner = undefined;
-    };
-  });
 
   const select = (id: string) =>
     // The path is resolved; only the query string varies, which the lint rule
@@ -141,83 +99,13 @@
       <!-- The figure: allowed a wider measure than the prose, since two boards
            side by side need the room a 70ch text column would not give them.
            Still centered, still one column -- never a second, competing one. -->
-      <figure
-        class="mx-auto mt-10 {lesson.layout === 'frontier' ? 'max-w-[940px]' : 'max-w-[880px]'}"
-      >
-        {#if lesson.layout === 'scoreboard'}
-          <ScoreboardPanel board={lesson.board} variants={lesson.variants} />
-        {:else}
-          <!-- Fixed height, not just a starting one: the frontier list's row
-               count changes every frame during playback, and letting the
-               panel's natural height follow it made the whole row -- board
-               included -- visibly resize as the search ran. -->
-          <div
-            class="grid h-[420px] gap-5 {lesson.layout === 'frontier'
-              ? 'grid-cols-[1fr_360px]'
-              : 'grid-cols-2'}"
-          >
-            {#each lesson.variants as variant, i (variant.label)}
-              <BoardPanel
-                label={variant.label}
-                state={runnerState.boards[i]}
-                painter={runner?.painters[i]}
-                {optimal}
-                isPlaying={runnerState.isPlaying}
-                bind:element={boardEls[i]}
-              />
-            {/each}
-            {#if lesson.layout === 'frontier'}
-              <FrontierPanel
-                painter={runner?.painters[0]}
-                state={runnerState.boards[0]}
-                algorithm={lesson.variants[0].algorithm}
-                isPlaying={runnerState.isPlaying}
-              />
-            {/if}
-          </div>
-
-          <div class="border-line bg-surface shadow-card mt-4 rounded-2xl border px-5 py-3">
-            <input
-              type="range"
-              class="scrubber"
-              min="0"
-              max={runnerState.totalSteps}
-              step="1"
-              aria-label={$_('controls.timeline')}
-              value={runnerState.cursor}
-              oninput={(event) => runner?.seek(parseInt(event.currentTarget.value, 10))}
-            />
-            <div class="mt-1 flex items-center justify-between gap-4">
-              <span class="text-ink-subtle w-36 text-xs tabular-nums">
-                {$_('learn.cursorOfTotal', {
-                  values: { cursor: runnerState.cursor, total: runnerState.totalSteps }
-                })}
-              </span>
-              <Controls
-                hasData={runnerState.totalSteps > 0}
-                isPlaying={runnerState.isPlaying}
-                onPlay={() => runner?.play()}
-                onStop={() => runner?.pause()}
-                onSkipForward={() => runner?.skip(25)}
-                onSkipBackward={() => runner?.skip(-25)}
-                onStepForward={() => runner?.skip(1)}
-                onStepBackward={() => runner?.skip(-1)}
-              />
-              <button
-                type="button"
-                onclick={() => runner?.run()}
-                class="text-brand hover:text-brand-bright w-36 cursor-pointer text-right text-xs font-medium"
-              >
-                {$_('learn.runAgain')}
-              </button>
-            </div>
-          </div>
-        {/if}
-
-        <figcaption class="text-ink-subtle mx-auto mt-4 max-w-[70ch] text-center text-sm italic">
-          <RichText text={lesson.watchFor} />
-        </figcaption>
-      </figure>
+      <LessonFigure
+        board={lesson.board}
+        layout={lesson.layout}
+        variants={lesson.variants}
+        {optimal}
+        caption={lesson.watchFor}
+      />
 
       <div class="mx-auto max-w-[70ch]">
         {#each rest as paragraph, index (index)}
@@ -264,9 +152,4 @@
       </div>
     </article>
   </div>
-
-  {#if inspection}
-    <PullArrow {inspection} />
-    <BoardTooltip {inspection} />
-  {/if}
 </main>
