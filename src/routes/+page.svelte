@@ -3,9 +3,11 @@
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { _ } from 'svelte-i18n';
+  import CodeBlock from '../components/CodeBlock.svelte';
   import Navbar from '../components/Navbar.svelte';
   import LessonFigure from '../components/LessonFigure.svelte';
   import RichText from '../components/RichText.svelte';
+  import { CODE_MARKER } from '../content/lessons.en';
   import { Grid } from '../core/Grid';
   import { findLesson, LESSONS } from '../core/lessons';
   import { shortestPathLength } from '../core/reference';
@@ -109,9 +111,13 @@
 
       <div class="mx-auto max-w-[70ch]">
         {#each rest as paragraph, index (index)}
-          <p class="text-ink-muted mt-6 text-[17px] leading-[1.75]">
-            <RichText text={paragraph} />
-          </p>
+          {#if paragraph.startsWith(CODE_MARKER)}
+            <CodeBlock code={paragraph.slice(CODE_MARKER.length)} />
+          {:else}
+            <p class="text-ink-muted mt-6 text-[17px] leading-[1.75]">
+              <RichText text={paragraph} />
+            </p>
+          {/if}
         {/each}
 
         <nav
