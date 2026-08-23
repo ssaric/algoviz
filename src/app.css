@@ -172,11 +172,11 @@
   }
 
   .cell--start {
-    background-image: url('/play-circle-solid.svg');
+    background-image: url('/marker-start.svg');
   }
 
   .cell--end {
-    background-image: url('/dot-circle-solid.svg');
+    background-image: url('/marker-end.svg');
   }
 
   /* A preset board is there to be read, not drawn on. */
