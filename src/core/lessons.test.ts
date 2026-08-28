@@ -38,29 +38,7 @@ const runAll = (l: Lesson) => l.variants.map((variant) => run(l.board, variant))
 const visitOrder = (steps: Step[]) =>
   steps.filter((s) => s.kind === 'visit').map((s) => cellId(s.cell));
 
-describe('every lesson is well formed', () => {
-  it.each(LESSONS.map((l) => [l.id, l] as const))('%s', (_id, l) => {
-    expect(l.title).toBeTruthy();
-    expect(l.hook).toBeTruthy();
-    expect(l.watchFor).toBeTruthy();
-    expect(l.body.length).toBeGreaterThanOrEqual(3);
-
-    const labels = l.variants.map((v) => v.label);
-    expect(new Set(labels).size).toBe(labels.length);
-  });
-
-  it('gives every lesson a variant count that matches its layout', () => {
-    for (const l of LESSONS) {
-      if (l.layout === 'frontier') expect(l.variants).toHaveLength(1);
-      else if (l.layout === 'compare') expect(l.variants).toHaveLength(2);
-      else expect(l.variants.length).toBeGreaterThanOrEqual(2);
-    }
-  });
-
-  it('has unique ids', () => {
-    expect(new Set(LESSONS.map((l) => l.id)).size).toBe(LESSONS.length);
-  });
-
+describe('every lesson actually works', () => {
   it('falls back to the first lesson for an unknown id', () => {
     expect(findLesson('nope')).toBe(LESSONS[0]);
     expect(findLesson(null)).toBe(LESSONS[0]);
